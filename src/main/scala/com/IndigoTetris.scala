@@ -2,6 +2,7 @@ package com
 
 import indigo._
 import indigo.scenes._
+
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("IndigoGame")

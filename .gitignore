@@ -16,3 +16,4 @@ src_managed
 .vscode
 metals.sbt
 .bsp
+node_modules
