@@ -1,59 +1,73 @@
 package com
 
-import indigo._
-import indigo.scenes._
+import com.init.*
+import indigo.*
+import indigo.scenes.*
+import indigo.shared.datatypes.*
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("IndigoGame")
-object IndigoTetris extends IndigoGame[Unit, Unit, Unit, Unit]:
+object IndigoTetris extends Game:
 
-  def initialScene(bootData: Unit): Option[SceneName] =
+  def initialScene(bootData: BootData): Option[SceneName] =
     None
 
-  def scenes(bootData: Unit): NonEmptyList[Scene[Unit, Unit, Unit]] =
-    NonEmptyList(GameScene)
+  def scenes(bootData: BootData) =
+    NonEmptyList(GameplayScene)
 
   val eventFilters: EventFilters =
     EventFilters.Permissive
 
-  def boot(flags: Map[String, String]): Outcome[BootResult[Unit]] =
-    Outcome(
-      BootResult.noData(
-        GameConfig.default
-          .withViewport(550, 400)
+  def boot(flags: Map[String, String]): Outcome[BootResult[BootData]] =
+    Outcome {
+      val bootData = BootData.default
+      val gameConfig = GameConfig(
+        viewport = bootData.viewport,
+        clearColor = RGBA.Black,
+        magnification = bootData.magnificationLevel
       )
-    )
 
-  def initialModel(startupData: Unit): Outcome[Unit] =
-    Outcome(())
+      BootResult(gameConfig, bootData)
+    }
 
-  def initialViewModel(startupData: Unit, model: Unit): Outcome[Unit] =
+  def initialModel(startupData: SetupData): Outcome[GameModel] =
+    Outcome {
+      GameModel.initial(startupData.bootData.gridSize)
+    }
+
+  def initialViewModel(
+      startupData: SetupData,
+      model: GameModel
+  ): Outcome[GameViewModel] =
     Outcome(())
 
   def setup(
-      bootData: Unit,
+      bootData: BootData,
       assetCollection: AssetCollection,
       dice: Dice
-  ): Outcome[Startup[Unit]] =
-    Outcome(Startup.Success(()))
+  ): Outcome[Startup[SetupData]] =
+    Outcome(Startup.Success(SetupData(bootData)))
 
   def updateModel(
-      context: FrameContext[Unit],
-      model: Unit
-  ): GlobalEvent => Outcome[Unit] =
+      context: GameContext,
+      model: GameModel
+  ): GlobalEvent => Outcome[GameModel] =
     _ => Outcome(model)
 
   def updateViewModel(
-      context: FrameContext[Unit],
-      model: Unit,
-      viewModel: Unit
-  ): GlobalEvent => Outcome[Unit] =
+      context: GameContext,
+      model: GameModel,
+      viewModel: GameViewModel
+  ): GlobalEvent => Outcome[GameViewModel] =
     _ => Outcome(viewModel)
 
   def present(
-      context: FrameContext[Unit],
-      model: Unit,
-      viewModel: Unit
+      context: GameContext,
+      model: GameModel,
+      viewModel: GameViewModel
   ): Outcome[SceneUpdateFragment] =
-    Outcome(SceneUpdateFragment.empty)
+    Outcome {
+      SceneUpdateFragment.empty
+        .addLayer(Layer(BindingKey("game")))
+    }

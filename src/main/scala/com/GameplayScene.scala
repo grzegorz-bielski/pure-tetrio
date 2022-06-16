@@ -1,20 +1,22 @@
 package com
 
-import indigo._
-import indigo.scenes._
+import com.init.*
+import indigo.*
+import indigo.scenes.*
 
-object GameScene extends Scene[Unit, Unit, Unit]:
 
-  type SceneModel     = Unit
-  type SceneViewModel = Unit
+object GameplayScene extends GameScene:
+
+  type SceneModel     = GameModel
+  type SceneViewModel = GameViewModel
 
   val name: SceneName =
     SceneName("game")
 
-  val modelLens: Lens[Unit, Unit] =
+  val modelLens: Lens[GameModel, SceneModel] =
     Lens.keepLatest
 
-  val viewModelLens: Lens[Unit, Unit] =
+  val viewModelLens: Lens[GameViewModel, SceneViewModel] =
     Lens.keepLatest
 
   val eventFilters: EventFilters =
@@ -24,28 +26,28 @@ object GameScene extends Scene[Unit, Unit, Unit]:
     Set()
 
   def updateModel(
-      context: FrameContext[Unit],
-      model: Unit
-  ): GlobalEvent => Outcome[Unit] =
+      context: GameContext,
+      model: GameModel
+  ): GlobalEvent => Outcome[GameModel] =
     _ => Outcome(model)
 
   def updateViewModel(
-      context: FrameContext[Unit],
-      model: Unit,
-      viewModel: Unit
-  ): GlobalEvent => Outcome[Unit] =
+      context: GameContext,
+      model: GameModel,
+      viewModel: GameViewModel
+  ): GlobalEvent => Outcome[GameViewModel] =
     _ => Outcome(viewModel)
 
   def present(
-      context: FrameContext[Unit],
-      model: Unit,
-      viewModel: Unit
+      context: GameContext,
+      model: GameModel,
+      viewModel: GameViewModel
   ): Outcome[SceneUpdateFragment] =
     Outcome(
       SceneUpdateFragment(
         Shape
           .Box(
-            Rectangle(0, 0, 60, 60),
+            Rectangle(0, 0, 60, 199),
             Fill.LinearGradient(Point(0), RGBA.Magenta, Point(45), RGBA.Cyan)
           )
           .withRef(30, 30)
