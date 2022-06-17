@@ -9,9 +9,10 @@ import scala.annotation.tailrec
 final case class GameMap(
     // used for collision detection
     // https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-    quadTree: QuadTree[MapElement],
-    gridSize: BoundingBox
+    private val quadTree: QuadTree[MapElement]
 ):
+  def mapElements = quadTree.toBatch
+
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
       quadTree = quadTree.insertElements(elements.map(e => e -> e.point)).prune
@@ -20,16 +21,27 @@ final case class GameMap(
   def insertWalls(pos: Batch[Vertex]) =
     insertElements(pos.map(MapElement.Wall(_)))
 
+  // def spawn
+
 object GameMap:
   def apply(grid: BoundingBox): GameMap =
-    GameMap(QuadTree.empty[MapElement](grid.size), grid)
+    val gridSize = (grid.size + grid.position + Vertex.one)
+
+    GameMap(QuadTree.empty[MapElement](gridSize))
 
   def walled(grid: BoundingBox): GameMap =
-    GameMap(grid)
-      .insertWalls(grid.topLeft --> grid.topRight)
-      .insertWalls(grid.topRight --> grid.bottomRight)
-      .insertWalls(grid.bottomLeft --> grid.bottomRight)
-      .insertWalls(grid.topLeft --> grid.bottomLeft)
+    val map = 
+      GameMap(grid)
+        .insertWalls(grid.topLeft --> grid.topRight)
+        .insertWalls(grid.topRight --> grid.bottomRight)
+        .insertWalls(grid.bottomLeft --> grid.bottomRight)
+        .insertWalls(grid.topLeft --> grid.bottomLeft)
+
+    println(
+      "ele" -> map.mapElements
+    )
+
+    map
 
 enum MapElement derives CanEqual:
   case Wall(point: Vertex)
@@ -45,6 +57,8 @@ extension (underlying: Vertex)
   def -->(end: Vertex): Batch[Vertex] =
     val start = underlying
 
+    // println(start -> end)
+
     @tailrec
     def rec(
         last: Vertex,
@@ -57,10 +71,13 @@ extension (underlying: Vertex)
         val nextX: Double = if (last.x + 1 <= end.x) last.x + 1 else last.x
         val nextY: Double = if (last.y + 1 <= end.y) last.y + 1 else last.y
         val next: Vertex  = Vertex(nextX, nextY)
+        // println(next)
         rec(next, dest, p, acc :+ next)
 
     if lessThanOrEqual(start, end) then
-      rec(start, end, (gp: Vertex) => gp == end, Batch(start))
+      val res = rec(start, end, (gp: Vertex) => gp == end, Batch(start))
+      println("res" -> res)
+      res
     else rec(end, start, (gp: Vertex) => gp == start, Batch(end))
 
   private def lessThanOrEqual(a: Vertex, b: Vertex): Boolean =
