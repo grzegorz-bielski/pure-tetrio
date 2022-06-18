@@ -36,7 +36,8 @@ lazy val mygame =
       libraryDependencies ++= Seq(
         "io.indigoengine" %%% "indigo-json-circe" % "0.13.0",
         "io.indigoengine" %%% "indigo"            % "0.13.0",
-        "io.indigoengine" %%% "indigo-extras"     % "0.13.0"
+        "io.indigoengine" %%% "indigo-extras"     % "0.13.0",
+        "com.lihaoyi" %%% "pprint" % "0.7.0"
       )
     )
     .settings(

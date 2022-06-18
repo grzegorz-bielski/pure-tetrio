@@ -9,48 +9,65 @@ import scala.annotation.tailrec
 final case class GameMap(
     // used for collision detection
     // https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-    private val quadTree: QuadTree[MapElement]
+    val quadTree: QuadTree[MapElement]
 ):
   def mapElements = quadTree.toBatch
+
+  def intersects(tetramino: Tetramino): Batch[MapElement] =
+    tetramino.positions.flatMap(p =>
+      Batch.fromOption(
+        quadTree
+          .fetchElementAt(Vertex.fromPoint(p))
+      )
+    )
 
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
       quadTree = quadTree.insertElements(elements.map(e => e -> e.point)).prune
     )
 
-  def insertWalls(pos: Batch[Vertex]) =
+  def insertDebris(pos: Batch[Vertex]) =
+    insertElements(pos.map(MapElement.Debris(_)))
+
+  def insertWall(pos: Batch[Vertex]) =
     insertElements(pos.map(MapElement.Wall(_)))
 
-  // def spawn
+  def insertFloor(pos: Batch[Vertex]) =
+    insertElements(pos.map(MapElement.Floor(_)))
 
 object GameMap:
   def apply(grid: BoundingBox): GameMap =
-    val gridSize = (grid.size + grid.position + Vertex.one)
+    val gridSize = grid.size + grid.position + Vertex.one
 
     GameMap(QuadTree.empty[MapElement](gridSize))
 
   def walled(grid: BoundingBox): GameMap =
-    val map = 
+    val map =
       GameMap(grid)
-        .insertWalls(grid.topLeft --> grid.topRight)
-        .insertWalls(grid.topRight --> grid.bottomRight)
-        .insertWalls(grid.bottomLeft --> grid.bottomRight)
-        .insertWalls(grid.topLeft --> grid.bottomLeft)
-
-    println(
-      "ele" -> map.mapElements
-    )
+        // .insertWalls(grid.topLeft --> grid.topRight)
+        .insertWall(grid.topRight --> grid.bottomRight)
+        .insertFloor(grid.bottomLeft --> grid.bottomRight)
+        .insertWall(grid.topLeft --> grid.bottomLeft)
 
     map
 
 enum MapElement derives CanEqual:
   case Wall(point: Vertex)
-  case Debris(point: Vertex, colour: String)
+  case Floor(point: Vertex)
+  case Debris(point: Vertex)
 
 extension (underlying: MapElement)
   def point = underlying match
+    case MapElement.Floor(p)     => p
     case MapElement.Wall(p)      => p
-    case MapElement.Debris(p, _) => p
+    case MapElement.Debris(p) => p
+
+// extension (underlying: Batch[MapElement])
+//   def hasFloors: Boolean =
+//     underlying.exists {
+//       case e: MapElement.Floor => true
+//       case _                   => false
+//     }
 
 extension (underlying: Vertex)
   // adapted from snake demo
