@@ -1,7 +1,7 @@
 package com.model
 
 import com.*
-import com.model.Tetramino.*
+import com.model.Tetromino.*
 import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.datatypes.Point
@@ -42,67 +42,87 @@ enum GameState extends MapState:
   )
   case InProgress(
       map: GameMap,
-      tetramino: Tetramino,
+      tetromino: Tetromino,
       lastUpdated: Seconds,
       fallDelay: Seconds
   )
+
 extension (state: GameState)
   def onFrameTick(ctx: GameContext): GameState =
     state match
       case s: GameState.Initial =>
-        s.spawnTetramino(ctx)
+        s.spawnTetromino(ctx)
       case s: GameState.InProgress =>
-        s.autoTetraminoDescent(ctx, input = Point.zero)
+        s.autoTetrominoDescent(ctx, input = Point.zero)
 
   def onInput(ctx: GameContext, e: KeyboardEvent): GameState =
-    // todo: fast, smooth movement on long press
-    (state, e) match
-      case (s: GameState.InProgress, KeyboardEvent.KeyDown(Key.LEFT_ARROW)) =>
-        s.moveTetraminoBy(Point(-1, 0))
-      case (s: GameState.InProgress, KeyboardEvent.KeyDown(Key.RIGHT_ARROW)) =>
-        s.moveTetraminoBy(Point(1, 0))
-      case (s: GameState.InProgress, KeyboardEvent.KeyDown(Key.DOWN_ARROW)) =>
-        s.moveTetraminoBy(Point(0, 1))
-      case _ => state
+    state match
+      case s: GameState.InProgress => s.onInput(ctx, e)
+      case _                       => state
 
 extension (state: GameState.Initial)
-  def spawnTetramino(ctx: GameContext): GameState.InProgress =
-    val tetramino = Tetramino.spawn(
+  def spawnTetromino(ctx: GameContext): GameState.InProgress =
+    val tetromino = Tetromino.spawn(
       center = Point(9, 1),
       side = ctx.dice.rollFromZero(6)
     )
 
-    GameState.InProgress(state.map, tetramino, ctx.gameTime.running, Seconds(1))
+    GameState.InProgress(state.map, tetromino, ctx.gameTime.running, Seconds(1))
 
 extension (state: GameState.InProgress)
-  def moveTetraminoBy(point: Point): GameState =
-    val movedTetramino = state.tetramino.moveBy(point)
+  def onInput(ctx: GameContext, e: KeyboardEvent) =
+    // todo: smooth movement on long press
+    // todo: fast drop
+    e match
+      case KeyboardEvent.KeyDown(Key.LEFT_ARROW) =>
+        state.moveTetrominoBy(Point(-1, 0))
+      case KeyboardEvent.KeyDown(Key.RIGHT_ARROW) =>
+        state.moveTetrominoBy(Point(1, 0))
+      case KeyboardEvent.KeyDown(Key.DOWN_ARROW) =>
+        state.moveTetrominoBy(Point(0, 1))
+      case KeyboardEvent.KeyDown(Key.KEY_Z) =>
+        state.rotateTetromino(ctx, Rotation.Direction.CounterClockwise)
+      case KeyboardEvent.KeyDown(Key.KEY_X) =>
+        state.rotateTetromino(ctx, Rotation.Direction.Clockwise)
+      case _ => state
 
-    val intersections = state.map.intersects(movedTetramino)
-    lazy val intersectStack =
+  def moveTetrominoBy(point: Point): GameState =
+    val movedTetromino = state.tetromino.moveBy(point)
+
+    val intersections = state.map.intersectsWith(movedTetromino.positions)
+    lazy val intersectedStack =
       intersections.exists {
-        case _: MapElement.Floor  => true
-        case _: MapElement.Debris => true
-        case _                    => false
+        case _: MapElement.Floor | _: MapElement.Debris => true
+        case _                                          => false
       }
 
     if intersections.isEmpty then
       state.copy(
-        tetramino = movedTetramino
+        tetromino = movedTetromino
       )
-    else if intersectStack then
+    else if intersectedStack then
       GameState.Initial(
         map = state.map.insertDebris(
-          state.tetramino.positions.map(Vertex.fromPoint(_))
+          state.tetromino.positions.map(Vertex.fromPoint(_)).toBatch
         )
       )
     else state
 
-  def autoTetraminoDescent(ctx: GameContext, input: Point): GameState =
+  // borked
+  def rotateTetromino(
+      ctx: GameContext,
+      direction: Rotation.Direction
+  ): GameState =
+    state.tetromino
+      .rotate(direction)(state.map.intersects)
+      .map(t => state.copy(tetromino = t))
+      .getOrElse(state)
+
+  def autoTetrominoDescent(ctx: GameContext, input: Point): GameState =
     if ctx.gameTime.running > state.lastUpdated + state.fallDelay then
       state
         .copy(
           lastUpdated = ctx.gameTime.running
         )
-        .moveTetraminoBy(input + Point(0, 1))
-    else state.moveTetraminoBy(input)
+        .moveTetrominoBy(input + Point(0, 1))
+    else state.moveTetrominoBy(input)

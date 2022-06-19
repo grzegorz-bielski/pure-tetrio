@@ -1,25 +1,26 @@
 package com.model
 
 import indigo.shared.collections.Batch
+import indigo.shared.collections.NonEmptyBatch
+import indigo.shared.datatypes.Point
 import indigoextras.geometry.*
 import indigoextras.trees.QuadTree
 
 import scala.annotation.tailrec
 
-final case class GameMap(
-    // used for collision detection
-    // https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-    val quadTree: QuadTree[MapElement]
-):
+final case class GameMap(quadTree: QuadTree[MapElement]):
   def mapElements = quadTree.toBatch
 
-  def intersects(tetramino: Tetramino): Batch[MapElement] =
-    tetramino.positions.flatMap(p =>
+  def intersects(positions: NonEmptyBatch[Point]): Boolean = 
+    !intersectsWith(positions).isEmpty
+    
+  def intersectsWith(positions: NonEmptyBatch[Point]): Batch[MapElement] =
+    positions.toBatch.flatMap { p =>
       Batch.fromOption(
         quadTree
           .fetchElementAt(Vertex.fromPoint(p))
       )
-    )
+    }
 
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
@@ -58,23 +59,14 @@ enum MapElement derives CanEqual:
 
 extension (underlying: MapElement)
   def point = underlying match
-    case MapElement.Floor(p)     => p
-    case MapElement.Wall(p)      => p
+    case MapElement.Floor(p)  => p
+    case MapElement.Wall(p)   => p
     case MapElement.Debris(p) => p
-
-// extension (underlying: Batch[MapElement])
-//   def hasFloors: Boolean =
-//     underlying.exists {
-//       case e: MapElement.Floor => true
-//       case _                   => false
-//     }
 
 extension (underlying: Vertex)
   // adapted from snake demo
   def -->(end: Vertex): Batch[Vertex] =
     val start = underlying
-
-    // println(start -> end)
 
     @tailrec
     def rec(
@@ -88,13 +80,10 @@ extension (underlying: Vertex)
         val nextX: Double = if (last.x + 1 <= end.x) last.x + 1 else last.x
         val nextY: Double = if (last.y + 1 <= end.y) last.y + 1 else last.y
         val next: Vertex  = Vertex(nextX, nextY)
-        // println(next)
         rec(next, dest, p, acc :+ next)
 
     if lessThanOrEqual(start, end) then
-      val res = rec(start, end, (gp: Vertex) => gp == end, Batch(start))
-      println("res" -> res)
-      res
+      rec(start, end, (gp: Vertex) => gp == end, Batch(start))
     else rec(end, start, (gp: Vertex) => gp == start, Batch(end))
 
   private def lessThanOrEqual(a: Vertex, b: Vertex): Boolean =

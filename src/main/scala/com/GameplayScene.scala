@@ -82,19 +82,19 @@ object GameplayScene extends GameScene:
             drawMapElement(e, RGBA.Silver)
           }
       ),
-      drawTetramino(model.state)
+      drawTetromino(model.state)
     )
 
-  def drawTetramino(state: GameState) =
+  def drawTetromino(state: GameState) =
     state match
       case s: GameState.InProgress =>
         Group(
-          s.tetramino.positions.map { p =>
+          s.tetromino.positions.map { p =>
             Shape.Box(
               Rectangle(p.x.toInt, p.y.toInt, 1, 1),
               Fill.Color(RGBA.Pink)
             )
-          }
+          }.toBatch
         )
 
       case _ => Group.empty
