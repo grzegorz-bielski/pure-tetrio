@@ -63,9 +63,8 @@ extension (state: GameState)
 extension (state: GameState.Initial)
   def spawnTetromino(ctx: GameContext): GameState.InProgress =
     val tetromino = Tetromino.spawn(
-      center = Point(9, 1),
       side = ctx.dice.rollFromZero(6)
-    )
+    )(Point(9, 1))
 
     GameState.InProgress(state.map, tetromino, ctx.gameTime.running, Seconds(1))
 

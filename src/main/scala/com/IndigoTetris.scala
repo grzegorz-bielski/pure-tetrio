@@ -11,8 +11,8 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 object IndigoTetris extends Game:
 
   // temp
-  val `blackify the screen` =
-     org.scalajs.dom.document.body.style = "background: black"
+  // val `blackify the screen` =
+  //    org.scalajs.dom.document.body.style = "background: black"
 
 
   def initialScene(bootData: BootData): Option[SceneName] =

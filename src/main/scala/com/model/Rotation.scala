@@ -24,10 +24,8 @@ import indigo.shared.collections.Batch.Unapply._
 // - get first passing
 // - fail if it intersects with sth
 
-/**
- * SRS rotation system
- * https://harddrop.com/wiki/SRS
-*/
+/** SRS rotation system https://harddrop.com/wiki/SRS
+  */
 object Rotation:
   def rotate(tetromino: Tetromino, direction: Rotation.Direction): RotateFn =
     val positionsFn =
@@ -55,6 +53,8 @@ object Rotation:
   // depends on ordinal index
   enum State:
     case Spawn, Clockwise, InvertedSpawn, CounterClockwise
+  object State:
+    val size = State.values.size
 
   extension (state: State)
     def rotateClockwise: State =
@@ -62,8 +62,9 @@ object Rotation:
     def rotateCounterClockwise: State =
       rotate(direction = Direction.CounterClockwise)
     private def rotate(direction: Direction): State =
-      State.fromOrdinal((state.ordinal + direction.index) % 4)
-        // (x % m + m) % m (???)
+      State.fromOrdinal(
+        math.floorMod((state.ordinal + direction.index), State.size)
+      )
 
   private def baseRotation(
       tetromino: Tetromino,

@@ -1,10 +1,10 @@
 package com.model
 
+import com.model.*
 import cats.syntax.apply
 import indigo.*
 import indigo.shared.collections.Batch
 import indigo.shared.collections.Batch.Unapply._
-
 
 type Positions = NonEmptyBatch[Point]
 
@@ -12,7 +12,7 @@ sealed trait TetrominoPiece:
   def positions: Positions
   def rotationState: Rotation.State
 
-enum Tetromino extends TetrominoPiece:
+private enum Tetromino extends TetrominoPiece:
   case I(positions: Positions, rotationState: Rotation.State)
   case J(positions: Positions, rotationState: Rotation.State)
   case L(positions: Positions, rotationState: Rotation.State)
@@ -31,7 +31,7 @@ extension (t: Tetromino)
   def rotationCenter: Point =
     t.positions.head
   def rotate(direction: Rotation.Direction): RotateFn =
-      Rotation.rotate(t, direction)
+    Rotation.rotate(t, direction)
   def withPositions(pos: Positions): Tetromino =
     t match
       case t: I => t.copy(positions = pos)
@@ -45,20 +45,28 @@ extension (t: Tetromino)
 object Tetromino:
   type DiceValue = Int
 
-  def spawn(center: Point, side: DiceValue): Tetromino =
-    val rotation = Rotation.State.Spawn
+  val i = at(Batch((-1, 0), (1, 0), (2, 0))) andThen (I(_, rotation))
+  val j = at(Batch((-1, 1), (-1, 0), (1, 0))) andThen (J(_, rotation))
+  val l = at(Batch((-1, 0), (1, 0), (1, 1))) andThen (L(_, rotation))
+  val o = at(Batch((0, 1), (1, 0), (1, 1))) andThen (O(_, rotation))
+  val s = at(Batch((-1, 0), (0, 1), (1, 1))) andThen (S(_, rotation))
+  val t = at(Batch((1, 0), (0, 1), (1, 1))) andThen (T(_, rotation))
+  val z = at(Batch((-1, 1), (0, 1), (1, 0))) andThen (Z(_, rotation))
 
-    def fromCenter(pos: (Int, Int)*) =
-      NonEmptyBatch(
-        center,
-        pos.map(p => center.moveBy(Point.tuple2ToPoint(p))): _*
-      )
-
+  // todo: unsafe
+  def spawn(side: DiceValue): Point => Tetromino =
     side match
-      case 0 => I(fromCenter((-1, 0), (1, 0), (2, 0)), rotation)
-      case 1 => J(fromCenter((-1, 1), (-1, 0), (1, 0)), rotation)
-      case 2 => L(fromCenter((-1, 0), (1, 0), (1, 1)), rotation)
-      case 3 => O(fromCenter((0, 1), (1, 0), (1, 1)), rotation)
-      case 4 => S(fromCenter((-1, 0), (0, 1), (1, 1)), rotation)
-      case 5 => T(fromCenter((1, 0), (0, 1), (1, 1)), rotation)
-      case 6 => Z(fromCenter((-1, 1), (0, 1), (1, 0)), rotation)
+      case 0 => i
+      case 1 => j
+      case 2 => l
+      case 3 => o
+      case 4 => s
+      case 5 => t
+      case 6 => z
+
+  private val rotation = Rotation.State.Spawn
+  private def at(pos: Batch[(Int, Int)])(center: Point) =
+    NonEmptyBatch(
+      center,
+      pos.toArray.map(p => center.moveBy(Point.tuple2ToPoint(p))): _*
+    )
