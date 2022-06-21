@@ -26,58 +26,49 @@ import indigo.shared.collections.Batch.Unapply._
 
 /** SRS rotation system https://harddrop.com/wiki/SRS
   */
-object Rotation:
-  def rotate(tetromino: Tetromino, direction: Rotation.Direction): RotateFn =
+object SRS:
+  def rotate(tetromino: Tetromino, direction: RotationDirection): RotateFn =
     val positionsFn =
       direction match
-        case Rotation.Direction.Clockwise =>
+        case RotationDirection.Clockwise =>
           applyOffsets(
-            baseRotation(tetromino, Matrix2((0, 1), (-1, 0))),
-            offsets(tetromino, tetromino.rotationState.rotateClockwise)
+            clockwiseBaseRotation(tetromino),
+            offsets(tetromino)
           )
-        case Rotation.Direction.CounterClockwise =>
+        case RotationDirection.CounterClockwise =>
           applyOffsets(
-            baseRotation(tetromino, Matrix2((0, -1), (1, 0))),
+            counterClockwiseBaseRotation(tetromino),
             offsets(
-              tetromino,
-              tetromino.rotationState.rotateCounterClockwise
+              tetromino
+              // todo: new state should be merged back to tetromino (!??)
+              // tetromino.rotationState.rotateCounterClockwise
             )
           )
 
-    positionsFn andThen (_.map(tetromino.withPositions))
+    positionsFn andThen (_.map(pos =>
+      tetromino
+        .withPositions(pos)
+        // .withRotationState(
+        //   RotationState.rotate(tetromino.rotationState, direction)
+        // )
+    ))
 
-  enum Direction(val index: Int):
-    case Clockwise        extends Direction(1)
-    case CounterClockwise extends Direction(-1)
+  val clockwiseBaseRotation =
+    baseRotation(Matrix2((0, 1), (-1, 0)))
+  val counterClockwiseBaseRotation =
+    baseRotation(Matrix2((0, -1), (1, 0)))
 
-  // depends on ordinal index
-  enum State:
-    case Spawn, Clockwise, InvertedSpawn, CounterClockwise
-  object State:
-    val size = State.values.size
-
-  extension (state: State)
-    def rotateClockwise: State =
-      rotate(direction = Direction.Clockwise)
-    def rotateCounterClockwise: State =
-      rotate(direction = Direction.CounterClockwise)
-    private def rotate(direction: Direction): State =
-      State.fromOrdinal(
-        math.floorMod((state.ordinal + direction.index), State.size)
-      )
-
-  private def baseRotation(
-      tetromino: Tetromino,
-      rotationMatrix: Matrix2
+  private def baseRotation(rotationMatrix: Matrix2)(
+      tetromino: Tetromino
   ) = tetromino.positions.map { pos =>
     val relativePos = pos - tetromino.rotationCenter
-    val rotated     = (rotationMatrix * relativePos.toVector).toPoint
-    val absolutePos = rotated + relativePos
+    val rotatedPos  = (rotationMatrix * relativePos.toVector).toPoint
+    val absolutePos = rotatedPos + tetromino.rotationCenter
 
     absolutePos
   }
 
-  private def applyOffsets(
+  def applyOffsets(
       rotatedPositions: NonEmptyBatch[Point],
       offsets: Batch[Point]
   )(intersects: Intersects) =
@@ -95,11 +86,9 @@ object Rotation:
 
     findMatchingRotation(offsets)
 
-  private def offsets(
-      tetromino: Tetromino,
-      state: Rotation.State
-  ): Batch[Point] =
+  def offsets(tetromino: Tetromino): Batch[Point] =
     import Tetromino.*
+    val state = tetromino.rotationState
 
     tetromino match
       case _: J | _: L | _: S | _: T | _: Z => Offsets.jlstz(state)
@@ -110,7 +99,7 @@ object Rotation:
   type RotateFn   = Intersects => Option[Tetromino]
 
   object Offsets:
-    import Rotation.State.*
+    import RotationState.*
 
     type Offset
 
@@ -135,6 +124,6 @@ object Rotation:
       CounterClockwise -> Batch((-1, 0))
     ).toPoints
 
-    extension (offsets: Map[Rotation.State, Batch[(Int, Int)]])
-      def toPoints: Map[Rotation.State, Batch[Point]] =
+    extension (offsets: Map[RotationState, Batch[(Int, Int)]])
+      def toPoints: Map[RotationState, Batch[Point]] =
         offsets.view.mapValues(_.map(Point.tuple2ToPoint(_))).toMap

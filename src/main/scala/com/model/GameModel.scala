@@ -80,9 +80,9 @@ extension (state: GameState.InProgress)
       case KeyboardEvent.KeyDown(Key.DOWN_ARROW) =>
         state.moveTetrominoBy(Point(0, 1))
       case KeyboardEvent.KeyDown(Key.KEY_Z) =>
-        state.rotateTetromino(ctx, Rotation.Direction.CounterClockwise)
+        state.rotateTetromino(ctx, RotationDirection.CounterClockwise)
       case KeyboardEvent.KeyDown(Key.KEY_X) =>
-        state.rotateTetromino(ctx, Rotation.Direction.Clockwise)
+        state.rotateTetromino(ctx, RotationDirection.Clockwise)
       case _ => state
 
   def moveTetrominoBy(point: Point): GameState =
@@ -110,7 +110,7 @@ extension (state: GameState.InProgress)
   // borked
   def rotateTetromino(
       ctx: GameContext,
-      direction: Rotation.Direction
+      direction: RotationDirection
   ): GameState =
     state.tetromino
       .rotate(direction)(state.map.intersects)
