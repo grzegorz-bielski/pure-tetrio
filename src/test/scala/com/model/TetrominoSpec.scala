@@ -29,10 +29,10 @@ class TetrominoSpec extends FunSuite:
         center moveBy Point(1, 1)
       ),
       Tetromino.o -> NonEmptyBatch(
-        center,
-        center moveBy Point(0, 1),
-        center moveBy Point(1, 0),
-        center moveBy Point(1, 1)
+        // format: off
+        Point(9,1),   Point(9,2),
+        Point(10, 1), Point(10,2)
+        // format: on
       ),
       Tetromino.s -> NonEmptyBatch(
         center,
@@ -42,9 +42,9 @@ class TetrominoSpec extends FunSuite:
       ),
       Tetromino.t -> NonEmptyBatch(
         center,
-        center moveBy Point(1, 0),
+        center moveBy Point(-1, 0),
         center moveBy Point(0, 1),
-        center moveBy Point(1, 1)
+        center moveBy Point(1, 0)
       ),
       Tetromino.z -> NonEmptyBatch(
         center,

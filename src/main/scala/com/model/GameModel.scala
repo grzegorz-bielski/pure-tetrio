@@ -66,6 +66,10 @@ extension (state: GameState.Initial)
       side = ctx.dice.rollFromZero(6)
     )(Point(9, 1))
 
+    // val tetromino = Tetromino.o(Point(9, 1))
+
+    println(tetromino.positions)
+
     GameState.InProgress(state.map, tetromino, ctx.gameTime.running, Seconds(1))
 
 extension (state: GameState.InProgress)

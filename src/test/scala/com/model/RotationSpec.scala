@@ -41,27 +41,51 @@ class SRSSpec extends FunSuite:
 
     assertEquals(
       result,
+      // format: off
       NonEmptyBatch(
-        Point(9, 1),
-        Point(10, 1),
-        Point(9, 0),
-        Point(10, 0)
-      ) // 1 up
+        Point(9, 1), Point(10, 1),
+        Point(9, 0), Point(10, 0)
+      )
+      // format: on
     )
   }
 
-// test("rotates the tetromino clockwise without intersections") {
-//   val center = Point(9, 1)
+  test("rotates the tetromino clockwise with first offset") {
+    val atSpawn = Tetromino.o(center)
 
-//   val result = Rotation.rotate(
-//    Tetromino.o(center),
-//    Rotation.Direction.Clockwise
-//   )(const(false))
+    for {
+      t <- atSpawn.rotateClockwise(
+        NonEmptyBatch(
+          Point(9, 2),
+          Point(10, 2),
+          Point(9, 1),
+          Point(10, 1)
+        )
+      )
+      t <- t.rotateClockwise(
+        NonEmptyBatch(
+          Point(10, 2),
+          Point(10, 1),
+          Point(9, 2),
+          Point(9, 1)
+        )
+      )
+      t <- t.rotateClockwise(
+        NonEmptyBatch(
+          Point(10, 1),
+          Point(9, 1),
+          Point(10, 2),
+          Point(9, 2)
+        )
+      )
+      t <- t.rotateClockwise(
+        atSpawn.positions
+      )
+    } yield ()
+  }
 
-//   assertEquals(
-//     result.map(_.positions),
-//     Some(
-//       Tetromino.o(center).positions
-//     )
-//   )
-// }
+  extension (t: Tetromino)
+    def rotateClockwise(expected: => NonEmptyBatch[Point]) =
+      val next = t.rotate(RotationDirection.Clockwise)(const(false))
+      assertEquals(next.map(_.positions), Some(expected))
+      next

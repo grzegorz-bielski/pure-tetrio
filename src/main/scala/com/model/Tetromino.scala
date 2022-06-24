@@ -31,11 +31,7 @@ extension (t: Tetromino)
   def rotationCenter: Point =
     t.positions.head
   def rotate(direction: RotationDirection): RotateFn =
-    SRS.rotate(
-      t,
-      // t.withRotationState(RotationState.rotate(t.rotationState, direction)), ???
-       direction
-    )
+    SRS.rotate(t, direction)
 
   def withRotationState(state: RotationState): Tetromino =
     t match
@@ -65,7 +61,7 @@ object Tetromino:
   val l = at(List((-1, 0), (1, 0), (1, 1))) andThen (L(_, rotation))
   val o = at(List((0, 1), (1, 0), (1, 1))) andThen (O(_, rotation))
   val s = at(List((-1, 0), (0, 1), (1, 1))) andThen (S(_, rotation))
-  val t = at(List((1, 0), (0, 1), (1, 1))) andThen (T(_, rotation))
+  val t = at(List((-1, 0), (0, 1), (1, 0))) andThen (T(_, rotation))
   val z = at(List((-1, 1), (0, 1), (1, 0))) andThen (Z(_, rotation))
 
   // todo: unsafe
