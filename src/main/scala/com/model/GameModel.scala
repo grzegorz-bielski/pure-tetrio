@@ -6,11 +6,11 @@ import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.datatypes.Point
 import indigoextras.geometry.BoundingBox
+import indigoextras.geometry.LineSegment
+import indigoextras.geometry.LineSegment.apply
 import indigoextras.geometry.Vertex
 
-case class GameModel(
-    state: GameState
-):
+case class GameModel(state: GameState):
   def onFrameTick(ctx: GameContext): Outcome[GameModel] =
     Outcome(
       copy(
@@ -64,11 +64,7 @@ extension (state: GameState.Initial)
   def spawnTetromino(ctx: GameContext): GameState.InProgress =
     val tetromino = Tetromino.spawn(
       side = ctx.dice.rollFromZero(6)
-    )(Point(9, 1))
-
-    // val tetromino = Tetromino.o(Point(9, 1))
-
-    println(tetromino.positions)
+    )(Point(9, 0))
 
     GameState.InProgress(state.map, tetromino, ctx.gameTime.running, Seconds(1))
 
@@ -87,17 +83,38 @@ extension (state: GameState.InProgress)
         state.rotateTetromino(ctx, RotationDirection.CounterClockwise)
       case KeyboardEvent.KeyDown(Key.KEY_X) =>
         state.rotateTetromino(ctx, RotationDirection.Clockwise)
+      case KeyboardEvent.KeyDown(Key.SPACE) =>
+        state.moveDown
       case _ => state
 
-  def moveTetrominoBy(point: Point): GameState =
-    val movedTetromino = state.tetromino.moveBy(point)
+  def moveDown: GameState =
+    val start        = state.tetromino.lowestPoint
+    val end          = Point(start.x, state.map.quadTree.bounds.bottom.toInt)
+    val intersection = (start.y to end.y).find { y => 
+        state.map.intersects(
+          state.tetromino.moveBy(Point(0, y)).positions
+        )
+    }
 
-    val intersections = state.map.intersectsWith(movedTetromino.positions)
+    val movement = intersection.map(y => Point(0, y - 1)) getOrElse Point(0, end.y - start.y)
+    val debrisPositons =  state.tetromino.positions.map(_.moveBy(movement).toVertex).toBatch
+
+    GameState.Initial(
+      map = state.map.insertDebris(debrisPositons)
+    )
+
+  def moveTetrominoBy(
+      point: Point
+  ): GameState =
+    val movedTetromino = state.tetromino.moveBy(point)
+    val intersections  = state.map.intersectsWith(movedTetromino.positions)
     lazy val intersectedStack =
       intersections.exists {
         case _: MapElement.Floor | _: MapElement.Debris => true
         case _                                          => false
       }
+
+    // println("state.tetromino.positions" -> state.tetromino.positions)
 
     if intersections.isEmpty then
       state.copy(
@@ -106,12 +123,11 @@ extension (state: GameState.InProgress)
     else if intersectedStack then
       GameState.Initial(
         map = state.map.insertDebris(
-          state.tetromino.positions.map(Vertex.fromPoint(_)).toBatch
+          state.tetromino.positions.map(_.toVertex).toBatch
         )
       )
     else state
 
-  // borked
   def rotateTetromino(
       ctx: GameContext,
       direction: RotationDirection

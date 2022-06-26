@@ -58,24 +58,9 @@ object GameplayScene extends GameScene:
     )
 
   def drawGame(model: GameModel): SceneNode =
-    logger.debugOnce(model.state.map.mapElements.toString)
+    // logger.debugOnce(model.state.map.mapElements.toString)
 
     Group(
-      // Group(
-      //   drawMapElement(MapElement.Wall(Vertex(4, 0)), c),
-      //    drawMapElement(MapElement.Wall(Vertex(5, 0)), c),
-      //     drawMapElement(MapElement.Wall(Vertex(6, 0)), c),
-      //      drawMapElement(MapElement.Wall(Vertex(7, 0)), c),
-      //        drawMapElement(MapElement.Wall(Vertex(8, 0)), c),
-      //        drawMapElement(MapElement.Wall(Vertex(9, 0)), c),
-      //        drawMapElement(MapElement.Wall(Vertex(10, 0)), c),
-      //        drawMapElement(MapElement.Wall(Vertex(11, 0)), c),
-      //        drawMapElement(MapElement.Wall(Vertex(12, 0)), c),
-      //   drawMapElement(MapElement.Wall(Vertex(13, 0)), c)
-      // ),
-      // Group(
-      // ),
-
       Group(
         model.state.map.mapElements
           .map { e =>

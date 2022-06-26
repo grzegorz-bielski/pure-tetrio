@@ -22,7 +22,7 @@ private enum Tetromino extends TetrominoPiece:
   case Z(positions: Positions, rotationState: RotationState)
 import Tetromino.*
 
-type Intersects = NonEmptyBatch[Point] => Boolean
+type Intersects = Positions => Boolean
 type RotateFn   = Intersects => Option[Tetromino]
 
 extension (t: Tetromino)
@@ -32,6 +32,9 @@ extension (t: Tetromino)
     t.positions.head
   def rotate(direction: RotationDirection): RotateFn =
     SRS.rotate(t, direction)
+
+  def lowestPoint: Point =
+    t.positions.toBatch.toJSArray.maxBy(_.y)
 
   def withRotationState(state: RotationState): Tetromino =
     t match

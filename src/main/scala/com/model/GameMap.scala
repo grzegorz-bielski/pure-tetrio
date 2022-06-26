@@ -11,16 +11,23 @@ import scala.annotation.tailrec
 final case class GameMap(quadTree: QuadTree[MapElement]):
   def mapElements = quadTree.toBatch
 
-  def intersects(positions: NonEmptyBatch[Point]): Boolean = 
+  def intersects(position: Vertex): Boolean = 
+    !intersectsWith(position).isEmpty
+
+  def intersects(position: Point): Boolean = 
+    !intersectsWith(position).isEmpty
+
+  def intersects(positions: NonEmptyBatch[Point]): Boolean =
     !intersectsWith(positions).isEmpty
-    
+
+  def intersectsWith(position: Vertex): Option[MapElement] =
+    quadTree.fetchElementAt(position)
+
+  def intersectsWith(position: Point): Option[MapElement] =
+    intersectsWith(position.toVertex)
+
   def intersectsWith(positions: NonEmptyBatch[Point]): Batch[MapElement] =
-    positions.toBatch.flatMap { p =>
-      Batch.fromOption(
-        quadTree
-          .fetchElementAt(Vertex.fromPoint(p))
-      )
-    }
+    positions.toBatch.flatMap(p => Batch.fromOption(intersectsWith(p)))
 
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
@@ -69,7 +76,7 @@ extension (underlying: Vertex)
     val start = underlying
 
     @tailrec
-    def rec(
+    def go(
         last: Vertex,
         dest: Vertex,
         p: Vertex => Boolean,
@@ -77,14 +84,15 @@ extension (underlying: Vertex)
     ): Batch[Vertex] =
       if p(last) then acc
       else
-        val nextX: Double = if (last.x + 1 <= end.x) last.x + 1 else last.x
-        val nextY: Double = if (last.y + 1 <= end.y) last.y + 1 else last.y
-        val next: Vertex  = Vertex(nextX, nextY)
-        rec(next, dest, p, acc :+ next)
+        val next =
+          Vertex(
+            x = if (last.x + 1 <= end.x) last.x + 1 else last.x,
+            y = if (last.y + 1 <= end.y) last.y + 1 else last.y
+          )
+        go(next, dest, p, acc :+ next)
 
-    if lessThanOrEqual(start, end) then
-      rec(start, end, (gp: Vertex) => gp == end, Batch(start))
-    else rec(end, start, (gp: Vertex) => gp == start, Batch(end))
+    if lessThanOrEqual(start, end) then go(start, end, _ == end, Batch(start))
+    else go(end, start, _ == start, Batch(end))
 
   private def lessThanOrEqual(a: Vertex, b: Vertex): Boolean =
     a.x <= b.x && a.y <= b.y
