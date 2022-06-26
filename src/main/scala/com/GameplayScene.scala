@@ -63,11 +63,24 @@ object GameplayScene extends GameScene:
     Group(
       Group(
         model.state.map.mapElements
-          .map { e =>
-            drawMapElement(e, RGBA.Silver)
+          .map {
+            case e: MapElement.Debris =>
+              drawMapElement(e, e.color)
+            case e: (MapElement.Wall | MapElement.Floor) =>
+              drawMapElement(e, RGBA.Silver)
           }
       ),
-      drawTetromino(model.state)
+      drawTetromino(model.state),
+      // Shape.Circle(
+      //   Point(11, 21),
+      //   1,
+      //   Fill.Color(RGBA.Tomato)
+      // ),
+      //  Shape.Circle(
+      //   Point(16, 24),
+      //   1,
+      //   Fill.Color(RGBA.White)
+      // )
     )
 
   def drawTetromino(state: GameState) =
@@ -77,7 +90,7 @@ object GameplayScene extends GameScene:
           s.tetromino.positions.map { p =>
             Shape.Box(
               Rectangle(p.x.toInt, p.y.toInt, 1, 1),
-              Fill.Color(RGBA.Pink)
+              Fill.Color(s.tetromino.color)
             )
           }.toBatch
         )

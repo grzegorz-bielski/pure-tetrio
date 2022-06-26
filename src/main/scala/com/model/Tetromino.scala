@@ -12,14 +12,21 @@ sealed trait TetrominoPiece:
   def positions: Positions
   def rotationState: RotationState
 
-private enum Tetromino extends TetrominoPiece:
+private enum Tetromino(val color: RGBA) extends TetrominoPiece:
   case I(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Cyan)
   case J(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Blue)
   case L(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Orange)
   case O(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Yellow)
   case S(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Green)
   case T(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Indigo)
   case Z(positions: Positions, rotationState: RotationState)
+      extends Tetromino(RGBA.Red)
 import Tetromino.*
 
 type Intersects = Positions => Boolean
@@ -32,7 +39,6 @@ extension (t: Tetromino)
     t.positions.head
   def rotate(direction: RotationDirection): RotateFn =
     SRS.rotate(t, direction)
-
   def lowestPoint: Point =
     t.positions.toBatch.toJSArray.maxBy(_.y)
 

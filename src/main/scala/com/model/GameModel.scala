@@ -85,22 +85,26 @@ extension (state: GameState.InProgress)
         state.rotateTetromino(ctx, RotationDirection.Clockwise)
       case KeyboardEvent.KeyDown(Key.SPACE) =>
         state.moveDown
+      case KeyboardEvent.KeyDown(Key.KEY_R) =>
+        state.reset
       case _ => state
 
   def moveDown: GameState =
-    val start        = state.tetromino.lowestPoint
-    val end          = Point(start.x, state.map.quadTree.bounds.bottom.toInt)
-    val intersection = (start.y to end.y).find { y => 
-        state.map.intersects(
-          state.tetromino.moveBy(Point(0, y)).positions
-        )
+    val start = state.tetromino.lowestPoint
+    val end   = Point(start.x, state.map.quadTree.bounds.bottom.toInt)
+    val intersection = (start.y to end.y).find { y =>
+      state.map.intersects(
+        state.tetromino.moveBy(Point(0, y)).positions
+      )
     }
 
-    val movement = intersection.map(y => Point(0, y - 1)) getOrElse Point(0, end.y - start.y)
-    val debrisPositons =  state.tetromino.positions.map(_.moveBy(movement).toVertex).toBatch
+    val movement =
+      intersection.map(y => Point(0, y - 1)) getOrElse Point(0, end.y - start.y)
+    val debrisPositons =
+      state.tetromino.positions.map(_.moveBy(movement).toVertex).toBatch
 
     GameState.Initial(
-      map = state.map.insertDebris(debrisPositons)
+      map = state.map.insertDebris(debrisPositons, state.tetromino.color)
     )
 
   def moveTetrominoBy(
@@ -123,7 +127,8 @@ extension (state: GameState.InProgress)
     else if intersectedStack then
       GameState.Initial(
         map = state.map.insertDebris(
-          state.tetromino.positions.map(_.toVertex).toBatch
+          state.tetromino.positions.map(_.toVertex).toBatch,
+          state.tetromino.color
         )
       )
     else state
@@ -145,3 +150,7 @@ extension (state: GameState.InProgress)
         )
         .moveTetrominoBy(input + Point(0, 1))
     else state.moveTetrominoBy(input)
+
+  def reset = GameState.Initial(
+    map = state.map.reset
+  )

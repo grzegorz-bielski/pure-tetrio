@@ -3,12 +3,13 @@ package com.model
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.datatypes.Point
+import indigo.shared.datatypes.RGBA
 import indigoextras.geometry.*
 import indigoextras.trees.QuadTree
 
 import scala.annotation.tailrec
 
-final case class GameMap(quadTree: QuadTree[MapElement]):
+final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
   def mapElements = quadTree.toBatch
 
   def intersects(position: Vertex): Boolean = 
@@ -34,8 +35,8 @@ final case class GameMap(quadTree: QuadTree[MapElement]):
       quadTree = quadTree.insertElements(elements.map(e => e -> e.point)).prune
     )
 
-  def insertDebris(pos: Batch[Vertex]) =
-    insertElements(pos.map(MapElement.Debris(_)))
+  def insertDebris(pos: Batch[Vertex], color: RGBA) =
+    insertElements(pos.map(MapElement.Debris(_, color)))
 
   def insertWall(pos: Batch[Vertex]) =
     insertElements(pos.map(MapElement.Wall(_)))
@@ -43,11 +44,15 @@ final case class GameMap(quadTree: QuadTree[MapElement]):
   def insertFloor(pos: Batch[Vertex]) =
     insertElements(pos.map(MapElement.Floor(_)))
 
+  def reset: GameMap = 
+    GameMap.walled(grid)
+
 object GameMap:
   def apply(grid: BoundingBox): GameMap =
-    val gridSize = grid.size + grid.position + Vertex.one
+    // move the grid to center
+    val gridSize = grid.size + grid.position + Vertex.one 
 
-    GameMap(QuadTree.empty[MapElement](gridSize))
+    GameMap(grid, QuadTree.empty[MapElement](gridSize))
 
   def walled(grid: BoundingBox): GameMap =
     val map =
@@ -62,13 +67,13 @@ object GameMap:
 enum MapElement derives CanEqual:
   case Wall(point: Vertex)
   case Floor(point: Vertex)
-  case Debris(point: Vertex)
+  case Debris(point: Vertex, color: RGBA)
 
 extension (underlying: MapElement)
   def point = underlying match
     case MapElement.Floor(p)  => p
     case MapElement.Wall(p)   => p
-    case MapElement.Debris(p) => p
+    case MapElement.Debris(p, _) => p
 
 extension (underlying: Vertex)
   // adapted from snake demo
