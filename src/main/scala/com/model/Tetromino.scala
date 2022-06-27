@@ -12,7 +12,7 @@ sealed trait TetrominoPiece:
   def positions: Positions
   def rotationState: RotationState
 
-private enum Tetromino(val color: RGBA) extends TetrominoPiece:
+enum Tetromino(val color: RGBA) extends TetrominoPiece:
   case I(positions: Positions, rotationState: RotationState)
       extends Tetromino(RGBA.Cyan)
   case J(positions: Positions, rotationState: RotationState)

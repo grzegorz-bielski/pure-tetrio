@@ -49,41 +49,45 @@ object GameplayScene extends GameScene:
       viewModel: GameViewModel
   ): Outcome[SceneUpdateFragment] =
     Outcome(
-      SceneUpdateFragment.empty.addLayer(
+      SceneUpdateFragment.empty.addLayers(
         Layer(
           BindingKey("game"),
           drawGame(model)
-        )
+        ),
+        Layer(
+          BindingKey("pause"),
+          drawPauseScreen(model.state)
+        ).withMagnification(1)
       )
     )
 
   def drawGame(model: GameModel): SceneNode =
-    // logger.debugOnce(model.state.map.mapElements.toString)
-
     Group(
-      Group(
-        model.state.map.mapElements
-          .map {
-            case e: MapElement.Debris =>
-              drawMapElement(e, e.color)
-            case e: (MapElement.Wall | MapElement.Floor) =>
-              drawMapElement(e, RGBA.Silver)
-          }
-      ),
-      drawTetromino(model.state),
-      // Shape.Circle(
-      //   Point(11, 21),
-      //   1,
-      //   Fill.Color(RGBA.Tomato)
-      // ),
-      //  Shape.Circle(
-      //   Point(16, 24),
-      //   1,
-      //   Fill.Color(RGBA.White)
-      // )
+      drawMap(model.state),
+      drawTetromino(model.state)
     )
 
-  def drawTetromino(state: GameState) =
+  // todo: separate scene ?
+  def drawPauseScreen(state: GameState): SceneNode =
+    state match
+      case s: GameState.Paused =>
+        TextBox("Paused")
+          .moveTo(state.map.grid.position.toPoint)
+          .withColor(RGBA.White)
+          .withFontSize(Pixels(30))
+      case _ => Group.empty
+
+  def drawMap(state: GameState): SceneNode =
+    Group(
+      state.map.mapElements.map {
+        case e: MapElement.Debris =>
+          drawMapElement(e, e.color)
+        case e: (MapElement.Wall | MapElement.Floor) =>
+          drawMapElement(e, RGBA.Silver)
+      }
+    )
+
+  def drawTetromino(state: GameState): SceneNode =
     state match
       case s: GameState.InProgress =>
         Group(
@@ -94,8 +98,8 @@ object GameplayScene extends GameScene:
             )
           }.toBatch
         )
-
-      case _ => Group.empty
+      case s: GameState.Paused => drawTetromino(s.pausedState)
+      case _                   => Group.empty
 
   def drawMapElement(e: MapElement, color: RGBA) =
     Shape.Box(
