@@ -151,6 +151,8 @@ extension (state: GameState.InProgress)
   ): GameState =
     val movedTetromino = state.tetromino.moveBy(point)
     val intersections  = state.map.intersectsWith(movedTetromino.positions)
+
+    lazy val movesVertically = point.x == 0
     lazy val intersectedStack =
       intersections.exists {
         case _: MapElement.Floor | _: MapElement.Debris => true
@@ -158,10 +160,8 @@ extension (state: GameState.InProgress)
       }
 
     if intersections.isEmpty then
-      state.copy(
-        tetromino = movedTetromino
-      )
-    else if intersectedStack then
+      state.copy(tetromino = movedTetromino)
+    else if movesVertically && intersectedStack then
       GameState.Initial(
         map = state.map.insertDebris(
           state.tetromino.positions.map(_.toVertex).toBatch,
