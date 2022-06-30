@@ -129,16 +129,15 @@ extension (state: GameState.InProgress)
       case _ => state
 
   def moveDown: GameState =
-    val start = state.tetromino.lowestPoint
-    val end   = Point(start.x, state.map.quadTree.bounds.bottom.toInt)
-    val intersection = (start.y to end.y).find { y =>
+    val lineBeforeFloor = state.map.bottom - 1
+    val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
+
+    val intersection = (0 to linesToBottom).find { y =>
       state.map.intersects(
         state.tetromino.moveBy(Point(0, y)).positions
       )
     }
-
-    val movement =
-      intersection.map(y => Point(0, y - 1)) getOrElse Point(0, end.y - start.y)
+    val movement = Point(0, intersection.map(_ - 1) getOrElse linesToBottom)
     val debrisPositons =
       state.tetromino.positions.map(_.moveBy(movement).toVertex).toBatch
 
@@ -186,7 +185,8 @@ extension (state: GameState.InProgress)
           lastUpdated = ctx.gameTime.running
         )
         .moveTetrominoBy(input + Point(0, 1))
-    else state.moveTetrominoBy(input)
+    else if input != Point.zero then state.moveTetrominoBy(input)
+    else state
 
   def pause: GameState =
     GameState.Paused(pausedState = state)

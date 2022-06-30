@@ -10,12 +10,14 @@ import indigoextras.trees.QuadTree
 import scala.annotation.tailrec
 
 final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
-  def mapElements = quadTree.toBatch
+  lazy val mapElements = quadTree.toBatch
 
-  def intersects(position: Vertex): Boolean = 
+  lazy val bottom = (grid.height + grid.position.y).toInt
+
+  def intersects(position: Vertex): Boolean =
     !intersectsWith(position).isEmpty
 
-  def intersects(position: Point): Boolean = 
+  def intersects(position: Point): Boolean =
     !intersectsWith(position).isEmpty
 
   def intersects(positions: NonEmptyBatch[Point]): Boolean =
@@ -44,13 +46,16 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
   def insertFloor(pos: Batch[Vertex]) =
     insertElements(pos.map(MapElement.Floor(_)))
 
-  def reset: GameMap = 
+  def walls  = mapElements.collect { case e: MapElement.Wall => e }
+  def debris = mapElements.collect { case e: MapElement.Debris => e }
+
+  def reset: GameMap =
     GameMap.walled(grid)
 
 object GameMap:
   def apply(grid: BoundingBox): GameMap =
     // move the grid to center
-    val gridSize = grid.size + grid.position + Vertex.one 
+    val gridSize = grid.size + grid.position + Vertex.one
 
     GameMap(grid, QuadTree.empty[MapElement](gridSize))
 
@@ -71,8 +76,8 @@ enum MapElement derives CanEqual:
 
 extension (underlying: MapElement)
   def point = underlying match
-    case MapElement.Floor(p)  => p
-    case MapElement.Wall(p)   => p
+    case MapElement.Floor(p)     => p
+    case MapElement.Wall(p)      => p
     case MapElement.Debris(p, _) => p
 
 extension (underlying: Vertex)
