@@ -5,26 +5,6 @@ import indigo.*
 import indigo.shared.collections.Batch
 import indigo.shared.collections.Batch.Unapply.*
 
-// https://www.youtube.com/watch?v=yIpk5TJ_uaI&t=1091s
-// https://github.com/JohnnyTurbo/LD43/blob/master/Assets/Scripts/PieceController.cs
-// tetromino rotation
-// 1. calc new rotation index (?) - might not be needed
-// 2. relativePos = originPos - pos of center tile
-// 3. relativePos * rotationMatrix = newRelativePos (dot product) [for each pos]
-// clockwise
-//  (0, 1)
-//  (-1, 0)
-// counterclockwise
-// (0, -1)
-// (1, 0)
-// 5. convert to global coords
-// newPos = newRelativePos + pos of center tile
-// 4. apply offsets
-// prev offset - offset
-//
-// - get first passing
-// - fail if it intersects with sth
-
 /** SRS rotation system https://harddrop.com/wiki/SRS
   */
 object SRS:
@@ -49,9 +29,11 @@ object SRS:
     ))
 
   lazy val clockwiseBaseRotation =
-    baseRotation(Matrix2((0, 1), (-1, 0)))
-  lazy val counterClockwiseBaseRotation =
+    // baseRotation(Matrix2((0, 1), (-1, 0)))
     baseRotation(Matrix2((0, -1), (1, 0)))
+  lazy val counterClockwiseBaseRotation =
+    // baseRotation(Matrix2((0, -1), (1, 0)))
+     baseRotation(Matrix2((0, 1), (-1, 0)))
 
   private def baseRotation(rotationMatrix: Matrix2)(
       tetromino: Tetromino
@@ -117,9 +99,14 @@ object SRS:
     ).toPoints
 
     val o = Map(
-      Spawn            -> Batch((0, 0)),
-      Clockwise        -> Batch((0, -1)),
-      InvertedSpawn    -> Batch((-1, -1)),
+      // Spawn            -> Batch((0, 0)),
+      // Clockwise        -> Batch((0, -1)),
+      // InvertedSpawn    -> Batch((-1, -1)),
+      // CounterClockwise -> Batch((-1, 0))
+
+     Spawn            -> Batch((0, 0)),
+      Clockwise        -> Batch((0, 1)),
+      InvertedSpawn    -> Batch((-1, 1)),
       CounterClockwise -> Batch((-1, 0))
     ).toPoints
 

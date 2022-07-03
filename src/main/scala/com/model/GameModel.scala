@@ -27,7 +27,7 @@ final case class GameModel(state: GameState):
 end GameModel
 
 object GameModel:
-  val spawnPoint = Point(9, 0)
+  val spawnPoint = Point(9, 1)
   def initial(grid: BoundingBox) =
     GameModel(
       state = GameState.Initial(GameMap.walled(grid), 0, Batch.empty[Int])

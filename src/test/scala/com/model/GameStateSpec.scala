@@ -11,7 +11,6 @@ class GameStateSpec extends FunSuite:
     val testTable = Batch(
       // format: off
       gameInProgress(Tetromino.o(Point(9, 1))) -> Batch(Vertex(10, 22), Vertex(10, 21), Vertex(9, 22), Vertex(9, 21)),
-
       // format: on
     )
 

@@ -65,14 +65,15 @@ extension (t: Tetromino)
 
 object Tetromino:
   type DiceValue = Int
+  // todo: check initial spawn states
 
   val i = at(List((-1, 0), (1, 0), (2, 0))) andThen (I(_, rotation))
-  val j = at(List((-1, 1), (-1, 0), (1, 0))) andThen (J(_, rotation))
-  val l = at(List((-1, 0), (1, 0), (1, 1))) andThen (L(_, rotation))
-  val o = at(List((0, 1), (1, 0), (1, 1))) andThen (O(_, rotation))
-  val s = at(List((-1, 0), (0, 1), (1, 1))) andThen (S(_, rotation))
-  val t = at(List((-1, 0), (0, 1), (1, 0))) andThen (T(_, rotation))
-  val z = at(List((-1, 1), (0, 1), (1, 0))) andThen (Z(_, rotation))
+  val j = at(List((-1, -1), (-1, 0), (1, 0))) andThen (J(_, rotation))
+  val l = at(List((-1, 0), (1, 0), (1, -1))) andThen (L(_, rotation))
+  val o = at(List((0, -1), (1, 0), (1, -1))) andThen (O(_, rotation))
+  val s = at(List((-1, 0), (0, -1), (1, -1))) andThen (S(_, rotation))
+  val t = at(List((-1, 0), (0, -1), (1, 0))) andThen (T(_, rotation))
+  val z = at(List((-1, -1), (0, -1), (1, 0))) andThen (Z(_, rotation))
 
   // todo: unsafe, try using bounded int
   def spawn(side: DiceValue): Point => Tetromino =

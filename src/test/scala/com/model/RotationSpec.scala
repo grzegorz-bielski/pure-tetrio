@@ -44,7 +44,7 @@ class SRSSpec extends FunSuite:
       // format: off
       NonEmptyBatch(
         Point(9, 1), Point(10, 1),
-        Point(9, 0), Point(10, 0)
+        Point(9, 2), Point(10, 2)
       )
       // format: on
     )
@@ -56,17 +56,17 @@ class SRSSpec extends FunSuite:
     for {
       t <- atSpawn.rotateClockwise(
         NonEmptyBatch(
-          Point(9, 2),
-          Point(10, 2),
+          Point(9, 0),
+          Point(10, 0),
           Point(9, 1),
           Point(10, 1)
         )
       )
       t <- t.rotateClockwise(
         NonEmptyBatch(
-          Point(10, 2),
+          Point(10, 0),
           Point(10, 1),
-          Point(9, 2),
+          Point(9, 0),
           Point(9, 1)
         )
       )
@@ -74,8 +74,8 @@ class SRSSpec extends FunSuite:
         NonEmptyBatch(
           Point(10, 1),
           Point(9, 1),
-          Point(10, 2),
-          Point(9, 2)
+          Point(10, 0),
+          Point(9, 0)
         )
       )
       t <- t.rotateClockwise(
