@@ -29,35 +29,28 @@ import indigo.shared.collections.Batch.Unapply.*
   */
 object SRS:
   def rotate(tetromino: Tetromino, direction: RotationDirection): RotateFn =
-    val states = (tetromino.rotationState, RotationState.rotate(tetromino.rotationState, direction))
-    val (prevRotationState, nextRotationState) = states
-
-    // println("states" -> states)
-
-    val positionsFn =
+    val states = (
+      tetromino.rotationState,
+      RotationState.rotate(tetromino.rotationState, direction)
+    )
+    val (_, nextRotationState) = states
+    val offsets                = tetrominoOffsets(tetromino, states)
+    val rotatedPositions =
       direction match
         case RotationDirection.Clockwise =>
-          applyOffsets(
-            clockwiseBaseRotation(tetromino),
-            offsets(tetromino, states)
-          )
+          clockwiseBaseRotation(tetromino)
         case RotationDirection.CounterClockwise =>
-          applyOffsets(
-            counterClockwiseBaseRotation(tetromino),
-            offsets(
-              tetromino, states
-            )
-          )
+          counterClockwiseBaseRotation(tetromino)
 
-    positionsFn andThen (_.map(
+    applyOffsets(offsets, rotatedPositions) andThen (_.map(
       tetromino
         .withPositions(_)
         .withRotationState(nextRotationState)
     ))
 
-  val clockwiseBaseRotation =
+  lazy val clockwiseBaseRotation =
     baseRotation(Matrix2((0, 1), (-1, 0)))
-  val counterClockwiseBaseRotation =
+  lazy val counterClockwiseBaseRotation =
     baseRotation(Matrix2((0, -1), (1, 0)))
 
   private def baseRotation(rotationMatrix: Matrix2)(
@@ -71,8 +64,8 @@ object SRS:
   }
 
   def applyOffsets(
-      rotatedPositions: NonEmptyBatch[Point],
-      offsets: Batch[(Point, Point)]
+      offsets: Batch[(Point, Point)],
+      rotatedPositions: NonEmptyBatch[Point]
   )(intersects: Intersects) =
 
     @annotation.tailrec
@@ -81,27 +74,25 @@ object SRS:
     ): Option[NonEmptyBatch[Point]] =
       offsets match
         case (prevOffset, nextOffset) :: xs =>
-          // println("prevOffset" -> prevOffset) 
-          // println("nextOffset" -> nextOffset)
-          val endOffset = prevOffset - nextOffset /// ??
-          // println("endOffset" -> endOffset)
-          val withOffsets = rotatedPositions.map(_ + endOffset) 
-          // println("withOffsets" -> withOffsets)
+          val endOffset   = prevOffset - nextOffset
+          val withOffsets = rotatedPositions.map(_ + endOffset)
           if intersects(withOffsets) then findMatchingOffset(xs)
           else Some(withOffsets)
         case _ => None
 
     findMatchingOffset(offsets)
 
-  // val kek = ("kek", 1).map
-
-  def offsets(tetromino: Tetromino, states: (RotationState, RotationState)): Batch[(Point, Point)] =
+  def tetrominoOffsets(
+      tetromino: Tetromino,
+      states: (RotationState, RotationState)
+  ): Batch[(Point, Point)] =
     import Tetromino.*
 
     tetromino match
-      case _: J | _: L | _: S | _: T | _: Z => Offsets.jlstz(states._1) zip Offsets.jlstz(states._2)
-      case _: I                             => Offsets.i(states._1) zip Offsets.i(states._2)
-      case _: O                             => Offsets.o(states._1) zip  Offsets.o(states._2)
+      case _: J | _: L | _: S | _: T | _: Z =>
+        Offsets.jlstz(states._1) zip Offsets.jlstz(states._2)
+      case _: I => Offsets.i(states._1) zip Offsets.i(states._2)
+      case _: O => Offsets.o(states._1) zip Offsets.o(states._2)
 
   type Intersects = NonEmptyBatch[Point] => Boolean
   type RotateFn   = Intersects => Option[Tetromino]

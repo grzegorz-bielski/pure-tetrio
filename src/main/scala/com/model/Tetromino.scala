@@ -4,7 +4,6 @@ import cats.syntax.apply
 import com.model.*
 import indigo.*
 import indigo.shared.collections.Batch
-import indigo.shared.collections.Batch.Unapply._
 
 type Positions = NonEmptyBatch[Point]
 
@@ -39,6 +38,8 @@ extension (t: Tetromino)
     t.positions.head
   def rotate(direction: RotationDirection): RotateFn =
     SRS.rotate(t, direction)
+  def highestPoint: Point = 
+    t.positions.toBatch.toJSArray.minBy(_.y)
   def lowestPoint: Point =
     t.positions.toBatch.toJSArray.maxBy(_.y)
 
@@ -73,7 +74,7 @@ object Tetromino:
   val t = at(List((-1, 0), (0, 1), (1, 0))) andThen (T(_, rotation))
   val z = at(List((-1, 1), (0, 1), (1, 0))) andThen (Z(_, rotation))
 
-  // todo: unsafe
+  // todo: unsafe, try using bounded int
   def spawn(side: DiceValue): Point => Tetromino =
     side match
       case 0 => i

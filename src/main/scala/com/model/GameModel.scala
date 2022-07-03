@@ -10,7 +10,7 @@ import indigoextras.geometry.LineSegment
 import indigoextras.geometry.LineSegment.apply
 import indigoextras.geometry.Vertex
 
-case class GameModel(state: GameState):
+final case class GameModel(state: GameState):
   def onFrameTick(ctx: GameContext): Outcome[GameModel] =
     Outcome(
       copy(
@@ -30,22 +30,28 @@ object GameModel:
   val spawnPoint = Point(9, 0)
   def initial(grid: BoundingBox) =
     GameModel(
-      state = GameState.Initial(GameMap.walled(grid))
+      state = GameState.Initial(GameMap.walled(grid), 0, Batch.empty[Int])
     )
 
 enum GameState:
   case Initial(
-      map: GameMap
+      map: GameMap,
+      score: Int,
+      fullLines: Batch[Int]
   )
   case InProgress(
       map: GameMap,
       tetromino: Tetromino,
       lastUpdated: Seconds,
-      fallDelay: Seconds
+      fallDelay: Seconds,
+      score: Int
   )
-
   case Paused(
       pausedState: GameState
+  )
+
+  case GameOver(
+      finishedState: GameState
   )
 
 extension (state: GameState)
@@ -54,19 +60,29 @@ extension (state: GameState)
       case s: GameState.Initial    => s.map
       case s: GameState.InProgress => s.map
       case s: GameState.Paused     => s.pausedState.map
+      case s: GameState.GameOver   => s.finishedState.map
+
+  def score: Int =
+    state match
+      case s: GameState.Initial    => s.score
+      case s: GameState.InProgress => s.score
+      case s: GameState.Paused     => s.pausedState.score
+      case s: GameState.GameOver   => s.finishedState.score
 
   def onFrameTick(ctx: GameContext): GameState =
     state match
       case s: GameState.Initial =>
-        s.spawnTetromino(ctx, None)
+        s.removeFullLines // add score + anmations
+          .spawnTetromino(ctx, None)
       case s: GameState.InProgress =>
         s.autoTetrominoDescent(ctx, input = Point.zero)
-      case s: GameState.Paused => s
+      case s => s
 
   def onInput(ctx: GameContext, e: KeyboardEvent): GameState =
     state match
       case s: GameState.InProgress => s.onInput(ctx, e)
       case s: GameState.Paused     => s.onInput(ctx, e)
+      case s: GameState.GameOver   => s.onInput(ctx, e)
       case _                       => state
 
   def spawnTetromino(
@@ -79,7 +95,33 @@ extension (state: GameState)
       )(GameModel.spawnPoint)
     }
 
-    GameState.InProgress(state.map, tetromino, ctx.gameTime.running, Seconds(1))
+    GameState.InProgress(
+      state.map,
+      tetromino,
+      ctx.gameTime.running,
+      Seconds(1),
+      state.score
+    )
+
+  def reset(ctx: GameContext, t: Option[Tetromino]): GameState =
+    GameState
+      .Initial(
+        map = state.map.reset,
+        score = state.score,
+        fullLines = Batch.empty[Int]
+      )
+      .spawnTetromino(ctx, t)
+
+extension (state: GameState.Initial)
+  def removeFullLines: GameState = state.copy(
+    map = state.map.removeFullLines(state.fullLines)
+  )
+
+extension (state: GameState.GameOver)
+  def onInput(ctx: GameContext, e: KeyboardEvent): GameState =
+    e match
+      case KeyboardEvent.KeyDown(Key.KEY_R) => state.reset(ctx, None)
+      case _                                => state
 
 extension (state: GameState.Paused)
   def onInput(ctx: GameContext, e: KeyboardEvent): GameState =
@@ -90,6 +132,7 @@ extension (state: GameState.Paused)
   def continue: GameState = state.pausedState
 
 extension (state: GameState.InProgress)
+  // todo: move it to gameplay scene?
   def onInput(ctx: GameContext, e: KeyboardEvent): GameState =
     // todo: smooth movement on long press
     e match
@@ -129,43 +172,49 @@ extension (state: GameState.InProgress)
       case _ => state
 
   def moveDown: GameState =
-    val lineBeforeFloor = state.map.bottom - 1
+    val lineBeforeFloor = state.map.bottomInternal
     val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
 
     val intersection = (0 to linesToBottom).find { y =>
-      state.map.intersects(
-        state.tetromino.moveBy(Point(0, y)).positions
-      )
+      state.map.intersects(state.tetromino.moveBy(Point(0, y)).positions)
     }
     val movement = Point(0, intersection.map(_ - 1) getOrElse linesToBottom)
-    val debrisPositons =
-      state.tetromino.positions.map(_.moveBy(movement).toVertex).toBatch
+    val movedTetromino = state.tetromino.moveBy(movement)
+    val sticksOutOfTheMap =
+      movedTetromino.positions.exists(_.y < state.map.topInternal)
 
-    GameState.Initial(
-      map = state.map.insertDebris(debrisPositons, state.tetromino.color)
-    )
+    if sticksOutOfTheMap then GameState.GameOver(finishedState = state)
+    else
+      val nextMap = state.map.insertTetromino(movedTetromino)
+      GameState.Initial(
+        map = nextMap,
+        score = state.score,
+        fullLines = nextMap.fullLinesWith(movedTetromino)
+      )
 
-  def moveTetrominoBy(
-      point: Point
-  ): GameState =
+  def moveTetrominoBy(point: Point): GameState =
     val movedTetromino = state.tetromino.moveBy(point)
     val intersections  = state.map.intersectsWith(movedTetromino.positions)
 
     lazy val movesVertically = point.x == 0
-    lazy val intersectedStack =
-      intersections.exists {
-        case _: MapElement.Floor | _: MapElement.Debris => true
-        case _                                          => false
-      }
+    lazy val noIntersections = intersections.isEmpty
+    lazy val stackIntersections = intersections.collect {
+      case e: MapElement.Floor  => e.point
+      case e: MapElement.Debris => e.point
+    }
 
-    if intersections.isEmpty then
-      state.copy(tetromino = movedTetromino)
-    else if movesVertically && intersectedStack then
+    lazy val intersectedStack = movesVertically && !stackIntersections.isEmpty
+    lazy val sticksOutOfTheMap =
+      movesVertically && movedTetromino.positions.exists(_.y < state.map.topInternal)
+
+    if noIntersections then state.copy(tetromino = movedTetromino)
+    else if sticksOutOfTheMap then GameState.GameOver(finishedState = state)
+    else if intersectedStack then
+      val nextMap = state.map.insertTetromino(state.tetromino)
       GameState.Initial(
-        map = state.map.insertDebris(
-          state.tetromino.positions.map(_.toVertex).toBatch,
-          state.tetromino.color
-        )
+        map = nextMap,
+        score = state.score,
+        fullLines = nextMap.fullLinesWith(state.tetromino)
       )
     else state
 
@@ -190,6 +239,3 @@ extension (state: GameState.InProgress)
 
   def pause: GameState =
     GameState.Paused(pausedState = state)
-
-  def reset(ctx: GameContext, t: Option[Tetromino]): GameState =
-    GameState.Initial(map = state.map.reset).spawnTetromino(ctx, t)

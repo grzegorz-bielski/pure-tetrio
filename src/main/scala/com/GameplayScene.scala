@@ -55,8 +55,8 @@ object GameplayScene extends GameScene:
           drawGame(model)
         ),
         Layer(
-          BindingKey("pause"),
-          drawPauseScreen(model.state)
+          BindingKey("overlay"),
+          drawOverlay(model.state)
         ).withMagnification(1)
       )
     )
@@ -68,14 +68,19 @@ object GameplayScene extends GameScene:
     )
 
   // todo: separate scene ?
-  def drawPauseScreen(state: GameState): SceneNode =
+  def drawOverlay(state: GameState): SceneNode =
+    val p = state.map.grid.position.toPoint
+
     state match
-      case s: GameState.Paused =>
-        TextBox("Paused")
-          .moveTo(state.map.grid.position.toPoint)
-          .withColor(RGBA.White)
-          .withFontSize(Pixels(30))
-      case _ => Group.empty
+      case s: GameState.Paused   => drawTextBox("Paused", p)
+      case s: GameState.GameOver => drawTextBox("Game Over", p)
+      case _                     => Group.empty
+
+  def drawTextBox(text: String, p: Point): SceneNode =
+    TextBox(text)
+      .moveTo(p)
+      .withColor(RGBA.White)
+      .withFontSize(Pixels(30))
 
   def drawMap(state: GameState): SceneNode =
     Group(

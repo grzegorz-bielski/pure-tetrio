@@ -60,7 +60,8 @@ lazy val indigoTetris = project
         "Run the fully optimised game (requires Electron)"
       ),
       UsefulTask("d", "buildGameFull", "Build the fully optimised web version"),
-      UsefulTask("e", "code", "Launch VSCode")
+      UsefulTask("e", "code", "Launch VSCode"),
+      UsefulTask("dev", "~ fastOptJS;indigoBuild", "Dev mode watcher")
     ),
     logoColor        := scala.Console.MAGENTA,
     aliasColor       := scala.Console.YELLOW,

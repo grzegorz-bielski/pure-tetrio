@@ -11,8 +11,16 @@ import scala.annotation.tailrec
 
 final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
   lazy val mapElements = quadTree.toBatch
+  lazy val walls       = mapElements.collect { case e: MapElement.Wall => e }
+  lazy val debris      = mapElements.collect { case e: MapElement.Debris => e }
 
-  lazy val bottom = (grid.height + grid.position.y).toInt
+  // map size without walls
+  lazy val bottomInternal: Int = grid.bottom.toInt - 1
+  lazy val topInternal: Int    = grid.top.toInt + 1
+  lazy val leftInternal: Int   = grid.left.toInt + 1
+  lazy val rigthInternal: Int  = grid.right.toInt - 1
+
+  lazy val xs = leftInternal to rigthInternal
 
   def intersects(position: Vertex): Boolean =
     !intersectsWith(position).isEmpty
@@ -37,17 +45,46 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
       quadTree = quadTree.insertElements(elements.map(e => e -> e.point)).prune
     )
 
-  def insertDebris(pos: Batch[Vertex], color: RGBA) =
+  def insertTetromino(t: Tetromino): GameMap =
+    insertDebris(t.positions.map(_.toVertex).toBatch, t.color)
+
+  def insertDebris(pos: Batch[Vertex], color: RGBA): GameMap =
     insertElements(pos.map(MapElement.Debris(_, color)))
 
-  def insertWall(pos: Batch[Vertex]) =
+  def insertWall(pos: Batch[Vertex]): GameMap =
     insertElements(pos.map(MapElement.Wall(_)))
 
-  def insertFloor(pos: Batch[Vertex]) =
+  def insertFloor(pos: Batch[Vertex]): GameMap =
     insertElements(pos.map(MapElement.Floor(_)))
 
-  def walls  = mapElements.collect { case e: MapElement.Wall => e }
-  def debris = mapElements.collect { case e: MapElement.Debris => e }
+  def removeFullLines(ys: Batch[Int]): GameMap =
+    ys.toJSArray.minOption
+      .map { yMin =>
+        val withRemovedLines = ys
+          .foldLeft(quadTree) { (acc, y) =>
+            xs.foldLeft(acc) { (acc, x) =>
+              acc.removeElement(Vertex(x.toDouble, y.toDouble))
+            }
+          }
+
+        val withMovedDebris = withRemovedLines.update {
+          case e: MapElement.Debris if e.point.y <= yMin =>
+            val nextPoint = e.point.moveBy(Vertex(0, ys.size))
+            e.copy(point = nextPoint) -> nextPoint
+        }
+
+        copy(
+          quadTree = withMovedDebris.prune
+        )
+      }
+      .getOrElse(this)
+
+  def fullLinesWith(t: Tetromino): Batch[Int] =
+    val ys = t.highestPoint.y to t.lowestPoint.y
+
+    ys.foldLeft(Batch.empty[Int]) { (acc, y) =>
+      if xs.map(Point(_, y)) forall intersects then acc :+ y else acc
+    }
 
   def reset: GameMap =
     GameMap.walled(grid)
@@ -60,14 +97,11 @@ object GameMap:
     GameMap(grid, QuadTree.empty[MapElement](gridSize))
 
   def walled(grid: BoundingBox): GameMap =
-    val map =
-      GameMap(grid)
-        // .insertWalls(grid.topLeft --> grid.topRight)
-        .insertWall(grid.topRight --> grid.bottomRight)
-        .insertFloor(grid.bottomLeft --> grid.bottomRight)
-        .insertWall(grid.topLeft --> grid.bottomLeft)
-
-    map
+    GameMap(grid)
+      // .insertWalls(grid.topLeft --> grid.topRight) // no top wall
+      .insertWall(grid.topRight --> grid.bottomRight)
+      .insertFloor(grid.bottomLeft --> grid.bottomRight)
+      .insertWall(grid.topLeft --> grid.bottomLeft)
 
 enum MapElement derives CanEqual:
   case Wall(point: Vertex)
@@ -79,6 +113,12 @@ extension (underlying: MapElement)
     case MapElement.Floor(p)     => p
     case MapElement.Wall(p)      => p
     case MapElement.Debris(p, _) => p
+
+extension [A](underlying: QuadTree[A])
+  def update[B >: A](fn: PartialFunction[A, (B, Vertex)]): QuadTree[B] =
+    QuadTree(
+      underlying.toBatchWithPosition.map((v, a) => fn.applyOrElse(a, (_, v)))
+    )
 
 extension (underlying: Vertex)
   // adapted from snake demo
