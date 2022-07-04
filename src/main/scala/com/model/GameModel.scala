@@ -91,7 +91,7 @@ extension (state: GameState)
   ): GameState.InProgress =
     val tetromino = t.getOrElse {
       Tetromino.spawn(
-        side = ctx.dice.rollFromZero(6)
+        side = ctx.dice.rollFromZero(7)
       )(GameModel.spawnPoint)
     }
 
@@ -178,9 +178,11 @@ extension (state: GameState.InProgress)
     val intersection = (0 to linesToBottom).find { y =>
       state.map.intersects(state.tetromino.moveBy(Point(0, y)).positions)
     }
+ 
     val movement = Point(0, intersection.map(_ - 1) getOrElse linesToBottom)
     val movedTetromino = state.tetromino.moveBy(movement)
     val sticksOutOfTheMap =
+       // movement decreased by 1 on intersections, so it can't be `<=`
       movedTetromino.positions.exists(_.y < state.map.topInternal)
 
     if sticksOutOfTheMap then GameState.GameOver(finishedState = state)
@@ -196,8 +198,8 @@ extension (state: GameState.InProgress)
     val movedTetromino = state.tetromino.moveBy(point)
     val intersections  = state.map.intersectsWith(movedTetromino.positions)
 
-    lazy val movesVertically = point.x == 0
-    lazy val noIntersections = intersections.isEmpty
+    val movesVertically = point.x == 0
+    val noIntersections = intersections.isEmpty
     lazy val stackIntersections = intersections.collect {
       case e: MapElement.Floor  => e.point
       case e: MapElement.Debris => e.point
@@ -205,10 +207,9 @@ extension (state: GameState.InProgress)
 
     lazy val intersectedStack = movesVertically && !stackIntersections.isEmpty
     lazy val sticksOutOfTheMap =
-      movesVertically && movedTetromino.positions.exists(_.y < state.map.topInternal)
+      intersectedStack && movedTetromino.positions.exists(_.y <= state.map.topInternal)
 
-    if noIntersections then state.copy(tetromino = movedTetromino)
-    else if sticksOutOfTheMap then GameState.GameOver(finishedState = state)
+    if sticksOutOfTheMap then GameState.GameOver(finishedState = state)
     else if intersectedStack then
       val nextMap = state.map.insertTetromino(state.tetromino)
       GameState.Initial(
@@ -216,6 +217,7 @@ extension (state: GameState.InProgress)
         score = state.score,
         fullLines = nextMap.fullLinesWith(state.tetromino)
       )
+    else if noIntersections then state.copy(tetromino = movedTetromino)
     else state
 
   def rotateTetromino(

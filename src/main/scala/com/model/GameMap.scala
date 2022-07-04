@@ -16,7 +16,7 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
 
   // map size without walls
   lazy val bottomInternal: Int = grid.bottom.toInt - 1
-  lazy val topInternal: Int    = grid.top.toInt + 1
+  lazy val topInternal: Int    = grid.top.toInt // no wall
   lazy val leftInternal: Int   = grid.left.toInt + 1
   lazy val rigthInternal: Int  = grid.right.toInt - 1
 
