@@ -51,7 +51,7 @@ class GameMapSpec extends FunSuite:
           Vertex(5, 22),
           Vertex(5, 21)
         ),
-        RGBA.Tomato
+        0
       )
       .insertTetromino(tetromino)
       .fullLinesWith(tetromino)

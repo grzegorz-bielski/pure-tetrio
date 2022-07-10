@@ -46,10 +46,10 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
     )
 
   def insertTetromino(t: Tetromino): GameMap =
-    insertDebris(t.positions.map(_.toVertex).toBatch, t.color)
+    insertDebris(t.positions.map(_.toVertex).toBatch, t.extractOrdinal)
 
-  def insertDebris(pos: Batch[Vertex], color: RGBA): GameMap =
-    insertElements(pos.map(MapElement.Debris(_, color)))
+  def insertDebris(pos: Batch[Vertex], ord: Tetromino.Ordinal): GameMap =
+    insertElements(pos.map(MapElement.Debris(_, ord)))
 
   def insertWall(pos: Batch[Vertex]): GameMap =
     insertElements(pos.map(MapElement.Wall(_)))
@@ -106,7 +106,7 @@ object GameMap:
 enum MapElement derives CanEqual:
   case Wall(point: Vertex)
   case Floor(point: Vertex)
-  case Debris(point: Vertex, color: RGBA)
+  case Debris(point: Vertex, tetrominoOrdinal: Tetromino.Ordinal)
 
 extension (underlying: MapElement)
   def point = underlying match

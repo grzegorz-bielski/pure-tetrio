@@ -33,7 +33,7 @@ object IndigoTetris extends Game:
         magnification = bootData.magnificationLevel
       )
 
-      BootResult(gameConfig, bootData)
+      BootResult(gameConfig, bootData).withAssets(Assets.assets)
     }
 
   def initialModel(startupData: SetupData): Outcome[GameModel] =

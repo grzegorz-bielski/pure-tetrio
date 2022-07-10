@@ -33,7 +33,7 @@ object SRS:
     baseRotation(Matrix2((0, -1), (1, 0)))
   lazy val counterClockwiseBaseRotation =
     // baseRotation(Matrix2((0, -1), (1, 0)))
-     baseRotation(Matrix2((0, 1), (-1, 0)))
+    baseRotation(Matrix2((0, 1), (-1, 0)))
 
   private def baseRotation(rotationMatrix: Matrix2)(
       tetromino: Tetromino
@@ -99,12 +99,7 @@ object SRS:
     ).toPoints
 
     val o = Map(
-      // Spawn            -> Batch((0, 0)),
-      // Clockwise        -> Batch((0, -1)),
-      // InvertedSpawn    -> Batch((-1, -1)),
-      // CounterClockwise -> Batch((-1, 0))
-
-     Spawn            -> Batch((0, 0)),
+      Spawn            -> Batch((0, 0)),
       Clockwise        -> Batch((0, 1)),
       InvertedSpawn    -> Batch((-1, 1)),
       CounterClockwise -> Batch((-1, 0))

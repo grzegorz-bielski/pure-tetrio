@@ -1,9 +1,11 @@
 package com.model
 
 import cats.syntax.apply
+import com.init.Assets
 import com.model.*
 import indigo.*
 import indigo.shared.collections.Batch
+import indigo.shared.materials.Material.Bitmap
 
 type Positions = NonEmptyBatch[Point]
 
@@ -11,21 +13,14 @@ sealed trait TetrominoPiece:
   def positions: Positions
   def rotationState: RotationState
 
-enum Tetromino(val color: RGBA) extends TetrominoPiece:
+enum Tetromino extends TetrominoPiece:
   case I(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Cyan)
   case J(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Blue)
   case L(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Orange)
   case O(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Yellow)
   case S(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Green)
   case T(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Indigo)
   case Z(positions: Positions, rotationState: RotationState)
-      extends Tetromino(RGBA.Red)
 import Tetromino.*
 
 type Intersects = Positions => Boolean
@@ -63,7 +58,14 @@ extension (t: Tetromino)
       case t: T => t.copy(positions = pos)
       case t: Z => t.copy(positions = pos)
 
+  def extractOrdinal: Ordinal = Ordinal(t)
+
 object Tetromino:
+  type Ordinal = 0 | 1 | 2 | 3 | 4 | 5 | 6
+  def Ordinal(t: Tetromino): Ordinal = 
+      t.ordinal match 
+        case o: Ordinal => o
+
   type DiceValue = Int
   // todo: check initial spawn states
 
@@ -75,7 +77,7 @@ object Tetromino:
   val t = at(List((-1, 0), (0, -1), (1, 0))) andThen (T(_, rotation))
   val z = at(List((-1, -1), (0, -1), (1, 0))) andThen (Z(_, rotation))
 
-  // todo: unsafe, try using bounded int
+  // todo: use Ordinal
   def spawn(side: DiceValue): Point => Tetromino =
     side match
       case 0 => i
