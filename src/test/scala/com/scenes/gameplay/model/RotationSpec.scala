@@ -1,5 +1,6 @@
-package com.model
+package com.scenes.gameplay.model
 
+import com.core.*
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.collections.NonEmptyBatch.apply
 import indigo.shared.datatypes.Point

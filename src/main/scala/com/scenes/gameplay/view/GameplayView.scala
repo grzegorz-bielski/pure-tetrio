@@ -1,53 +1,16 @@
-package com
+package com.scenes.gameplay.view
 
-import com.init.Assets.Tetrominos
-import com.init.*
-import com.model.*
+import com.core.*
+import com.scenes.gameplay.model.*
+import com.scenes.gameplay.viewmodel.*
 import indigo.*
 import indigo.scenes.*
-import indigo.shared.events.*
-import indigoextras.geometry.BoundingBox
-import indigoextras.geometry.Vertex
 
-object GameplayScene extends GameScene:
-  type SceneModel     = GameModel
-  type SceneViewModel = GameViewModel
-
-  val name: SceneName =
-    SceneName("game")
-
-  val modelLens: Lens[GameModel, SceneModel] =
-    Lens.keepLatest // passthrough
-
-  val viewModelLens: Lens[GameViewModel, SceneViewModel] =
-    Lens.keepLatest
-
-  val eventFilters: EventFilters =
-    EventFilters.Permissive
-
-  val subSystems: Set[SubSystem] =
-    Set()
-
-  def updateModel(
-      context: GameContext,
-      model: GameModel
-  ): GlobalEvent => Outcome[GameModel] = {
-    case FrameTick        => model.onFrameTick(context)
-    case e: KeyboardEvent => model.onInput(context, e)
-    case _                => Outcome(model)
-  }
-
-  def updateViewModel(
-      context: GameContext,
-      model: GameModel,
-      viewModel: GameViewModel
-  ): GlobalEvent => Outcome[GameViewModel] =
-    _ => Outcome(viewModel)
-
+object GameplayView:
   def present(
       context: GameContext,
-      model: GameModel,
-      viewModel: GameViewModel
+      model: GameplayModel,
+      viewModel: GameplayViewModel
   ): Outcome[SceneUpdateFragment] =
     val bootData = context.startUpData.bootData
 
@@ -60,27 +23,27 @@ object GameplayScene extends GameScene:
           .withMagnification(bootData.magnificationLevel),
         Layer(
           BindingKey("overlay"),
-          drawOverlay(model.state, bootData)
+          drawOverlay(model, bootData)
         )
       )
     )
 
   // todo: convert to Batch of SceneNodes ?
-  def drawGame(model: GameModel, bootData: BootData): SceneNode =
+  def drawGame(model: GameplayModel, bootData: BootData): SceneNode =
     Group(
-      drawMap(model.state, bootData),
-      drawTetromino(model.state, bootData)
+      drawMap(model, bootData),
+      drawTetromino(model, bootData)
     ).withScale(bootData.scale)
 
   // todo: separate scene ?
-  def drawOverlay(state: GameState, bootData: BootData): SceneNode =
+  def drawOverlay(state: GameplayModel, bootData: BootData): SceneNode =
     val point = state.map.grid.position.toPoint
     val scale = bootData.scale
 
     state match
-      case s: GameState.Paused =>
+      case s: GameplayModel.Paused =>
         drawTextBox("Paused", point).withScale(scale)
-      case s: GameState.GameOver =>
+      case s: GameplayModel.GameOver =>
         drawTextBox("Game Over", point).withScale(scale)
       case _ => Group.empty
 
@@ -90,7 +53,7 @@ object GameplayScene extends GameScene:
       .withColor(RGBA.White)
       .withFontSize(Pixels(30))
 
-  def drawMap(state: GameState, bootData: BootData) =
+  def drawMap(state: GameplayModel, bootData: BootData) =
     Group(
       state.map.mapElements.map {
         case e: MapElement.Debris =>
@@ -100,9 +63,9 @@ object GameplayScene extends GameScene:
       }
     )
 
-  def drawTetromino(state: GameState, bootData: BootData): SceneNode =
+  def drawTetromino(state: GameplayModel, bootData: BootData): SceneNode =
     state match
-      case s: GameState.InProgress =>
+      case s: GameplayModel.InProgress =>
         val graphic = blockGraphic(
           s.tetromino.extractOrdinal,
           bootData.gameAssets.tetrominos
@@ -116,8 +79,8 @@ object GameplayScene extends GameScene:
             .toBatch
         )
 
-      case s: GameState.Paused => drawTetromino(s.pausedState, bootData)
-      case _                   => Group.empty
+      case s: GameplayModel.Paused => drawTetromino(s.pausedState, bootData)
+      case _                       => Group.empty
 
   def drawDebris(e: MapElement.Debris, bootData: BootData) =
     blockGraphic(e.tetrominoOrdinal, bootData.gameAssets.tetrominos)

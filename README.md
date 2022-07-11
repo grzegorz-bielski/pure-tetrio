@@ -20,9 +20,11 @@ graphics:
 - background
 
 features:
-- smooth tetromino movement - animations
+- smooth tetromino movement
+- line clear animations
 - predict next few tetrominos
 - add scores
+- stages
 - hold mechanic
 - block placement preview
 - floating blocks falling down (cascade gravity mode)

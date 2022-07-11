@@ -1,4 +1,4 @@
-package com.model
+package com.core
 
 import indigo.Vector2
 

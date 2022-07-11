@@ -1,6 +1,6 @@
-package com.model
+package com.scenes.gameplay.model
 
-import com.model.*
+import com.core.*
 import indigo.*
 import indigo.shared.collections.Batch
 import indigo.shared.collections.Batch.Unapply.*
@@ -28,11 +28,9 @@ object SRS:
         .withRotationState(nextRotationState)
     ))
 
-  lazy val clockwiseBaseRotation =
-    // baseRotation(Matrix2((0, 1), (-1, 0)))
+  val clockwiseBaseRotation =
     baseRotation(Matrix2((0, -1), (1, 0)))
-  lazy val counterClockwiseBaseRotation =
-    // baseRotation(Matrix2((0, -1), (1, 0)))
+  val counterClockwiseBaseRotation =
     baseRotation(Matrix2((0, 1), (-1, 0)))
 
   private def baseRotation(rotationMatrix: Matrix2)(
@@ -81,8 +79,6 @@ object SRS:
 
   object Offsets:
     import RotationState.*
-
-    type Offset
 
     val jlstz = Map(
       Spawn            -> Batch((0, 0), (0, 0), (0, 0), (0, 0), (0, 0)),

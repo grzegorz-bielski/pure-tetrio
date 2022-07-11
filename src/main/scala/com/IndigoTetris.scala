@@ -1,6 +1,7 @@
 package com
 
-import com.init.*
+import com.core.*
+import com.scenes.gameplay.*
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
@@ -8,9 +9,9 @@ import indigo.shared.datatypes.*
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 @JSExportTopLevel("IndigoGame")
-object IndigoTetris extends Game:
+object IndigoTetris extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
 
-  // temp
+  // todo: trigger on event?
   // val `blackify the screen` =
   //    org.scalajs.dom.document.body.style = "background: black"
 
@@ -45,7 +46,7 @@ object IndigoTetris extends Game:
       startupData: SetupData,
       model: GameModel
   ): Outcome[GameViewModel] =
-    Outcome(())
+    Outcome(GameViewModel.initial)
 
   def setup(
       bootData: BootData,

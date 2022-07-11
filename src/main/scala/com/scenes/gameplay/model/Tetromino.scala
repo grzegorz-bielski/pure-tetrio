@@ -1,11 +1,8 @@
-package com.model
+package com.scenes.gameplay.model
 
-import cats.syntax.apply
-import com.init.Assets
-import com.model.*
+import com.core.*
 import indigo.*
 import indigo.shared.collections.Batch
-import indigo.shared.materials.Material.Bitmap
 
 type Positions = NonEmptyBatch[Point]
 

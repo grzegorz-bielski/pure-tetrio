@@ -1,4 +1,4 @@
-package com.model
+package com.scenes.gameplay.model
 
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch

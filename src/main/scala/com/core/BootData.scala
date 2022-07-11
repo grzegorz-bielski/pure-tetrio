@@ -1,4 +1,4 @@
-package com.init
+package com.core
 
 import indigo.GameViewport
 import indigo.shared.datatypes.Vector2

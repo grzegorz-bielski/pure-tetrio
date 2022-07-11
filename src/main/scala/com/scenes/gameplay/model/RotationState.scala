@@ -1,4 +1,4 @@
-package com.model
+package com.scenes.gameplay.model
 
 // depends on ordinal index
 enum RotationState:
