@@ -4,6 +4,7 @@ import com.core.*
 import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.datatypes.Point
+import indigo.shared.events.GlobalEvent
 import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.Vertex
 
@@ -18,7 +19,7 @@ enum GameplayModel:
   case InProgress(
       map: GameMap,
       tetromino: Tetromino,
-      lastUpdated: Seconds,
+      lastUpdatedFalling: Seconds,
       fallDelay: Seconds,
       score: Int
   )
@@ -34,6 +35,12 @@ object GameplayModel:
     GameplayModel.Initial(GameMap.walled(grid), 0, Batch.empty[Int])
 
   val spawnPoint = Point(9, 1)
+
+  case class TetrominoPositionChanged(
+      positions: Tetromino.Positions,
+      from: Seconds
+      // to: Tetromino.Positions
+  ) extends GlobalEvent
 
   extension (state: GameplayModel)
     def onFrameTick(ctx: GameContext): Outcome[GameplayModel] =
@@ -76,13 +83,18 @@ object GameplayModel:
         )(spawnPoint)
       }
 
-      Outcome(
+      Outcome[GameplayModel.InProgress](
         GameplayModel.InProgress(
           state.map,
           tetromino,
           ctx.gameTime.running,
           Seconds(1),
           state.score
+        )
+      ).addGlobalEvents(
+        TetrominoPositionChanged(
+          positions = tetromino.positions,
+          from = ctx.gameTime.running
         )
       )
 
@@ -122,17 +134,17 @@ object GameplayModel:
     def onInput(ctx: GameContext, e: KeyboardEvent): Outcome[GameplayModel] =
       e match
         case KeyboardEvent.KeyDown(Key.LEFT_ARROW) =>
-          state.moveTetrominoBy(Point(-1, 0))
+          state.moveTetrominoBy(Point(-1, 0), ctx)
         case KeyboardEvent.KeyDown(Key.RIGHT_ARROW) =>
-          state.moveTetrominoBy(Point(1, 0))
+          state.moveTetrominoBy(Point(1, 0), ctx)
         case KeyboardEvent.KeyDown(Key.DOWN_ARROW) =>
-          state.moveTetrominoBy(Point(0, 1))
+          state.moveTetrominoBy(Point(0, 1), ctx)
         case KeyboardEvent.KeyDown(Key.KEY_Q) =>
           state.rotateTetromino(ctx, RotationDirection.CounterClockwise)
         case KeyboardEvent.KeyDown(Key.KEY_W) =>
           state.rotateTetromino(ctx, RotationDirection.Clockwise)
         case KeyboardEvent.KeyDown(Key.SPACE) =>
-          state.moveDown
+          state.moveDown(ctx)
 
         // debug
         case KeyboardEvent.KeyDown(Key.KEY_I) =>
@@ -156,7 +168,7 @@ object GameplayModel:
 
         case _ => Outcome(state)
 
-    def moveDown: Outcome[GameplayModel] =
+    def moveDown(ctx: GameContext): Outcome[GameplayModel] =
       val lineBeforeFloor = state.map.bottomInternal
       val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
 
@@ -170,18 +182,27 @@ object GameplayModel:
         // movement decreased by 1 on intersections, so it can't be `<=`
         movedTetromino.positions.exists(_.y < state.map.topInternal)
 
-      Outcome(
-        if sticksOutOfTheMap then GameplayModel.GameOver(finishedState = state)
-        else
-          val nextMap = state.map.insertTetromino(movedTetromino)
+      if sticksOutOfTheMap then
+        Outcome(GameplayModel.GameOver(finishedState = state))
+      else
+        val nextMap = state.map.insertTetromino(movedTetromino)
+        Outcome(
           GameplayModel.Initial(
             map = nextMap,
             score = state.score,
             fullLines = nextMap.fullLinesWith(movedTetromino)
           )
-      )
+        ).addGlobalEvents(
+          TetrominoPositionChanged(
+            positions = state.tetromino.positions,
+            from = ctx.gameTime.running
+          )
+        )
 
-    def moveTetrominoBy(point: Point): Outcome[GameplayModel] =
+    def moveTetrominoBy(
+        point: Point,
+        ctx: GameContext
+    ): Outcome[GameplayModel] =
       val movedTetromino = state.tetromino.moveBy(point)
       val intersections  = state.map.intersectsWith(movedTetromino.positions)
 
@@ -198,18 +219,26 @@ object GameplayModel:
           _.y <= state.map.topInternal
         )
 
-      Outcome(
-        if sticksOutOfTheMap then GameplayModel.GameOver(finishedState = state)
-        else if intersectedStack then
-          val nextMap = state.map.insertTetromino(state.tetromino)
+      if sticksOutOfTheMap then
+        Outcome(GameplayModel.GameOver(finishedState = state))
+      else if intersectedStack then
+        val nextMap = state.map.insertTetromino(state.tetromino)
+        Outcome(
           GameplayModel.Initial(
             map = nextMap,
             score = state.score,
             fullLines = nextMap.fullLinesWith(state.tetromino)
           )
-        else if noIntersections then state.copy(tetromino = movedTetromino)
-        else state
-      )
+        )
+      else if noIntersections then
+        Outcome(state.copy(tetromino = movedTetromino))
+          .addGlobalEvents(
+            TetrominoPositionChanged(
+              positions = state.tetromino.positions,
+              from = ctx.gameTime.running
+            )
+          )
+      else Outcome(state)
 
     def rotateTetromino(
         ctx: GameContext,
@@ -226,13 +255,15 @@ object GameplayModel:
         ctx: GameContext,
         input: Point
     ): Outcome[GameplayModel] =
-      if ctx.gameTime.running > state.lastUpdated + state.fallDelay then
+      val running = ctx.gameTime.running
+
+      if running > state.lastUpdatedFalling + state.fallDelay then
         state
           .copy(
-            lastUpdated = ctx.gameTime.running
+            lastUpdatedFalling = running
           )
-          .moveTetrominoBy(input + Point(0, 1))
-      else if input != Point.zero then state.moveTetrominoBy(input)
+          .moveTetrominoBy(input + Point(0, 1), ctx)
+      else if input != Point.zero then state.moveTetrominoBy(input, ctx)
       else Outcome(state)
 
     def pause: Outcome[GameplayModel] =

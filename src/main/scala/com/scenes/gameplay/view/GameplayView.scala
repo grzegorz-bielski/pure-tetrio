@@ -8,37 +8,41 @@ import indigo.scenes.*
 
 object GameplayView:
   def present(
-      context: GameContext,
+      ctx: GameContext,
       model: GameplayModel,
       viewModel: GameplayViewModel
   ): Outcome[SceneUpdateFragment] =
-    val bootData = context.startUpData.bootData
+    // val bootData = context.startUpData.bootData
 
     Outcome(
       SceneUpdateFragment.empty.addLayers(
         Layer(
           BindingKey("game"),
-          drawGame(model, bootData)
+          drawGame(model, viewModel, ctx)
         )
-          .withMagnification(bootData.magnificationLevel),
+          .withMagnification( ctx.startUpData.bootData.magnificationLevel),
         Layer(
           BindingKey("overlay"),
-          drawOverlay(model, bootData)
+          drawOverlay(model, ctx)
         )
       )
     )
 
   // todo: convert to Batch of SceneNodes ?
-  def drawGame(model: GameplayModel, bootData: BootData): SceneNode =
+  def drawGame(
+      model: GameplayModel,
+      viewModel: GameplayViewModel,
+      ctx: GameContext
+  ): SceneNode =
     Group(
-      drawMap(model, bootData),
-      drawTetromino(model, bootData)
-    ).withScale(bootData.scale)
+      drawMap(model, ctx),
+      drawTetromino(model, viewModel, ctx)
+    ).withScale(ctx.startUpData.bootData.scale)
 
   // todo: separate scene ?
-  def drawOverlay(state: GameplayModel, bootData: BootData): SceneNode =
+  def drawOverlay(state: GameplayModel, ctx: GameContext): SceneNode =
     val point = state.map.grid.position.toPoint
-    val scale = bootData.scale
+    val scale = ctx.startUpData.bootData.scale
 
     state match
       case s: GameplayModel.Paused =>
@@ -53,34 +57,44 @@ object GameplayView:
       .withColor(RGBA.White)
       .withFontSize(Pixels(30))
 
-  def drawMap(state: GameplayModel, bootData: BootData) =
+  def drawMap(state: GameplayModel, ctx: GameContext) =
     Group(
       state.map.mapElements.map {
         case e: MapElement.Debris =>
-          drawDebris(e, bootData)
+          drawDebris(e,  ctx.startUpData.bootData)
         case e: (MapElement.Wall | MapElement.Floor) =>
-          drawBoundries(e, bootData)
+          drawBoundries(e,  ctx.startUpData.bootData)
       }
     )
 
-  def drawTetromino(state: GameplayModel, bootData: BootData): SceneNode =
+  def drawTetromino(
+      state: GameplayModel,
+      viewModel: GameplayViewModel,
+      ctx: GameContext
+  ): SceneNode =
     state match
-      case s: GameplayModel.InProgress =>
+      case model: GameplayModel.InProgress =>
+        val positions =
+          // model.tetromino.positions.map(gridPointToPoint(bootData.gridSquareSize))
+          viewModel.tetrominoPositions(ctx)
         val graphic = blockGraphic(
-          s.tetromino.extractOrdinal,
-          bootData.gameAssets.tetrominos
+          model.tetromino.extractOrdinal,
+          ctx.startUpData.bootData.gameAssets.tetrominos
         )
+
+        //  gridPointToPoint(bootData.gridSquareSize) andThen 
 
         Group(
-          s.tetromino.positions
+          positions
             .map(
-              gridPointToPoint(bootData.gridSquareSize) andThen graphic.moveTo
+              // gridPointToPoint(bootData.gridSquareSize) andThen graphic.moveTo
+              graphic.moveTo
             )
-            .toBatch
         )
 
-      case s: GameplayModel.Paused => drawTetromino(s.pausedState, bootData)
-      case _                       => Group.empty
+      case s: GameplayModel.Paused =>
+        drawTetromino(s.pausedState, viewModel, ctx)
+      case _ => Group.empty
 
   def drawDebris(e: MapElement.Debris, bootData: BootData) =
     blockGraphic(e.tetrominoOrdinal, bootData.gameAssets.tetrominos)
@@ -94,10 +108,7 @@ object GameplayView:
     )
 
   def gridPointToPoint(gridSquareSize: Int)(gridPoint: Point): Point =
-    Point(
-      x = gridPoint.x * gridSquareSize,
-      y = gridPoint.y * gridSquareSize
-    )
+    gridPoint * gridSquareSize
 
   def blockGraphic(
       ord: Tetromino.Ordinal,

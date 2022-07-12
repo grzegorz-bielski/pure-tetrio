@@ -53,9 +53,10 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       model: SceneModel,
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] = {
-    case FrameTick        => viewModel.onFrameTick(context, model)
-    case e: KeyboardEvent => viewModel.onInput(context, e, model)
-    case _                => Outcome(viewModel)
+    case FrameTick => viewModel.onFrameTick(context, model)
+    case e: GameplayModel.TetrominoPositionChanged =>
+      viewModel.onTetrominoPositionsChanged(context, e, model)
+    case _ => Outcome(viewModel)
   }
 
   def present(

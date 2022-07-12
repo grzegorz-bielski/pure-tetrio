@@ -4,7 +4,7 @@ import com.core.*
 import indigo.*
 import indigo.shared.collections.Batch
 
-type Positions = NonEmptyBatch[Point]
+import Tetromino.*
 
 sealed trait TetrominoPiece:
   def positions: Positions
@@ -58,6 +58,8 @@ extension (t: Tetromino)
   def extractOrdinal: Ordinal = Ordinal(t)
 
 object Tetromino:
+  type Positions = NonEmptyBatch[Point]
+
   type Ordinal = 0 | 1 | 2 | 3 | 4 | 5 | 6
   def Ordinal(t: Tetromino): Ordinal = 
       t.ordinal match 

@@ -30,7 +30,7 @@ class GameplayModelSpec extends FunSuite:
     GameplayModel.InProgress(
       map = standardMap,
       tetromino = Tetromino.o(Point(9, 1)),
-      lastUpdated = Seconds(0.5),
+      lastUpdatedFalling = Seconds(0.5),
       fallDelay = Seconds(1),
       score = 0
     )

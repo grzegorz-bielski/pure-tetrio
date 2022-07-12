@@ -13,14 +13,10 @@ sbt "~ fastOptJS;indigoBuild"
 TODO:
 
 setup:
-- add tyrian
-
-graphics:
-- walls
-- background
+- add tyrian (?)
 
 features:
-- smooth tetromino movement
+- smooth tetromino movement (!)
 - line clear animations
 - predict next few tetrominos
 - add scores
