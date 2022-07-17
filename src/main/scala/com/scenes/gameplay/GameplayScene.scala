@@ -10,6 +10,7 @@ import com.scenes.gameplay.view.*
 import com.scenes.gameplay.viewmodel.*
 import indigo.*
 import indigo.scenes.*
+import indigo.shared.events.InputEvent
 import indigo.shared.events.*
 import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.Vertex
@@ -43,8 +44,11 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       context: GameContext,
       model: SceneModel
   ): GlobalEvent => Outcome[SceneModel] = {
+
+    // model.update(keyboard events  => frame ticks) .... viewmodel.update
+
+    case e: InputEvent => model.onInput(context, e)
     case FrameTick        => model.onFrameTick(context)
-    case e: KeyboardEvent => model.onInput(context, e)
     case _                => Outcome(model)
   }
 
@@ -54,8 +58,6 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] = {
     case FrameTick => viewModel.onFrameTick(context, model)
-    case e: GameplayModel.TetrominoPositionChanged =>
-      viewModel.onTetrominoPositionsChanged(context, e, model)
     case _ => Outcome(viewModel)
   }
 

@@ -6,6 +6,8 @@ import com.scenes.gameplay.viewmodel.*
 import indigo.*
 import indigo.scenes.*
 
+import GameplayModel.GameplayState
+
 object GameplayView:
   def present(
       ctx: GameContext,
@@ -23,7 +25,7 @@ object GameplayView:
           .withMagnification( ctx.startUpData.bootData.magnificationLevel),
         Layer(
           BindingKey("overlay"),
-          drawOverlay(model, ctx)
+          drawOverlay(model.state, ctx)
         )
       )
     )
@@ -35,19 +37,19 @@ object GameplayView:
       ctx: GameContext
   ): SceneNode =
     Group(
-      drawMap(model, ctx),
-      drawTetromino(model, viewModel, ctx)
+      drawMap(model.state, ctx),
+      drawTetromino(model.state, viewModel, ctx)
     ).withScale(ctx.startUpData.bootData.scale)
 
   // todo: separate scene ?
-  def drawOverlay(state: GameplayModel, ctx: GameContext): SceneNode =
+  def drawOverlay(state: GameplayState, ctx: GameContext): SceneNode =
     val point = state.map.grid.position.toPoint
     val scale = ctx.startUpData.bootData.scale
 
     state match
-      case s: GameplayModel.Paused =>
+      case s: GameplayState.Paused =>
         drawTextBox("Paused", point).withScale(scale)
-      case s: GameplayModel.GameOver =>
+      case s: GameplayState.GameOver =>
         drawTextBox("Game Over", point).withScale(scale)
       case _ => Group.empty
 
@@ -57,7 +59,7 @@ object GameplayView:
       .withColor(RGBA.White)
       .withFontSize(Pixels(30))
 
-  def drawMap(state: GameplayModel, ctx: GameContext) =
+  def drawMap(state: GameplayState, ctx: GameContext) =
     Group(
       state.map.mapElements.map {
         case e: MapElement.Debris =>
@@ -68,17 +70,17 @@ object GameplayView:
     )
 
   def drawTetromino(
-      state: GameplayModel,
+      state: GameplayState,
       viewModel: GameplayViewModel,
       ctx: GameContext
   ): SceneNode =
     state match
-      case model: GameplayModel.InProgress =>
+      case state: GameplayState.InProgress =>
         val positions =
           // model.tetromino.positions.map(gridPointToPoint(bootData.gridSquareSize))
           viewModel.tetrominoPositions(ctx)
         val graphic = blockGraphic(
-          model.tetromino.extractOrdinal,
+          state.tetromino.extractOrdinal,
           ctx.startUpData.bootData.gameAssets.tetrominos
         )
 
@@ -92,7 +94,7 @@ object GameplayView:
             )
         )
 
-      case s: GameplayModel.Paused =>
+      case s: GameplayState.Paused =>
         drawTetromino(s.pausedState, viewModel, ctx)
       case _ => Group.empty
 

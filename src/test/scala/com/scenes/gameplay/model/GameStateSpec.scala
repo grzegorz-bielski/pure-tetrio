@@ -2,23 +2,41 @@ package com.scenes.gameplay.model
 
 import com.core.*
 import indigo.*
+import indigo.platform.assets.*
+import indigo.shared.*
 import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.Vertex
 import munit.FunSuite
 
+import GameplayModel.GameplayState
+
 class GameplayModelSpec extends FunSuite:
-  test("moveDown works correctly") {
+  test("hardDrop works correctly") {
     val testTable = Batch(
       // format: off
       gameInProgress(Tetromino.o(Point(9, 1))) -> Batch(Vertex(10, 22), Vertex(10, 21), Vertex(9, 22), Vertex(9, 21)),
       // format: on
     )
 
+    val testFrameContext = FrameContext(
+      gameTime = GameTime.is(Seconds(2)),
+      dice = Dice.fromSeed(1),
+      inputState = InputState.default,
+      boundaryLocator = BoundaryLocator(
+        animationsRegister = AnimationsRegister(),
+        fontRegister = FontRegister(),
+        dynamicText = DynamicText()
+      ),
+      _startUpData = SetupData(BootData.default)
+    )
+
     testTable.foreach { (game, expected) =>
       assertEquals(
-        game.moveDown.map(
-          _.map.debris.map(_.point)
-        ),
+        game
+          .hardDrop(testFrameContext)
+          .map(
+            _.map.debris.map(_.point)
+          ),
         Outcome(expected)
       )
     }
@@ -26,8 +44,8 @@ class GameplayModelSpec extends FunSuite:
 
   val standardMap = GameMap.walled(BootData.default.gridSize)
 
-  def gameInProgress(t: Tetromino): GameplayModel.InProgress =
-    GameplayModel.InProgress(
+  def gameInProgress(t: Tetromino): GameplayState.InProgress =
+    GameplayState.InProgress(
       map = standardMap,
       tetromino = Tetromino.o(Point(9, 1)),
       lastUpdatedFalling = Seconds(0.5),

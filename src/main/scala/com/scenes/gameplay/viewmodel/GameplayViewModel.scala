@@ -11,6 +11,8 @@ import indigo.shared.datatypes.Point
 import indigoextras.geometry.Vertex
 import indigoextras.subsystems.Automata
 
+import GameplayModel.GameplayState
+
 enum GameplayViewModel:
   case Empty()
   case InProgress(
@@ -25,9 +27,11 @@ object GameplayViewModel:
   extension (viewModel: GameplayViewModel)
     def tetrominoPositions(ctx: GameContext): Batch[Point] =
       lazy val ctxGrindPoint = toGridPoint(ctx)
-      lazy val targetPositions = (vm:  GameplayViewModel.InProgress) => vm.targetTetrominoPositions.map(ctxGrindPoint)
+      lazy val targetPositions = (vm: GameplayViewModel.InProgress) =>
+        vm.targetTetrominoPositions.map(ctxGrindPoint)
 
       viewModel match
+        // format: off
         case vm @ GameplayViewModel.InProgress(Some(prevTetrominoPositions), _, _) =>
            (prevTetrominoPositions.map(ctxGrindPoint) zip targetPositions(vm))
                 .map(
@@ -35,15 +39,22 @@ object GameplayViewModel:
                     .Lerp(_, _, Seconds(0.093))
                     .at(ctx.gameTime.running - vm.from)
                 ).toBatch
-        case vm: GameplayViewModel.InProgress =>  targetPositions(vm).toBatch
-        case _ => Batch.empty
+        // format: on
+        case vm: GameplayViewModel.InProgress => targetPositions(vm).toBatch
+        case _                                => Batch.empty
 
     def onFrameTick(
         ctx: GameContext,
         model: GameplayModel
     ): Outcome[GameplayViewModel] =
-      (model, viewModel) match
-        case (m: GameplayModel.InProgress, vm: GameplayViewModel.InProgress) =>
+      // pprint.pprintln(viewModel.getClass.getSimpleName())
+
+      (model.state, viewModel) match
+        case (m: GameplayState.InProgress, vm: GameplayViewModel.InProgress) =>
+          // scala.scalajs.js.special.debugger()
+          // debugOnce((m.tetromino.positions -> vm.targetTetrominoPositions).toString)
+          // debugOnce(((model.getClass.getSimpleName -> viewModel.getClass.getSimpleName) -> (vm.targetTetrominoPositions == m.tetromino.positions)).toString)
+
           if vm.targetTetrominoPositions == m.tetromino.positions then
             Outcome(vm)
           else
@@ -55,7 +66,7 @@ object GameplayViewModel:
               )
             )
 
-        case (m: GameplayModel.InProgress, _: GameplayViewModel.Empty) =>
+        case (m: GameplayState.InProgress, _: GameplayViewModel.Empty) =>
           Outcome(
             GameplayViewModel.InProgress(
               prevTetrominoPositions = None,
@@ -64,15 +75,10 @@ object GameplayViewModel:
             )
           )
 
-        case _ => Outcome(viewModel)
-
-    def onTetrominoPositionsChanged(
-        ctx: GameContext,
-        e: GameplayModel.TetrominoPositionChanged,
-        model: GameplayModel
-    ): Outcome[GameplayViewModel] =
-      model match
+        case (m: GameplayState.Initial, _) => 
+          // pprint.pprintln("empty")
+          Outcome(GameplayViewModel.Empty())
         case _ => Outcome(viewModel)
 
 def toGridPoint(ctx: GameContext)(point: Point) =
-    point * ctx.startUpData.bootData.gridSquareSize
+  point * ctx.startUpData.bootData.gridSquareSize
