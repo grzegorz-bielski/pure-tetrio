@@ -14,8 +14,8 @@ import scala.collection.immutable.Queue
 import Tetromino.*
 import GameplayModel.*
 import Command.*
+import RotationDirection.*
 
-// we want to collect commands from all events and apply them to state on FrameTick, which is always last
 case class GameplayModel(
     state: GameplayState,
     private val cmds: Queue[Command]
@@ -27,9 +27,9 @@ case class GameplayModel(
 
   def onFrameTick(ctx: GameContext): Outcome[GameplayModel] =
     for
-      state <- state.onFrameTick(ctx)
+      state <- state.onFrameTickPreCmd(ctx)
       state <- state.consumeCommands(ctx, cmds)
-    // state <- state.onFrameTick(ctx)
+      state <- state.onFrameTickPostCmd(ctx, cmds)
     yield GameplayModel(state = state, cmds = Queue.empty[Command])
 
   private def produceCommands(ctx: GameContext): Queue[Command] =
@@ -45,6 +45,7 @@ object GameplayModel:
       cmds = Queue.empty[Command]
     )
 
+  // TODO: extract to controller?
   sealed trait Command
   object Command:
     enum GameCommand extends Command:
@@ -54,16 +55,30 @@ object GameplayModel:
       case Pause
     export GameCommand.*
 
-    // todo: use Batch ?
-    // todo: rotate + move ?
+    // TODO: use Batch ?
     // format: off
+
     val gameMappings = List(
+        Combo.withKeyInputs(Key.LEFT_ARROW, Key.KEY_Q)  -> Composite(Move(Point(-1, 0)), Rotate(CounterClockwise)),
+        Combo.withKeyInputs(Key.LEFT_ARROW, Key.KEY_W)  -> Composite(Move(Point(-1, 0)), Rotate(Clockwise)),
+
+        Combo.withKeyInputs(Key.RIGHT_ARROW, Key.KEY_Q) -> Composite(Move(Point(1, 0)), Rotate(CounterClockwise)),
+        Combo.withKeyInputs(Key.RIGHT_ARROW, Key.KEY_W) -> Composite(Move(Point(1, 0)), Rotate(Clockwise)),
+
+        Combo.withKeyInputs(Key.DOWN_ARROW,  Key.KEY_Q) -> Composite(Move(Point(0, 1)), Rotate(CounterClockwise)),
+        Combo.withKeyInputs(Key.DOWN_ARROW,  Key.KEY_W) -> Composite(Move(Point(0, 1)), Rotate(Clockwise)),
+
+        Combo.withKeyInputs(Key.LEFT_ARROW, Key.SPACE)  -> Composite(Move(Point(-1, 0)), HardDrop),
+        Combo.withKeyInputs(Key.RIGHT_ARROW, Key.SPACE) -> Composite(Move(Point(1, 0)), HardDrop),
+        Combo.withKeyInputs(Key.DOWN_ARROW, Key.SPACE)  -> Composite(Move(Point(0, 1)), HardDrop),
+        Combo.withKeyInputs(Key.SPACE) -> HardDrop,
+
         Combo.withKeyInputs(Key.LEFT_ARROW)  -> Move(Point(-1, 0)),
         Combo.withKeyInputs(Key.RIGHT_ARROW) -> Move(Point(1, 0)),
         Combo.withKeyInputs(Key.DOWN_ARROW)  -> Move(Point(0, 1)),
-        Combo.withKeyInputs(Key.SPACE)      -> HardDrop,
-        Combo.withKeyInputs(Key.KEY_Q) -> Rotate(RotationDirection.CounterClockwise),
-        Combo.withKeyInputs(Key.KEY_W) -> Rotate(RotationDirection.Clockwise),
+
+        Combo.withKeyInputs(Key.KEY_Q) -> Rotate(CounterClockwise),
+        Combo.withKeyInputs(Key.KEY_W) -> Rotate(Clockwise),
         Combo.withKeyInputs(Key.KEY_P) -> Pause
     )
     // format: on
@@ -104,7 +119,6 @@ object GameplayModel:
         lastUpdatedFalling: Seconds,
         fallDelay: Seconds,
         score: Int
-        // isGoingDown: Boolean
     )
     case Paused(
         pausedState: GameplayState
@@ -117,14 +131,25 @@ object GameplayModel:
   val spawnPoint = Point(9, 1)
 
   extension (state: GameplayState)
-    def onFrameTick(ctx: GameContext): Outcome[GameplayState] =
+    def onFrameTickPreCmd(ctx: GameContext): Outcome[GameplayState] =
       state match
         case s: GameplayState.Initial =>
-          // todo: add score + anmations
+          // TODO: add score + anmations
           s.removeFullLines.flatMap(_.spawnTetromino(ctx, None))
-        case s: GameplayState.InProgress =>
-          s.autoTetrominoDescent(ctx)
         case s => Outcome(state)
+
+    def onFrameTickPostCmd(ctx: GameContext, cmds: Queue[Command]): Outcome[GameplayState] =
+      state match
+        case s: GameplayState.InProgress => 
+          s.autoTetrominoDescent(ctx, isMovingDown(ctx))
+        case s                           => Outcome(state)
+
+    def isMovingDown(ctx: GameContext): Boolean =
+        // TODO: less typesafe that I would like
+        // depends on pure info from the controller, ingoring Model's the game logic, so:
+        // ignoring: potential Moves with -y, not applied Moves, multiple Moves that cancels out, .etc
+        // The game doesn't support those at the moment, but once it will - this will break
+        ctx.inputState.keyboard.keysAreDown(Key.DOWN_ARROW)
 
     def consumeCommands(
         ctx: GameContext,
@@ -172,7 +197,6 @@ object GameplayModel:
           ctx.gameTime.running,
           Seconds(1),
           state.score
-          // false
         )
       )
 
@@ -271,8 +295,6 @@ object GameplayModel:
           _.y <= state.map.topInternal
         )
 
-      // println
-
       if sticksOutOfTheMap then
         Outcome(GameplayState.GameOver(finishedState = state))
       else if intersectedStack then
@@ -288,7 +310,6 @@ object GameplayModel:
         Outcome(
           state.copy(
             tetromino = movedTetromino
-            // isGoingDown = verticalMovement
           )
         )
       else Outcome(state)
@@ -304,15 +325,16 @@ object GameplayModel:
           .getOrElse(state)
       )
 
-    def autoTetrominoDescent(ctx: GameContext): Outcome[GameplayState] =
+    def autoTetrominoDescent(ctx: GameContext, isMovingDown: Boolean): Outcome[GameplayState] =
       val running = ctx.gameTime.running
 
       if running > state.lastUpdatedFalling + state.fallDelay then
-        state
-          .copy(
-            lastUpdatedFalling = running
-          )
-          .moveTetrominoBy(Point(0, 1), ctx)
+        val nextState: GameplayState.InProgress =
+          state.copy(lastUpdatedFalling = running)
+
+        if isMovingDown 
+        then Outcome(nextState) // reseting the counter for the next frame
+        else nextState.moveTetrominoBy(Point(0, 1), ctx)
       else Outcome(state)
 
     def pause: Outcome[GameplayState] =
