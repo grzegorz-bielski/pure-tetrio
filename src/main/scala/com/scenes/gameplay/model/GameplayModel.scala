@@ -6,6 +6,7 @@ import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.datatypes.Point
 import indigo.shared.events.GlobalEvent
+import indigo.shared.events.KeyboardEvent.KeyDown
 import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.Vertex
 
@@ -22,7 +23,7 @@ case class GameplayModel(
 ):
   def onInput(ctx: GameContext, e: InputEvent): Outcome[GameplayModel] =
     Outcome(
-      copy(cmds = produceCommands(ctx))
+      copy(cmds = produceCommands(e))
     )
 
   def onFrameTick(ctx: GameContext): Outcome[GameplayModel] =
@@ -32,11 +33,8 @@ case class GameplayModel(
       state <- state.onFrameTickPostCmd(ctx, cmds)
     yield GameplayModel(state = state, cmds = Queue.empty[Command])
 
-  private def produceCommands(ctx: GameContext): Queue[Command] =
-    ctx.inputState
-      .mapInputsOption(Command.keyDownMappings(ctx))
-      .map(cmds.enqueue)
-      .getOrElse(cmds)
+  private val produceCommands =
+    inputMappings.andThen(cmds.enqueue).orElse(_ => cmds)
 
 object GameplayModel:
   def initial(grid: BoundingBox): GameplayModel =
@@ -56,64 +54,36 @@ object GameplayModel:
     export GameCommand.*
 
     // TODO: use Batch ?
-    // format: off
-
-    def gameMappings(ctx: GameContext): List[(Combo, Command)] = 
-      val leftForce =  Point(-1, 0)
-      val rightForce = Point(1, 0)
-      val downForce = Point(0, 1)
-      
-      List(
-          Combo.withKeyInputs(Key.LEFT_ARROW, Key.KEY_Q)  -> Composite(Move(leftForce), Rotate(CounterClockwise)),
-          Combo.withKeyInputs(Key.LEFT_ARROW, Key.KEY_W)  -> Composite(Move(leftForce), Rotate(Clockwise)),
-
-          Combo.withKeyInputs(Key.RIGHT_ARROW, Key.KEY_Q) -> Composite(Move(rightForce), Rotate(CounterClockwise)),
-          Combo.withKeyInputs(Key.RIGHT_ARROW, Key.KEY_W) -> Composite(Move(rightForce), Rotate(Clockwise)),
-
-          Combo.withKeyInputs(Key.DOWN_ARROW,  Key.KEY_Q) -> Composite(Move(downForce), Rotate(CounterClockwise)),
-          Combo.withKeyInputs(Key.DOWN_ARROW,  Key.KEY_W) -> Composite(Move(downForce), Rotate(Clockwise)),
-
-          // Combo.withKeyInputs(Key.LEFT_ARROW, Key.SPACE)  -> Composite(Move(leftForce), HardDrop),
-          // Combo.withKeyInputs(Key.RIGHT_ARROW, Key.SPACE) -> Composite(Move(rightForce), HardDrop),
-          // Combo.withKeyInputs(Key.DOWN_ARROW, Key.SPACE)  -> Composite(Move(downForce), HardDrop),
-          Combo.withKeyInputs(Key.SPACE) -> HardDrop,
-
-          Combo.withKeyInputs(Key.LEFT_ARROW)  -> Move(leftForce),
-          Combo.withKeyInputs(Key.RIGHT_ARROW) -> Move(rightForce),
-          Combo.withKeyInputs(Key.DOWN_ARROW)  -> Move(downForce),
-
-          Combo.withKeyInputs(Key.KEY_Q) -> Rotate(CounterClockwise),
-          Combo.withKeyInputs(Key.KEY_W) -> Rotate(Clockwise),
-          Combo.withKeyInputs(Key.KEY_P) -> Pause
-      )
+    val gameMappings: PartialFunction[InputEvent, Command] =
+      case KeyDown(Key.SPACE)       => HardDrop
+      case KeyDown(Key.LEFT_ARROW)  => Move(Point(-1, 0))
+      case KeyDown(Key.RIGHT_ARROW) => Move(Point(1, 0))
+      case KeyDown(Key.DOWN_ARROW)  => Move(Point(0, 1))
+      case KeyDown(Key.KEY_Q)       => Rotate(CounterClockwise)
+      case KeyDown(Key.KEY_W)       => Rotate(Clockwise)
+      case KeyDown(Key.KEY_P)       => Pause
 
     enum DebugCommand extends Command:
       case Reset
       case SpawnTetromino(t: Tetromino)
     export DebugCommand.*
 
-    // format: off
-    val debugMappings = List(
-      Combo.withKeyInputs(Key.KEY_I) -> SpawnTetromino(Tetromino.i(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_J) ->  SpawnTetromino(Tetromino.j(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_L) ->  SpawnTetromino(Tetromino.l(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_O) ->  SpawnTetromino(Tetromino.o(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_S) ->  SpawnTetromino(Tetromino.s(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_T) ->  SpawnTetromino(Tetromino.t(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_Z) ->  SpawnTetromino(Tetromino.z(spawnPoint)),
-      Combo.withKeyInputs(Key.KEY_R) ->  Reset
-    )
-    // format: on
+    val debugMappings: PartialFunction[InputEvent, Command] =
+      case KeyDown(Key.KEY_I) => SpawnTetromino(Tetromino.i(spawnPoint))
+      case KeyDown(Key.KEY_J) => SpawnTetromino(Tetromino.j(spawnPoint))
+      case KeyDown(Key.KEY_L) => SpawnTetromino(Tetromino.l(spawnPoint))
+      case KeyDown(Key.KEY_O) => SpawnTetromino(Tetromino.o(spawnPoint))
+      case KeyDown(Key.KEY_S) => SpawnTetromino(Tetromino.s(spawnPoint))
+      case KeyDown(Key.KEY_T) => SpawnTetromino(Tetromino.t(spawnPoint))
+      case KeyDown(Key.KEY_Z) => SpawnTetromino(Tetromino.z(spawnPoint))
+      case KeyDown(Key.KEY_R) => Reset
 
     case class Composite(cmds: Batch[Command]) extends Command
     object Composite:
       def apply(cmds: Command*): Composite = Composite(Batch.fromSeq(cmds))
 
-    def keyDownMappings(ctx: GameContext) =
-      InputMapping(gameMappings(ctx)) add debugMappings
-  // val keyUpMappings: PartialFunction[] =
-  //     case Combo.withKeyInputs(Key.KEY_Q) => Rotate(CounterClockwise)
-  //     case Combo.withKeyInputs(Key.KEY_W) => Rotate(Clockwise)
+    val inputMappings: PartialFunction[InputEvent, Command] =
+      debugMappings orElse gameMappings
 
   enum GameplayState:
     case Initial(
@@ -144,8 +114,8 @@ object GameplayModel:
       intersections: Batch[MapElement],
       point: Point
   ):
-    lazy val minimalMovement    = 
-      val p = point.abs.max(1) 
+    lazy val minimalMovement =
+      val p = point.abs.max(1)
       p == Point.zero || p == Point(1, 1)
     lazy val horizontalMovement = point.x != 0
     lazy val verticalMovement   = point.y != 0
@@ -168,19 +138,7 @@ object GameplayModel:
     ): Outcome[GameplayState] =
       state match
         case s: GameplayState.Initial =>
-          // TODO: add score + anmations
-
           s.removeFullLines.flatMap(_.spawnTetromino(ctx, None))
-        // case s: GameplayState.InProgress =>
-
-        //   println("move" ->  cmds
-        //       .collectFirst { case m: Command.Move => m })
-
-        //   Outcome(
-        //     cmds
-        //       .collectFirst { case m: Command.Move => s }
-        //       .getOrElse(s.copy(lastMovement = Point.zero))
-        //   )
 
         case s => Outcome(state)
 
@@ -350,19 +308,21 @@ object GameplayModel:
         ctx: GameContext
     ): Outcome[GameplayState] =
       val inputForce = (a: Int) =>
-        if a < 0 then - 2
+        if a < 0 then -2
         else if a > 0 then 2
         else a
       val movement = state.lastMovement
-        .map { last => 
-          lazy val pforce = Point(inputForce(last.x), inputForce(last.y)) 
-          println("pforce" -> pforce)
-          println("last" -> last)
+        .map { last =>
+          lazy val pforce = Point(inputForce(last.x), inputForce(last.y))
+          println("pforce"       -> pforce)
+          println("last"         -> last)
           println("baseMovement" -> baseMovement)
 
-          val res = 
-            if last.x < 0 && baseMovement.x < 0 || last.x > 0 && baseMovement.x > 0 then pforce 
-            else if last.y < 0 && baseMovement.y < 0 || last.y > 0 && baseMovement.y > 0 then pforce 
+          val res =
+            if last.x < 0 && baseMovement.x < 0 || last.x > 0 && baseMovement.x > 0 then
+              pforce
+            else if last.y < 0 && baseMovement.y < 0 || last.y > 0 && baseMovement.y > 0 then
+              pforce
             else baseMovement
 
           println("res" -> res)
@@ -387,7 +347,7 @@ object GameplayModel:
         // ctx: GameContext
     ): Outcome[GameplayState] =
       val intersection = state.closestIntersections(point)
-      pprint.pprintln("intersection.point" -> intersection.point)
+      // pprint.pprintln("intersection.point" -> intersection.point)
 
       if intersection.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))
@@ -421,7 +381,6 @@ object GameplayModel:
       val running = ctx.gameTime.running
 
       if running > state.lastUpdatedFalling + state.fallDelay then
-        // println(" running > state.lastUpdatedFalling + state.fallDelay" -> ( running > state.lastUpdatedFalling + state.fallDelay))
         val nextState: GameplayState.InProgress =
           state.copy(lastUpdatedFalling = running)
 
