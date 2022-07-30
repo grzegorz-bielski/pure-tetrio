@@ -24,15 +24,15 @@ type Intersects = Positions => Boolean
 type RotateFn   = Intersects => Option[Tetromino]
 
 extension (t: Tetromino)
-  def moveBy(point: Point): Tetromino =
+  def moveBy(point: Vector2): Tetromino =
     withPositions(t.positions.map(_.moveBy(point)))
-  def rotationCenter: Point =
+  def rotationCenter: Vector2 =
     t.positions.head
   def rotate(direction: RotationDirection): RotateFn =
     SRS.rotate(t, direction)
-  def highestPoint: Point = 
+  def highestPoint: Vector2 = 
     t.positions.toBatch.toJSArray.minBy(_.y)
-  def lowestPoint: Point =
+  def lowestPoint: Vector2 =
     t.positions.toBatch.toJSArray.maxBy(_.y)
 
   def withRotationState(state: RotationState): Tetromino =
@@ -58,7 +58,7 @@ extension (t: Tetromino)
   def extractOrdinal: Ordinal = Ordinal(t)
 
 object Tetromino:
-  type Positions = NonEmptyBatch[Point]
+  type Positions = NonEmptyBatch[Vector2]
 
   type Ordinal = 0 | 1 | 2 | 3 | 4 | 5 | 6
   def Ordinal(t: Tetromino): Ordinal = 
@@ -77,7 +77,7 @@ object Tetromino:
   val z = at(List((-1, -1), (0, -1), (1, 0))) andThen (Z(_, rotation))
 
   // todo: use Ordinal
-  def spawn(side: DiceValue): Point => Tetromino =
+  def spawn(side: DiceValue): Vector2 => Tetromino =
     side match
       case 0 => i
       case 1 => j
@@ -88,8 +88,8 @@ object Tetromino:
       case 6 => z
 
   private val rotation = RotationState.Spawn
-  private def at(pos: List[(Int, Int)])(center: Point) =
+  private def at(pos: List[(Int, Int)])(center: Vector2) =
     NonEmptyBatch(
       center,
-      pos.map(p => center.moveBy(Point.tuple2ToPoint(p))): _*
+      pos.map(p => center.moveBy(Vector2(p._1, p._2))): _*
     )

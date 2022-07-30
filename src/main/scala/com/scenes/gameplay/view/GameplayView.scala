@@ -5,6 +5,7 @@ import com.scenes.gameplay.model.*
 import com.scenes.gameplay.viewmodel.*
 import indigo.*
 import indigo.scenes.*
+import indigoextras.geometry.Vertex
 
 import GameplayModel.GameplayState
 
@@ -101,16 +102,16 @@ object GameplayView:
   def drawDebris(e: MapElement.Debris, bootData: BootData) =
     blockGraphic(e.tetrominoOrdinal, bootData.gameAssets.tetrominos)
       .moveTo(
-        gridPointToPoint(bootData.gridSquareSize)(e.point.toPoint)
+        gridVectorToPoint(bootData.gridSquareSize)(e.point)
       )
 
   def drawBoundries(e: MapElement, bootData: BootData) =
     bootData.gameAssets.tetrominos.wall.moveTo(
-      gridPointToPoint(bootData.gridSquareSize)(e.point.toPoint)
+      gridVectorToPoint(bootData.gridSquareSize)(e.point)
     )
 
-  def gridPointToPoint(gridSquareSize: Int)(gridPoint: Point): Point =
-    gridPoint * gridSquareSize
+  def gridVectorToPoint(gridSquareSize: Int)(gridVector: Vector2): Point =
+   (gridVector * gridSquareSize).toPoint
 
   def blockGraphic(
       ord: Tetromino.Ordinal,

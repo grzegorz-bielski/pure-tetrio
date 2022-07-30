@@ -7,8 +7,6 @@ import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
-import indigo.shared.datatypes.Point
-import indigoextras.geometry.Vertex
 import indigoextras.subsystems.Automata
 
 import GameplayModel.GameplayState
@@ -16,8 +14,8 @@ import GameplayModel.GameplayState
 enum GameplayViewModel:
   case Empty()
   case InProgress(
-      prevTetrominoPositions: Option[NonEmptyBatch[Point]],
-      targetTetrominoPositions: NonEmptyBatch[Point],
+      prevTetrominoPositions: Option[NonEmptyBatch[Vector2]],
+      targetTetrominoPositions: NonEmptyBatch[Vector2],
       from: Seconds
   )
 
@@ -26,7 +24,7 @@ object GameplayViewModel:
 
   extension (viewModel: GameplayViewModel)
     def tetrominoPositions(ctx: GameContext): Batch[Point] =
-      lazy val ctxGrindPoint = toGridPoint(ctx)
+      lazy val ctxGrindPoint = toGridPoint(ctx).andThen(_.toPoint)
       lazy val targetPositions = (vm: GameplayViewModel.InProgress) =>
         vm.targetTetrominoPositions.map(ctxGrindPoint)
 
@@ -80,5 +78,5 @@ object GameplayViewModel:
           Outcome(GameplayViewModel.Empty())
         case _ => Outcome(viewModel)
 
-def toGridPoint(ctx: GameContext)(point: Point) =
+def toGridPoint(ctx: GameContext)(point: Vector2) =
   point * ctx.startUpData.bootData.gridSquareSize

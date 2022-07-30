@@ -35,23 +35,23 @@ object SRS:
 
   private def baseRotation(rotationMatrix: Matrix2)(
       tetromino: Tetromino
-  ) = tetromino.positions.map { pos =>
+  ): Tetromino.Positions = tetromino.positions.map { pos =>
     val relativePos = pos - tetromino.rotationCenter
-    val rotatedPos  = (rotationMatrix * relativePos.toVector).toPoint
+    val rotatedPos  = rotationMatrix * relativePos
     val absolutePos = rotatedPos + tetromino.rotationCenter
 
     absolutePos
   }
 
   def applyOffsets(
-      offsets: Batch[(Point, Point)],
-      rotatedPositions: NonEmptyBatch[Point]
+      offsets: Batch[(Vector2, Vector2)],
+      rotatedPositions: NonEmptyBatch[Vector2]
   )(intersects: Intersects) =
 
     @annotation.tailrec
     def findMatchingOffset(
-        offsets: Batch[(Point, Point)]
-    ): Option[NonEmptyBatch[Point]] =
+        offsets: Batch[(Vector2, Vector2)]
+    ): Option[NonEmptyBatch[Vector2]] =
       offsets match
         case (prevOffset, nextOffset) :: xs =>
           val endOffset   = prevOffset - nextOffset
@@ -65,7 +65,7 @@ object SRS:
   def tetrominoOffsets(
       tetromino: Tetromino,
       states: (RotationState, RotationState)
-  ): Batch[(Point, Point)] =
+  ): Batch[(Vector2, Vector2)] =
     import Tetromino.*
 
     tetromino match
@@ -74,7 +74,7 @@ object SRS:
       case _: I => Offsets.i(states._1) zip Offsets.i(states._2)
       case _: O => Offsets.o(states._1) zip Offsets.o(states._2)
 
-  type Intersects = NonEmptyBatch[Point] => Boolean
+  type Intersects = NonEmptyBatch[Vector2] => Boolean
   type RotateFn   = Intersects => Option[Tetromino]
 
   object Offsets:
@@ -85,22 +85,22 @@ object SRS:
       Clockwise        -> Batch((0, 0), (1, 0), (1, -1), (0, 2), (1, 2)),
       InvertedSpawn    -> Batch((0, 0), (0, 0), (0, 0), (0, 0), (0, 0)),
       CounterClockwise -> Batch((0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2))
-    ).toPoints
+    ).toVectors
 
     val i = Map(
       Spawn            -> Batch((0, 0), (-1, 0), (2, 0), (-1, 0), (2, 0)),
       Clockwise        -> Batch((-1, 0), (0, 0), (0, 0), (0, 1), (0, -2)),
       InvertedSpawn    -> Batch((-1, 1), (1, 1), (-2, 1), (1, 0), (-2, 0)),
       CounterClockwise -> Batch((0, 1), (0, 1), (0, 1), (0, -1), (0, 2))
-    ).toPoints
+    ).toVectors
 
     val o = Map(
       Spawn            -> Batch((0, 0)),
       Clockwise        -> Batch((0, 1)),
       InvertedSpawn    -> Batch((-1, 1)),
       CounterClockwise -> Batch((-1, 0))
-    ).toPoints
+    ).toVectors
 
     extension (offsets: Map[RotationState, Batch[(Int, Int)]])
-      def toPoints: Map[RotationState, Batch[Point]] =
-        offsets.view.mapValues(_.map(Point.tuple2ToPoint(_))).toMap
+      def toVectors: Map[RotationState, Batch[Vector2]] =
+        offsets.view.mapValues(_.map(p => Vector2(p._1, p._2))).toMap

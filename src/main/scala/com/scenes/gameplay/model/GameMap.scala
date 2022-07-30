@@ -1,6 +1,7 @@
 package com.scenes.gameplay.model
 
 import com.core.*
+import indigo.Vector2
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.datatypes.Point
@@ -23,39 +24,33 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
 
   lazy val xs = leftInternal to rigthInternal
 
-  def intersects(position: Vertex): Boolean =
+  def intersects(position: Vector2): Boolean =
     !intersectsWith(position).isEmpty
 
-  def intersects(position: Point): Boolean =
-    !intersectsWith(position).isEmpty
-
-  def intersects(positions: NonEmptyBatch[Point]): Boolean =
+  def intersects(positions: NonEmptyBatch[Vector2]): Boolean =
     !intersectsWith(positions).isEmpty
 
-  def intersectsWith(position: Vertex): Option[MapElement] =
-    quadTree.fetchElementAt(position)
+  def intersectsWith(position: Vector2): Option[MapElement] =
+    quadTree.fetchElementAt(Vertex.fromVector2(position))
 
-  def intersectsWith(position: Point): Option[MapElement] =
-    intersectsWith(position.toVertex)
-
-  def intersectsWith(positions: NonEmptyBatch[Point]): Batch[MapElement] =
+  def intersectsWith(positions: NonEmptyBatch[Vector2]): Batch[MapElement] =
     positions.toBatch.flatMap(p => Batch.fromOption(intersectsWith(p)))
 
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
-      quadTree = quadTree.insertElements(elements.map(e => e -> e.point)).prune
+      quadTree = quadTree.insertElements(elements.map(e => e -> Vertex.fromVector2(e.point))).prune
     )
 
   def insertTetromino(t: Tetromino): GameMap =
-    insertDebris(t.positions.map(_.toVertex).toBatch, t.extractOrdinal)
+    insertDebris(t.positions.toBatch, t.extractOrdinal)
 
-  def insertDebris(pos: Batch[Vertex], ord: Tetromino.Ordinal): GameMap =
+  def insertDebris(pos: Batch[Vector2], ord: Tetromino.Ordinal): GameMap =
     insertElements(pos.map(MapElement.Debris(_, ord)))
 
-  def insertWall(pos: Batch[Vertex]): GameMap =
+  def insertWall(pos: Batch[Vector2]): GameMap =
     insertElements(pos.map(MapElement.Wall(_)))
 
-  def insertFloor(pos: Batch[Vertex]): GameMap =
+  def insertFloor(pos: Batch[Vector2]): GameMap =
     insertElements(pos.map(MapElement.Floor(_)))
 
   def removeFullLines(ys: Batch[Int]): GameMap =
@@ -70,8 +65,8 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
 
         val withMovedDebris = withRemovedLines.update {
           case e: MapElement.Debris if e.point.y <= yMin =>
-            val nextPoint = e.point.moveBy(Vertex(0, ys.size))
-            e.copy(point = nextPoint) -> nextPoint
+            val nextPoint = e.point.moveBy(Vector2(0, ys.size))
+            e.copy(point = nextPoint) -> Vertex.fromVector2(nextPoint)
         }
 
         copy(
@@ -81,10 +76,10 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
       .getOrElse(this)
 
   def fullLinesWith(t: Tetromino): Batch[Int] =
-    val ys = t.highestPoint.y to t.lowestPoint.y
+    val ys = t.highestPoint.y.toInt to t.lowestPoint.y.toInt
 
     ys.foldLeft(Batch.empty[Int]) { (acc, y) =>
-      if xs.map(Point(_, y)) forall intersects then acc :+ y else acc
+      if xs.map(Vector2(_, y)) forall intersects then acc :+ y else acc
     }
 
   def reset: GameMap =
@@ -94,10 +89,11 @@ object GameMap:
   def apply(grid: BoundingBox): GameMap =
     // move the grid to center
     val gridSize = grid.size + grid.position + Vertex.one
-
     GameMap(grid, QuadTree.empty[MapElement](gridSize))
 
   def walled(grid: BoundingBox): GameMap =
+    import com.core.given // scalafix error when importen on top (?)
+    
     GameMap(grid)
       // .insertWalls(grid.topLeft --> grid.topRight) // no top wall
       .insertWall(grid.topRight --> grid.bottomRight)
@@ -105,9 +101,9 @@ object GameMap:
       .insertWall(grid.topLeft --> grid.bottomLeft)
 
 enum MapElement derives CanEqual:
-  case Wall(point: Vertex)
-  case Floor(point: Vertex)
-  case Debris(point: Vertex, tetrominoOrdinal: Tetromino.Ordinal)
+  case Wall(point: Vector2)
+  case Floor(point: Vector2)
+  case Debris(point: Vector2, tetrominoOrdinal: Tetromino.Ordinal)
 
 extension (underlying: MapElement)
   def point = underlying match
@@ -120,30 +116,3 @@ extension [A](underlying: QuadTree[A])
     QuadTree(
       underlying.toBatchWithPosition.map((v, a) => fn.applyOrElse(a, (_, v)))
     )
-
-extension (underlying: Vertex)
-  // adapted from snake demo
-  def -->(end: Vertex): Batch[Vertex] =
-    val start = underlying
-
-    @tailrec
-    def go(
-        last: Vertex,
-        dest: Vertex,
-        p: Vertex => Boolean,
-        acc: Batch[Vertex]
-    ): Batch[Vertex] =
-      if p(last) then acc
-      else
-        val next =
-          Vertex(
-            x = if (last.x + 1 <= end.x) last.x + 1 else last.x,
-            y = if (last.y + 1 <= end.y) last.y + 1 else last.y
-          )
-        go(next, dest, p, acc :+ next)
-
-    if lessThanOrEqual(start, end) then go(start, end, _ == end, Batch(start))
-    else go(end, start, _ == start, Batch(end))
-
-  private def lessThanOrEqual(a: Vertex, b: Vertex): Boolean =
-    a.x <= b.x && a.y <= b.y

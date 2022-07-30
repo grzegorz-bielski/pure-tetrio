@@ -4,11 +4,9 @@ import com.core.*
 import indigo.IndigoLogger.*
 import indigo.*
 import indigo.shared.Outcome
-import indigo.shared.datatypes.Point
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.KeyboardEvent.KeyDown
 import indigoextras.geometry.BoundingBox
-import indigoextras.geometry.Vertex
 
 import scala.collection.immutable.Queue
 
@@ -47,7 +45,7 @@ object GameplayModel:
   sealed trait Command
   object Command:
     enum GameCommand extends Command:
-      case Move(point: Point)
+      case Move(point: Vector2)
       case Rotate(direction: RotationDirection)
       case HardDrop
       case Pause
@@ -56,9 +54,9 @@ object GameplayModel:
     // TODO: use Batch ?
     val gameMappings: PartialFunction[InputEvent, Command] =
       case KeyDown(Key.SPACE)       => HardDrop
-      case KeyDown(Key.LEFT_ARROW)  => Move(Point(-1, 0))
-      case KeyDown(Key.RIGHT_ARROW) => Move(Point(1, 0))
-      case KeyDown(Key.DOWN_ARROW)  => Move(Point(0, 1))
+      case KeyDown(Key.LEFT_ARROW)  => Move(Vector2(-1, 0))
+      case KeyDown(Key.RIGHT_ARROW) => Move(Vector2(1, 0))
+      case KeyDown(Key.DOWN_ARROW)  => Move(Vector2(0, 1))
       case KeyDown(Key.KEY_Q)       => Rotate(CounterClockwise)
       case KeyDown(Key.KEY_W)       => Rotate(Clockwise)
       case KeyDown(Key.KEY_P)       => Pause
@@ -97,7 +95,7 @@ object GameplayModel:
         lastUpdatedFalling: Seconds,
         fallDelay: Seconds,
         score: Int,
-        lastMovement: Option[Point]
+        lastMovement: Option[Vector2]
     )
     case Paused(
         pausedState: GameplayState
@@ -107,16 +105,15 @@ object GameplayModel:
         finishedState: GameplayState
     )
 
-  val spawnPoint = Point(9, 1)
+  val spawnPoint = Vector2(9, 1)
 
   case class Intersection(
       movedTetromino: Tetromino,
       intersections: Batch[MapElement],
-      point: Point
+      point: Vector2
   ):
     lazy val minimalMovement =
-      val p = point.abs.max(1)
-      p == Point.zero || p == Point(1, 1)
+      point == Vector2.zero || point.abs.max(1) == Vector2(1, 1)
     lazy val horizontalMovement = point.x != 0
     lazy val verticalMovement   = point.y != 0
 
@@ -261,11 +258,11 @@ object GameplayModel:
       val lineBeforeFloor = state.map.bottomInternal
       val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
 
-      val intersection = (0 to linesToBottom).find { y =>
-        state.map.intersects(state.tetromino.moveBy(Point(0, y)).positions)
+      val intersection = (0 to linesToBottom.toInt).find { y =>
+        state.map.intersects(state.tetromino.moveBy(Vector2(0, y)).positions)
       }
 
-      val movement = Point(0, intersection.map(_ - 1) getOrElse linesToBottom)
+      val movement = Vector2(0, intersection.map(_ - 1).map(_.toDouble).getOrElse(linesToBottom))
       val movedTetromino = state.tetromino.moveBy(movement)
       val sticksOutOfTheMap =
         // movement decreased by 1 on intersections, so it can't be `<=`
@@ -283,13 +280,13 @@ object GameplayModel:
           )
         )
 
-    def intersectionsAt(point: Point): Intersection =
+    def intersectionsAt(point: Vector2): Intersection =
       val movedTetromino = state.tetromino.moveBy(point)
       val intersections  = state.map.intersectsWith(movedTetromino.positions)
 
       Intersection(movedTetromino, intersections, point)
 
-    def closestIntersections(point: Point): Intersection =
+    def closestIntersections(point: Vector2): Intersection =
       @scala.annotation.tailrec
       def go(intersection: Intersection): Intersection =
         if intersection.intersections.isEmpty || intersection.minimalMovement then
@@ -297,23 +294,24 @@ object GameplayModel:
         else
           go(
             state.intersectionsAt(
-              point.moveBy(intersection.point.invert.clamp(-1, 1))
+              point.moveBy(intersection.point.invert.clamp(-1, 1)) // normalize
             )
           )
 
       go(state.intersectionsAt(point))
 
     def shiftTetrominoBy(
-        baseMovement: Point,
+        baseMovement: Vector2,
         ctx: GameContext
     ): Outcome[GameplayState] =
-      val inputForce = (a: Int) =>
+      // TODO: this is a mess
+      val inputForce = (a: Double) =>
         if a < 0 then -2
         else if a > 0 then 2
         else a
       val movement = state.lastMovement
         .map { last =>
-          lazy val pforce = Point(inputForce(last.x), inputForce(last.y))
+          lazy val pforce = Vector2(inputForce(last.x), inputForce(last.y))
           println("pforce"       -> pforce)
           println("last"         -> last)
           println("baseMovement" -> baseMovement)
@@ -342,12 +340,13 @@ object GameplayModel:
       )
 
     def moveTetrominoBy(
-        point: Point,
+        point: Vector2,
         fn: Intersection => Outcome[GameplayState]
         // ctx: GameContext
     ): Outcome[GameplayState] =
       val intersection = state.closestIntersections(point)
-      // pprint.pprintln("intersection.point" -> intersection.point)
+      pprint.pprintln("intersection.intersectedStack" -> intersection.intersectedStack)
+      pprint.pprintln("intersection.point" -> intersection.point)
 
       if intersection.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))
@@ -388,7 +387,7 @@ object GameplayModel:
           Outcome(nextState) // reseting the counter for the next frame
         else
           nextState.moveTetrominoBy(
-            Point(0, 1),
+            Vector2(0, 1),
             intersection =>
               Outcome(
                 nextState.copy(
