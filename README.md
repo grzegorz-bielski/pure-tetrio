@@ -16,7 +16,8 @@ setup:
 - add tyrian (?)
 
 features:
-- smooth tetromino movement (!)
+- smooth tetromino movement (!!!)
+
 - line clear animations
 - predict next few tetrominos
 - add scores
@@ -24,6 +25,13 @@ features:
 - hold mechanic
 - block placement preview
 - floating blocks falling down (cascade gravity mode)
+
+bugs:
+- I tetromino passes through walls...
+- stop continoous rotation
+- skipped rotation animation on move
+- rotate + move -> rotate; kills the rotation
+
 
 nice to have:
 - move input handlers to scene (?)
