@@ -112,6 +112,8 @@ object GameplayModel:
       intersections: Batch[MapElement],
       point: Vector2
   ):
+    lazy val intersects = !intersections.isEmpty
+
     lazy val minimalMovement =
       point == Vector2.zero || point.abs.max(1) == Vector2(1, 1)
     lazy val horizontalMovement = point.x != 0
@@ -262,7 +264,10 @@ object GameplayModel:
         state.map.intersects(state.tetromino.moveBy(Vector2(0, y)).positions)
       }
 
-      val movement = Vector2(0, intersection.map(_ - 1).map(_.toDouble).getOrElse(linesToBottom))
+      val movement = Vector2(
+        0,
+        intersection.map(_ - 1).map(_.toDouble).getOrElse(linesToBottom)
+      )
       val movedTetromino = state.tetromino.moveBy(movement)
       val sticksOutOfTheMap =
         // movement decreased by 1 on intersections, so it can't be `<=`
@@ -286,19 +291,51 @@ object GameplayModel:
 
       Intersection(movedTetromino, intersections, point)
 
-    def closestIntersections(point: Vector2): Intersection =
-      @scala.annotation.tailrec
-      def go(intersection: Intersection): Intersection =
-        if intersection.intersections.isEmpty || intersection.minimalMovement then
-          intersection
-        else
-          go(
-            state.intersectionsAt(
-              point.moveBy(intersection.point.invert.clamp(-1, 1)) // normalize
-            )
-          )
+    // def closestIntersections(point: Vector2): Intersection =
+    //   @scala.annotation.tailrec
+    //   def go(intersection: Intersection): Intersection =
+    //     if intersection.intersections.isEmpty || intersection.minimalMovement then
+    //       intersection
+    //     else
+    //       go(
+    //         state.intersectionsAt(
+    //           point.moveBy(intersection.point.invert.clamp(-1, 1)) // normalize
+    //         )
+    //       )
 
-      go(state.intersectionsAt(point))
+    //   go(state.intersectionsAt(point))
+
+    // indigotetris-fastopt.js:50 Uncaught org.scalajs.linker.runtime.UndefinedBehaviorError: java.lang.ClassCastException: undefined is not an instance of indigo.shared.datatypes.Vector2
+
+    def closestIntersections(point: Vector2): Intersection =
+      println("point" -> point)
+      val range = Vector2.zero --> point
+
+      // println("range" -> range)
+
+      @scala.annotation.tailrec
+      def go(i: Int, prev: Option[Intersection]): Intersection =
+        val intersection = state.intersectionsAt(range(i))
+
+        // intersection
+        println("i" -> i)
+        println("prev" -> prev)
+
+        prev match
+          case None if intersection.intersects       => intersection
+          case Some(prev) if intersection.intersects => prev
+          case _ if i == range.length - 1 => intersection
+          case _ => go(i + 1, Some(intersection))
+
+      val inter = go(0, None)
+      println(
+        "inter" -> inter
+      )
+      println(
+        "intersects" -> inter.intersects
+      )
+
+      inter
 
     def shiftTetrominoBy(
         baseMovement: Vector2,
@@ -345,7 +382,9 @@ object GameplayModel:
         // ctx: GameContext
     ): Outcome[GameplayState] =
       val intersection = state.closestIntersections(point)
-      pprint.pprintln("intersection.intersectedStack" -> intersection.intersectedStack)
+      pprint.pprintln(
+        "intersection.intersectedStack" -> intersection.intersectedStack
+      )
       pprint.pprintln("intersection.point" -> intersection.point)
 
       if intersection.sticksOutOfTheMap(state.map.topInternal) then

@@ -3,11 +3,11 @@ package com.scenes.gameplay.model
 import com.core.*
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.collections.NonEmptyBatch.apply
-import indigo.shared.datatypes.Point
+import indigo.shared.datatypes.Vector2
 import munit.FunSuite
 
 class SRSSpec extends FunSuite:
-  val center = Point(9, 1)
+  val center = Vector2(9, 1)
 
   test("rotates the state correctly clockwise") {
     Vector(
@@ -44,8 +44,8 @@ class SRSSpec extends FunSuite:
       result,
       // format: off
       NonEmptyBatch(
-        Point(9, 1), Point(10, 1),
-        Point(9, 2), Point(10, 2)
+        Vector2(9, 1), Vector2(10, 1),
+        Vector2(9, 2), Vector2(10, 2)
       )
       // format: on
     )
@@ -57,26 +57,26 @@ class SRSSpec extends FunSuite:
     for {
       t <- atSpawn.rotateClockwise(
         NonEmptyBatch(
-          Point(9, 0),
-          Point(10, 0),
-          Point(9, 1),
-          Point(10, 1)
+          Vector2(9, 0),
+          Vector2(10, 0),
+          Vector2(9, 1),
+          Vector2(10, 1)
         )
       )
       t <- t.rotateClockwise(
         NonEmptyBatch(
-          Point(10, 0),
-          Point(10, 1),
-          Point(9, 0),
-          Point(9, 1)
+          Vector2(10, 0),
+          Vector2(10, 1),
+          Vector2(9, 0),
+          Vector2(9, 1)
         )
       )
       t <- t.rotateClockwise(
         NonEmptyBatch(
-          Point(10, 1),
-          Point(9, 1),
-          Point(10, 0),
-          Point(9, 0)
+          Vector2(10, 1),
+          Vector2(9, 1),
+          Vector2(10, 0),
+          Vector2(9, 0)
         )
       )
       t <- t.rotateClockwise(
@@ -86,7 +86,7 @@ class SRSSpec extends FunSuite:
   }
 
   extension (t: Tetromino)
-    def rotateClockwise(expected: => NonEmptyBatch[Point]) =
+    def rotateClockwise(expected: => NonEmptyBatch[Vector2]) =
       val next = t.rotate(RotationDirection.Clockwise)(const(false))
       assertEquals(next.map(_.positions), Some(expected))
       next

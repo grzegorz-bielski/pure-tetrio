@@ -14,7 +14,7 @@ class GameplayModelSpec extends FunSuite:
   test("hardDrop works correctly") {
     val testTable = Batch(
       // format: off
-      gameInProgress(Tetromino.o(Point(9, 1))) -> Batch(Vertex(10, 22), Vertex(10, 21), Vertex(9, 22), Vertex(9, 21)),
+      gameInProgress(Tetromino.o(Vector2(9, 1))) -> Batch(Vector2(10, 22), Vector2(10, 21), Vector2(9, 22), Vector2(9, 21)),
       // format: on
     )
 
@@ -47,7 +47,7 @@ class GameplayModelSpec extends FunSuite:
   def gameInProgress(t: Tetromino): GameplayState.InProgress =
     GameplayState.InProgress(
       map = standardMap,
-      tetromino = Tetromino.o(Point(9, 1)),
+      tetromino = Tetromino.o(Vector2(9, 1)),
       lastUpdatedFalling = Seconds(0.5),
       fallDelay = Seconds(1),
       score = 0,
