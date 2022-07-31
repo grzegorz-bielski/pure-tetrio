@@ -147,10 +147,13 @@ object GameplayModel:
     ): Outcome[GameplayState] =
       state match
         case s: GameplayState.InProgress =>
-          // cmds
-          // .collectFirst { case m: Command.Move => s }
-          // .getOrElse(s.copy(lastMovement = Point.zero))
-          s.autoTetrominoDescent(ctx, isMovingDown(ctx))
+          // TODO: not only moves, those all pressed keys...
+          val moves = ctx.inputState.keyboard.keysDown
+
+          if moves.isEmpty then  
+            s.copy(lastMovement = None)
+            .autoTetrominoDescent(ctx, isMovingDown = false)
+          else s.autoTetrominoDescent(ctx, isMovingDown = isMovingDown(ctx))
         case s => Outcome(state)
 
     def isMovingDown(ctx: GameContext): Boolean =
@@ -257,6 +260,7 @@ object GameplayModel:
           }
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
+      // TODO: resuse `shiftTetrominoBy`
       val lineBeforeFloor = state.map.bottomInternal
       val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
 
@@ -273,9 +277,10 @@ object GameplayModel:
         // movement decreased by 1 on intersections, so it can't be `<=`
         movedTetromino.positions.exists(_.y < state.map.topInternal)
 
+  
       if sticksOutOfTheMap then
         Outcome(GameplayState.GameOver(finishedState = state))
-      else
+      else 
         val nextMap = state.map.insertTetromino(movedTetromino)
         Outcome(
           GameplayState.Initial(
@@ -285,73 +290,42 @@ object GameplayModel:
           )
         )
 
-    def intersectionsAt(point: Vector2): Intersection =
-      val movedTetromino = state.tetromino.moveBy(point)
-      val intersections  = state.map.intersectsWith(movedTetromino.positions)
-
-      Intersection(movedTetromino, intersections, point)
-
-    // def closestIntersections(point: Vector2): Intersection =
-    //   @scala.annotation.tailrec
-    //   def go(intersection: Intersection): Intersection =
-    //     if intersection.intersections.isEmpty || intersection.minimalMovement then
-    //       intersection
-    //     else
-    //       go(
-    //         state.intersectionsAt(
-    //           point.moveBy(intersection.point.invert.clamp(-1, 1)) // normalize
-    //         )
-    //       )
-
-    //   go(state.intersectionsAt(point))
-
-    // indigotetris-fastopt.js:50 Uncaught org.scalajs.linker.runtime.UndefinedBehaviorError: java.lang.ClassCastException: undefined is not an instance of indigo.shared.datatypes.Vector2
-
     def closestIntersections(point: Vector2): Intersection =
-      println("point" -> point)
       val range = Vector2.zero --> point
-
-      // println("range" -> range)
 
       @scala.annotation.tailrec
       def go(i: Int, prev: Option[Intersection]): Intersection =
-        val intersection = state.intersectionsAt(range(i))
-
-        // intersection
-        println("i" -> i)
-        println("prev" -> prev)
+        val intersection = 
+          val point = range(i)
+          val movedTetromino = state.tetromino.moveBy(point)
+          val intersections  = state.map.intersectsWith(movedTetromino.positions)
+          Intersection(movedTetromino, intersections, point)
 
         prev match
-          case None if intersection.intersects       => intersection
+          case _ if intersection.intersects && intersection.minimalMovement => intersection
           case Some(prev) if intersection.intersects => prev
           case _ if i == range.length - 1 => intersection
           case _ => go(i + 1, Some(intersection))
 
-      val inter = go(0, None)
-      println(
-        "inter" -> inter
-      )
-      println(
-        "intersects" -> inter.intersects
-      )
-
-      inter
+      go(0, None)
 
     def shiftTetrominoBy(
         baseMovement: Vector2,
         ctx: GameContext
     ): Outcome[GameplayState] =
       // TODO: this is a mess
+
+      // TODO: ease function, signal ?
       val inputForce = (a: Double) =>
-        if a < 0 then -2
-        else if a > 0 then 2
+        if a < 0 then a - 1
+        else if a > 0 then a + 1
         else a
       val movement = state.lastMovement
         .map { last =>
           lazy val pforce = Vector2(inputForce(last.x), inputForce(last.y))
-          println("pforce"       -> pforce)
-          println("last"         -> last)
-          println("baseMovement" -> baseMovement)
+          // println("pforce"       -> pforce)
+          // println("last"         -> last)
+          // println("baseMovement" -> baseMovement)
 
           val res =
             if last.x < 0 && baseMovement.x < 0 || last.x > 0 && baseMovement.x > 0 then
@@ -360,7 +334,7 @@ object GameplayModel:
               pforce
             else baseMovement
 
-          println("res" -> res)
+          // println("res" -> res)
           res
         }
         .getOrElse(baseMovement)
@@ -382,10 +356,10 @@ object GameplayModel:
         // ctx: GameContext
     ): Outcome[GameplayState] =
       val intersection = state.closestIntersections(point)
-      pprint.pprintln(
-        "intersection.intersectedStack" -> intersection.intersectedStack
-      )
-      pprint.pprintln("intersection.point" -> intersection.point)
+      // pprint.pprintln(
+      //   "intersection.intersectedStack" -> intersection.intersectedStack
+      // )
+      // pprint.pprintln("intersection.point" -> intersection.point)
 
       if intersection.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))

@@ -13,11 +13,10 @@ sbt "~ fastOptJS;indigoBuild"
 TODO:
 
 setup:
+- controller setup -> derive all cmds from input state
 - add tyrian (?)
 
-features:
-- smooth tetromino movement (!!!)
-
+- higher walls
 - line clear animations
 - predict next few tetrominos
 - add scores
@@ -27,14 +26,12 @@ features:
 - floating blocks falling down (cascade gravity mode)
 
 bugs:
-- I tetromino passes through walls...
 - stop continoous rotation
 - skipped rotation animation on move
 - rotate + move -> rotate; kills the rotation
 
 
 nice to have:
-- move input handlers to scene (?)
 - resizing
 - centered overlays
 

@@ -37,6 +37,7 @@ object GameplayViewModel:
                     .Lerp(_, _, Seconds(0.093))
                     .at(ctx.gameTime.running - vm.from)
                 ).toBatch
+          // targetPositions(vm).toBatch
         // format: on
         case vm: GameplayViewModel.InProgress => targetPositions(vm).toBatch
         case _                                => Batch.empty
