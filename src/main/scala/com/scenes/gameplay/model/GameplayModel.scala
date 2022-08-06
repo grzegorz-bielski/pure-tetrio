@@ -1,6 +1,7 @@
 package com.scenes.gameplay.model
 
 import com.core.*
+import com.scenes.gameplay.*
 import indigo.IndigoLogger.*
 import indigo.*
 import indigo.shared.Outcome
@@ -17,71 +18,28 @@ import RotationDirection.*
 
 case class GameplayModel(
     state: GameplayState,
-    private val cmds: Queue[Command]
+    input: GameplayInput
 ):
-  def onInput(ctx: GameContext, e: InputEvent): Outcome[GameplayModel] =
+  def onInput(e: InputEvent, ctx: GameContext): Outcome[GameplayModel] =
     Outcome(
-      copy(cmds = produceCommands(e))
+      copy(input = input.onInput(e, ctx))
     )
 
   def onFrameTick(ctx: GameContext): Outcome[GameplayModel] =
     for
-      state <- state.onFrameTickPreCmd(ctx, cmds)
-      state <- state.consumeCommands(ctx, cmds)
-      state <- state.onFrameTickPostCmd(ctx, cmds)
-    yield GameplayModel(state = state, cmds = Queue.empty[Command])
-
-  private val produceCommands =
-    inputMappings.andThen(cmds.enqueue).orElse(_ => cmds)
+      state <- state.onFrameTickPreCmd(ctx)
+      state <- state.consumeCommands(ctx, input)
+      state <- state.onFrameTickPostCmd(ctx, input)
+    yield GameplayModel(state = state, input = input.onFrameEnd)
 
 object GameplayModel:
-  def initial(grid: BoundingBox): GameplayModel =
+  def initial(setupData: SetupData): GameplayModel =
+    val grid = setupData.bootData.gridSize
+
     GameplayModel(
       state = GameplayState.Initial(GameMap.walled(grid), 0, Batch.empty[Int]),
-      cmds = Queue.empty[Command]
+      input = GameplayInput.initial(setupData.spawnPoint)
     )
-
-  // TODO: extract to controller?
-  sealed trait Command
-  object Command:
-    enum GameCommand extends Command:
-      case Move(point: Vector2)
-      case Rotate(direction: RotationDirection)
-      case HardDrop
-      case Pause
-    export GameCommand.*
-
-    // TODO: use Batch ?
-    val gameMappings: PartialFunction[InputEvent, Command] =
-      case KeyDown(Key.SPACE)       => HardDrop
-      case KeyDown(Key.LEFT_ARROW)  => Move(Vector2(-1, 0))
-      case KeyDown(Key.RIGHT_ARROW) => Move(Vector2(1, 0))
-      case KeyDown(Key.DOWN_ARROW)  => Move(Vector2(0, 1))
-      case KeyDown(Key.KEY_Q)       => Rotate(CounterClockwise)
-      case KeyDown(Key.KEY_W)       => Rotate(Clockwise)
-      case KeyDown(Key.KEY_P)       => Pause
-
-    enum DebugCommand extends Command:
-      case Reset
-      case SpawnTetromino(t: Tetromino)
-    export DebugCommand.*
-
-    val debugMappings: PartialFunction[InputEvent, Command] =
-      case KeyDown(Key.KEY_I) => SpawnTetromino(Tetromino.i(spawnPoint))
-      case KeyDown(Key.KEY_J) => SpawnTetromino(Tetromino.j(spawnPoint))
-      case KeyDown(Key.KEY_L) => SpawnTetromino(Tetromino.l(spawnPoint))
-      case KeyDown(Key.KEY_O) => SpawnTetromino(Tetromino.o(spawnPoint))
-      case KeyDown(Key.KEY_S) => SpawnTetromino(Tetromino.s(spawnPoint))
-      case KeyDown(Key.KEY_T) => SpawnTetromino(Tetromino.t(spawnPoint))
-      case KeyDown(Key.KEY_Z) => SpawnTetromino(Tetromino.z(spawnPoint))
-      case KeyDown(Key.KEY_R) => Reset
-
-    case class Composite(cmds: Batch[Command]) extends Command
-    object Composite:
-      def apply(cmds: Command*): Composite = Composite(Batch.fromSeq(cmds))
-
-    val inputMappings: PartialFunction[InputEvent, Command] =
-      debugMappings orElse gameMappings
 
   enum GameplayState:
     case Initial(
@@ -104,8 +62,6 @@ object GameplayModel:
     case GameOver(
         finishedState: GameplayState
     )
-
-  val spawnPoint = Vector2(9, 1)
 
   case class Intersection(
       movedTetromino: Tetromino,
@@ -132,8 +88,7 @@ object GameplayModel:
 
   extension (state: GameplayState)
     def onFrameTickPreCmd(
-        ctx: GameContext,
-        cmds: Queue[Command]
+        ctx: GameContext
     ): Outcome[GameplayState] =
       state match
         case s: GameplayState.Initial =>
@@ -143,31 +98,22 @@ object GameplayModel:
 
     def onFrameTickPostCmd(
         ctx: GameContext,
-        cmds: Queue[Command]
+        input: GameplayInput
     ): Outcome[GameplayState] =
       state match
         case s: GameplayState.InProgress =>
-          // TODO: not only moves, those all pressed keys...
-          val moves = ctx.inputState.keyboard.keysDown
-
-          if moves.isEmpty then  
+          if !input.isMoving(ctx) then
             s.copy(lastMovement = None)
-            .autoTetrominoDescent(ctx, isMovingDown = false)
-          else s.autoTetrominoDescent(ctx, isMovingDown = isMovingDown(ctx))
+              .autoTetrominoDescent(ctx, isMovingDown = false)
+          else
+            s.autoTetrominoDescent(ctx, isMovingDown = input.isMovingDown(ctx))
         case s => Outcome(state)
-
-    def isMovingDown(ctx: GameContext): Boolean =
-      // TODO: less typesafe that I would like
-      // depends on pure info from the controller, ingoring Model's the game logic, so:
-      // ignoring: potential Moves with -y, not applied Moves, multiple Moves that cancels out, .etc
-      // The game doesn't support those at the moment, but once it will - this will break
-      ctx.inputState.keyboard.keysAreDown(Key.DOWN_ARROW)
 
     def consumeCommands(
         ctx: GameContext,
-        cmds: Queue[Command]
+        input: GameplayInput
     ): Outcome[GameplayState] =
-      cmds.foldLeft(Outcome(state)) { (acc, cmd) =>
+      input.cmds.foldLeft(Outcome(state)) { (acc, cmd) =>
         acc.flatMap(_.onCommand(ctx, cmd))
       }
 
@@ -199,7 +145,7 @@ object GameplayModel:
       val tetromino = t.getOrElse {
         Tetromino.spawn(
           side = ctx.dice.rollFromZero(7)
-        )(spawnPoint)
+        )(ctx.startUpData.spawnPoint)
       }
 
       Outcome[GameplayState.InProgress](
@@ -260,7 +206,7 @@ object GameplayModel:
           }
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
-      // TODO: resuse `shiftTetrominoBy`
+      // TODO: reuse `shiftTetrominoBy`
       val lineBeforeFloor = state.map.bottomInternal
       val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
 
@@ -277,10 +223,9 @@ object GameplayModel:
         // movement decreased by 1 on intersections, so it can't be `<=`
         movedTetromino.positions.exists(_.y < state.map.topInternal)
 
-  
       if sticksOutOfTheMap then
         Outcome(GameplayState.GameOver(finishedState = state))
-      else 
+      else
         val nextMap = state.map.insertTetromino(movedTetromino)
         Outcome(
           GameplayState.Initial(
@@ -295,16 +240,17 @@ object GameplayModel:
 
       @scala.annotation.tailrec
       def go(i: Int, prev: Option[Intersection]): Intersection =
-        val intersection = 
-          val point = range(i)
+        val intersection =
+          val point          = range(i)
           val movedTetromino = state.tetromino.moveBy(point)
-          val intersections  = state.map.intersectsWith(movedTetromino.positions)
+          val intersections = state.map.intersectsWith(movedTetromino.positions)
           Intersection(movedTetromino, intersections, point)
 
         prev match
-          case _ if intersection.intersects && intersection.minimalMovement => intersection
+          case _ if intersection.intersects && intersection.minimalMovement =>
+            intersection
           case Some(prev) if intersection.intersects => prev
-          case _ if i == range.length - 1 => intersection
+          case _ if i == range.length - 1            => intersection
           case _ => go(i + 1, Some(intersection))
 
       go(0, None)

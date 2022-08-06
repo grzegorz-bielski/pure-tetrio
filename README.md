@@ -13,7 +13,7 @@ sbt "~ fastOptJS;indigoBuild"
 TODO:
 
 setup:
-- controller setup -> derive all cmds from input state
+<!-- - controller setup -> derive all cmds from input state (?) -->
 - add tyrian (?)
 
 - higher walls

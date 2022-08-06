@@ -22,6 +22,7 @@ enum GameplayViewModel:
 object GameplayViewModel:
   def initial: GameplayViewModel.Empty = GameplayViewModel.Empty()
 
+  // TODO: move to view ?
   extension (viewModel: GameplayViewModel)
     def tetrominoPositions(ctx: GameContext): Batch[Point] =
       lazy val ctxGrindPoint = toGridPoint(ctx).andThen(_.toPoint)
@@ -37,7 +38,6 @@ object GameplayViewModel:
                     .Lerp(_, _, Seconds(0.093))
                     .at(ctx.gameTime.running - vm.from)
                 ).toBatch
-          // targetPositions(vm).toBatch
         // format: on
         case vm: GameplayViewModel.InProgress => targetPositions(vm).toBatch
         case _                                => Batch.empty
@@ -46,14 +46,8 @@ object GameplayViewModel:
         ctx: GameContext,
         model: GameplayModel
     ): Outcome[GameplayViewModel] =
-      // pprint.pprintln(viewModel.getClass.getSimpleName())
-
       (model.state, viewModel) match
         case (m: GameplayState.InProgress, vm: GameplayViewModel.InProgress) =>
-          // scala.scalajs.js.special.debugger()
-          // debugOnce((m.tetromino.positions -> vm.targetTetrominoPositions).toString)
-          // debugOnce(((model.getClass.getSimpleName -> viewModel.getClass.getSimpleName) -> (vm.targetTetrominoPositions == m.tetromino.positions)).toString)
-
           if vm.targetTetrominoPositions == m.tetromino.positions then
             Outcome(vm)
           else
@@ -75,7 +69,6 @@ object GameplayViewModel:
           )
 
         case (m: GameplayState.Initial, _) => 
-          // pprint.pprintln("empty")
           Outcome(GameplayViewModel.Empty())
         case _ => Outcome(viewModel)
 

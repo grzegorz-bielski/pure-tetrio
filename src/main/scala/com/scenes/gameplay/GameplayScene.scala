@@ -5,15 +5,21 @@ import com.core.GameContext
 import com.core.GameModel
 import com.core.GameViewModel
 import com.core.SetupData
+import com.scenes.gameplay.*
 import com.scenes.gameplay.model.*
 import com.scenes.gameplay.view.*
 import com.scenes.gameplay.viewmodel.*
+import indigo.IndigoLogger.*
 import indigo.*
 import indigo.scenes.*
+import indigo.shared.Outcome
 import indigo.shared.events.InputEvent
-import indigo.shared.events.*
-import indigoextras.geometry.BoundingBox
-import indigoextras.geometry.Vertex
+import indigo.shared.events.KeyboardEvent.KeyDown
+
+import scala.collection.immutable.Queue
+
+import Command.*
+import RotationDirection.*
 
 object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
   type SceneModel     = GameplayModel
@@ -41,15 +47,12 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
     Set()
 
   def updateModel(
-      context: GameContext,
+      ctx: GameContext,
       model: SceneModel
   ): GlobalEvent => Outcome[SceneModel] = {
-
-    // model.update(keyboard events  => frame ticks) .... viewmodel.update
-
-    case e: InputEvent => model.onInput(context, e)
-    case FrameTick        => model.onFrameTick(context)
-    case _                => Outcome(model)
+    case e: InputEvent => model.onInput(e, ctx)
+    case FrameTick    => model.onFrameTick(ctx)
+    case _            => Outcome(model)
   }
 
   def updateViewModel(
@@ -58,7 +61,7 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] = {
     case FrameTick => viewModel.onFrameTick(context, model)
-    case _ => Outcome(viewModel)
+    case _         => Outcome(viewModel)
   }
 
   def present(

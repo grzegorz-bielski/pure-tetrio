@@ -8,7 +8,7 @@ import indigoextras.geometry.BoundingBox
 final case class GameModel(gameplay: GameplayModel)
 
 object GameModel:
-  def initial(grid: BoundingBox) =
+  def initial(setupData: SetupData) =
     GameModel(
-      gameplay = GameplayModel.initial(grid)
+      gameplay = GameplayModel.initial(setupData)
     )

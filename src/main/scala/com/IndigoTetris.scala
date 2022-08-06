@@ -36,9 +36,9 @@ object IndigoTetris extends IndigoGame[BootData, SetupData, GameModel, GameViewM
       BootResult(gameConfig, bootData).withAssets(Assets.assets)
     }
 
-  def initialModel(startupData: SetupData): Outcome[GameModel] =
+  def initialModel(setupData: SetupData): Outcome[GameModel] =
     Outcome {
-      GameModel.initial(startupData.bootData.gridSize)
+      GameModel.initial(setupData)
     }
 
   def initialViewModel(
@@ -52,7 +52,7 @@ object IndigoTetris extends IndigoGame[BootData, SetupData, GameModel, GameViewM
       assetCollection: AssetCollection,
       dice: Dice
   ): Outcome[Startup[SetupData]] =
-    Outcome(Startup.Success(SetupData(bootData)))
+    Outcome(Startup.Success(SetupData.initial(bootData)))
 
   def updateModel(
       context: GameContext,

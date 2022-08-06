@@ -27,7 +27,7 @@ class GameplayModelSpec extends FunSuite:
         fontRegister = FontRegister(),
         dynamicText = DynamicText()
       ),
-      _startUpData = SetupData(BootData.default)
+      _startUpData = SetupData.initial(BootData.default)
     )
 
     testTable.foreach { (game, expected) =>
