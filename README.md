@@ -27,8 +27,8 @@ setup:
 
 bugs:
 - stop continoous rotation
-- skipped rotation animation on move
-- rotate + move -> rotate; kills the rotation
+<!-- - skipped rotation animation on move -->
+<!-- - rotate + move -> rotate; kills the rotation -->
 
 
 nice to have:

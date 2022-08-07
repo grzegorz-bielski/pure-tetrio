@@ -1,15 +1,15 @@
 package com
 
+import cats.effect.IO
 import com.core.*
 import com.scenes.gameplay.*
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
+import tyrian.TyrianSubSystem
 
-import scala.scalajs.js.annotation.JSExportTopLevel
-
-@JSExportTopLevel("IndigoGame")
-object IndigoTetris extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
+// @JSExportTopLevel("IndigoGame")
+final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, Int]) extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
 
   // todo: trigger on event?
   // val `blackify the screen` =
@@ -33,7 +33,9 @@ object IndigoTetris extends IndigoGame[BootData, SetupData, GameModel, GameViewM
         magnification = bootData.magnificationLevel
       )
 
-      BootResult(gameConfig, bootData).withAssets(Assets.assets)
+      BootResult(gameConfig, bootData)
+        .withAssets(Assets.assets)
+        .withSubSystems(tyrianSubSystem)
     }
 
   def initialModel(setupData: SetupData): Outcome[GameModel] =

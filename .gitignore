@@ -17,3 +17,4 @@ src_managed
 metals.sbt
 .bsp
 node_modules
+.parcel-cache

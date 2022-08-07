@@ -4,12 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "live-server ./target/indigoBuild"
+    "dev": "parcel ./frontend/index.html --open --no-cache"
+  },
+  "staticFiles": {
+    "staticPath": "./frontend/assets",
+    "staticOutPath": "assets",
+    "watcherGlob": "**"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "jsdom": "^20.0.0",
-    "live-server": "^1.2.2"
+    "snabbdom": "^3.5.1"
+  },
+  "devDependencies": {
+    "parcel": "^2.7.0",
+    "parcel-reporter-static-files-copy": "^1.4.0",
+    "process": "^0.11.10"
   }
 }
