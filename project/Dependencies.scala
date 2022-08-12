@@ -34,5 +34,9 @@ object Dependencies {
     Seq("com.lihaoyi" %%% "pprint" % "0.7.0")
   )
 
+  val dom: Deps = Def.setting(
+    Seq("org.scala-js" %%% "scalajs-dom" % "2.2.0")
+  )
+
   type Deps = Def.Initialize[Seq[ModuleID]]
 }

@@ -1,5 +1,4 @@
-import scala.sys.process._
-import scala.language.postfixOps
+import org.scalajs.linker.interface.ModuleSplitStyle
 
 import sbtwelcome._
 
@@ -13,18 +12,24 @@ lazy val indigoTetris = project
   .settings(
     name         := "indigotetris",
     version      := "0.0.1",
-    scalaVersion := "3.1.2",
+    scalaVersion := IO.read(new File("./scalaVersion.txt")),
     organization := "com",
     libraryDependencies ++= Seq.concat(
         Dependencies.Indigo.deps.value,
         Dependencies.Tyrian.deps.value,
         Dependencies.munit.value,
-        Dependencies.pprint.value
+        Dependencies.pprint.value,
+        Dependencies.dom.value
     ),
     scalafixOnCompile := true,
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    scalaJSLinkerConfig ~= { 
+      _.withModuleKind(ModuleKind.ESModule)
+        .withModuleSplitStyle(
+          ModuleSplitStyle.SmallModulesFor(List("com"))
+        )
+      },
     // .withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
     Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) } 
   )
