@@ -1,13 +1,13 @@
-# Indigo Tetris
+# Pure Tetris
 
 ## Dev
 
 Run in separate terminal windows
 ```zsh
-npm run serve
+npm run dev
 ```
 ```zsh
-sbt "~ fastOptJS;indigoBuild"
+sbt "dev"
 ```
 
 TODO:

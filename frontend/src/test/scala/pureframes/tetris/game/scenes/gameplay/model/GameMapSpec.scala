@@ -1,7 +1,6 @@
 package pureframes.tetris
 package game.scenes.gameplay.model
 
-import pureframes.tetris.game.core.BootData
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.datatypes.Point
@@ -9,6 +8,7 @@ import indigo.shared.datatypes.RGBA
 import indigo.shared.datatypes.Vector2
 import indigoextras.geometry.Vertex
 import munit.FunSuite
+import pureframes.tetris.game.core.BootData
 
 class GameMapSpec extends FunSuite:
   test("fullLinesWith - empty map") {

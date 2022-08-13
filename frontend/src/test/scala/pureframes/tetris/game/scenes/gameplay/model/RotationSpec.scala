@@ -1,11 +1,11 @@
 package pureframes.tetris
 package game.scenes.gameplay.model
 
-import pureframes.tetris.game.core.*
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.collections.NonEmptyBatch.apply
 import indigo.shared.datatypes.Vector2
 import munit.FunSuite
+import pureframes.tetris.game.core.*
 
 class SRSSpec extends FunSuite:
   val center = Vector2(9, 1)

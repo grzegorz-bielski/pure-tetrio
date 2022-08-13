@@ -1,13 +1,13 @@
 package pureframes.tetris
 package game.scenes.gameplay.model
 
-import pureframes.tetris.game.core.*
 import indigo.*
 import indigo.platform.assets.*
 import indigo.shared.*
 import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.Vertex
 import munit.FunSuite
+import pureframes.tetris.game.core.*
 
 import GameplayModel.GameplayState
 

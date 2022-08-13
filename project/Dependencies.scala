@@ -38,5 +38,9 @@ object Dependencies {
     Seq("org.scala-js" %%% "scalajs-dom" % "2.2.0")
   )
 
+  val organizeImports: Deps = Def.setting(
+    Seq("com.github.liancheng" %% "organize-imports" % "0.5.0")
+  )
+
   type Deps = Def.Initialize[Seq[ModuleID]]
 }

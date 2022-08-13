@@ -2,8 +2,8 @@ import { defineConfig } from "vite";
 import fs from 'fs'
 
 const scalaVersion = fs.readFileSync("./scalaVersion.txt", { encoding: "utf-8" })
-const projectname = "indigotetris"
-const getAppPath = suffix => `./target/scala-${scalaVersion}/${projectname}-${suffix}`
+const feModuleName = "frontend"
+const getAppPath = suffix => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
 
 export default defineConfig({
     resolve: {
