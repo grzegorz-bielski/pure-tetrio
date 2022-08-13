@@ -11,16 +11,16 @@ import pureframes.tetris.game.scenes.gameplay.model.*
 
 import scala.collection.immutable.Queue
 
-import Command.*
+import GameplayCommand.*
 import RotationDirection.*
 
 final case class GameplayInput(
     spawnPoint: Vector2,
-    cmds: Queue[Command]
+    cmds: Queue[GameplayCommand]
 ):
 
   def onFrameEnd: GameplayInput =
-    copy(cmds = Queue.empty[Command])
+    copy(cmds = Queue.empty[GameplayCommand])
 
   def onInput(e: InputEvent, ctx: GameContext): GameplayInput =
     e match
@@ -28,21 +28,12 @@ final case class GameplayInput(
       case _            => this
 
   def isMoving(ctx: GameContext): Boolean =
-    // TODO: not only moves, those all pressed keys...
-    // !ctx.inputState.keyboard.keysDown.isEmpty
-    
      ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
       case m: Move => true
       case _ => false
      }
 
   def isMovingDown(ctx: GameContext): Boolean =
-    // TODO: less typesafe that I would like
-    // depends on pure info from the controller, ingoring Model's the game logic, so:
-    // ignoring: potential Moves with -y, not applied Moves, multiple Moves that cancels out, .etc
-    // The game doesn't support those at the moment, but once it will - this will break
-    // ctx.inputState.keyboard.keysAreDown(Key.DOWN_ARROW)
-
     ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
       case m: Move => m.point.y > 0
       case _ => false
@@ -54,7 +45,7 @@ final case class GameplayInput(
   private lazy val inputMappings =
     debugMappings orElse gameMappings
 
-  private lazy val gameMappings: PartialFunction[Key, Command] =
+  private lazy val gameMappings: PartialFunction[Key, GameplayCommand] =
     case Key.SPACE       => HardDrop
     case Key.LEFT_ARROW  => Move(Vector2(-1, 0))
     case Key.RIGHT_ARROW => Move(Vector2(1, 0))
@@ -63,7 +54,7 @@ final case class GameplayInput(
     case Key.KEY_W       => Rotate(Clockwise)
     case Key.KEY_P       => Pause
 
-  private lazy val debugMappings: PartialFunction[Key, Command] =
+  private lazy val debugMappings: PartialFunction[Key, GameplayCommand] =
     case Key.KEY_I => SpawnTetromino(Tetromino.i(spawnPoint))
     case Key.KEY_J => SpawnTetromino(Tetromino.j(spawnPoint))
     case Key.KEY_L => SpawnTetromino(Tetromino.l(spawnPoint))
@@ -75,4 +66,4 @@ final case class GameplayInput(
 
 object GameplayInput:
   def initial(spawnPoint: Vector2): GameplayInput =
-    GameplayInput(spawnPoint = spawnPoint, cmds = Queue.empty[Command])
+    GameplayInput(spawnPoint = spawnPoint, cmds = Queue.empty[GameplayCommand])

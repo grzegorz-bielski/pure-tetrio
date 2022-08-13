@@ -4,20 +4,20 @@ package game.scenes.gameplay
 import indigo.*
 import pureframes.tetris.game.scenes.gameplay.model.*
 
-sealed trait Command
-object Command:
-  enum GameCommand extends Command:
+sealed trait GameplayCommand
+object GameplayCommand:
+  enum GameCommand extends GameplayCommand:
     case Move(point: Vector2)
     case Rotate(direction: RotationDirection)
     case HardDrop
     case Pause
   export GameCommand.*
 
-  enum DebugCommand extends Command:
+  enum DebugCommand extends GameplayCommand:
     case Reset
     case SpawnTetromino(t: Tetromino)
   export DebugCommand.*
 
-  case class Composite(cmds: Batch[Command]) extends Command
+  case class Composite(cmds: Batch[GameplayCommand]) extends GameplayCommand
   object Composite:
-    def apply(cmds: Command*): Composite = Composite(Batch.fromSeq(cmds))
+    def apply(cmds: GameplayCommand*): Composite = Composite(Batch.fromSeq(cmds))

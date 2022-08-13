@@ -9,8 +9,8 @@ import pureframes.tetris.game.core.*
 import pureframes.tetris.game.scenes.gameplay.*
 import tyrian.TyrianSubSystem
 
-// @JSExportTopLevel("IndigoGame")
-final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, Int]) extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
+final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
+    extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
 
   // todo: trigger on event?
   // val `blackify the screen` =
@@ -61,7 +61,14 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, Int]) extends Indig
       context: GameContext,
       model: GameModel
   ): GlobalEvent => Outcome[GameModel] =
-    _ => Outcome(model)
+    case tyrianSubSystem.TyrianEvent.Receive(cmd) =>
+      onExternalCommand(cmd, model)
+    //  Why can't I use `SceneEvent` as a param ??
+    case e: GameplayEvent.ProgressUpdated =>
+      Outcome(model).addGlobalEvents(
+        tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.inProgress))
+      )
+    case _ => Outcome(model)
 
   def updateViewModel(
       context: GameContext,
@@ -79,3 +86,21 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, Int]) extends Indig
       SceneUpdateFragment.empty
         .addLayer(Layer(BindingKey("game")))
     }
+
+  private def onExternalCommand(
+      cmd: ExternalCommand,
+      model: GameModel
+  ): Outcome[GameModel] =
+    cmd match
+      case ExternalCommand.Pause =>
+        Outcome(
+          // TODO: don't do it here ... or maybe use some lenses :vomit
+          model.copy(
+            gameplay = model.gameplay.copy(
+              input = model.gameplay.input.copy(
+                cmds = model.gameplay.input.cmds :+ GameplayCommand.Pause
+              )
+            )
+          )
+        )
+      case _ => Outcome(model)

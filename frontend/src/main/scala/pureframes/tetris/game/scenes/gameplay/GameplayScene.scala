@@ -16,7 +16,7 @@ import pureframes.tetris.game.scenes.gameplay.viewmodel.*
 
 import scala.collection.immutable.Queue
 
-import Command.*
+import GameplayCommand.*
 import RotationDirection.*
 
 object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:

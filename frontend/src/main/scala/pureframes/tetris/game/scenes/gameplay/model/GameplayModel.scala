@@ -14,7 +14,7 @@ import scala.collection.immutable.Queue
 
 import Tetromino.*
 import GameplayModel.*
-import Command.*
+import GameplayCommand.*
 import RotationDirection.*
 
 case class GameplayModel(
@@ -118,7 +118,10 @@ object GameplayModel:
         acc.flatMap(_.onCommand(ctx, cmd))
       }
 
-    def onCommand(ctx: GameContext, cmd: Command): Outcome[GameplayState] =
+    def onCommand(
+        ctx: GameContext,
+        cmd: GameplayCommand
+    ): Outcome[GameplayState] =
       state match
         case s: GameplayState.InProgress => s.onCommand(ctx, cmd)
         case s: GameplayState.Paused     => s.onCommand(ctx, cmd)
@@ -158,6 +161,8 @@ object GameplayModel:
           state.score,
           None
         )
+      ).addGlobalEvents(
+        GameplayEvent.ProgressUpdated(inProgress = true)
       )
 
     def reset(ctx: GameContext, t: Option[Tetromino]): Outcome[GameplayState] =
@@ -178,13 +183,19 @@ object GameplayModel:
       )
 
   extension (state: GameplayState.GameOver)
-    def onCommand(ctx: GameContext, cmd: Command): Outcome[GameplayState] =
+    def onCommand(
+        ctx: GameContext,
+        cmd: GameplayCommand
+    ): Outcome[GameplayState] =
       cmd match
         case Reset => state.reset(ctx, None)
         case _     => Outcome(state)
 
   extension (state: GameplayState.Paused)
-    def onCommand(ctx: GameContext, cmd: Command): Outcome[GameplayState] =
+    def onCommand(
+        ctx: GameContext,
+        cmd: GameplayCommand
+    ): Outcome[GameplayState] =
       cmd match
         case Pause => state.continue
         case _     => Outcome(state)
@@ -192,7 +203,10 @@ object GameplayModel:
     def continue: Outcome[GameplayState] = Outcome(state.pausedState)
 
   extension (state: GameplayState.InProgress)
-    def onCommand(ctx: GameContext, cmd: Command): Outcome[GameplayState] =
+    def onCommand(
+        ctx: GameContext,
+        cmd: GameplayCommand
+    ): Outcome[GameplayState] =
       cmd match
         case Move(point)       => state.shiftTetrominoBy(point, ctx)
         case Rotate(direction) => state.rotateTetromino(ctx, direction)
@@ -226,6 +240,9 @@ object GameplayModel:
 
       if sticksOutOfTheMap then
         Outcome(GameplayState.GameOver(finishedState = state))
+          .addGlobalEvents(
+            GameplayEvent.ProgressUpdated(inProgress = false)
+          )
       else
         val nextMap = state.map.insertTetromino(movedTetromino)
         Outcome(
@@ -310,6 +327,9 @@ object GameplayModel:
 
       if intersection.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))
+          .addGlobalEvents(
+            GameplayEvent.ProgressUpdated(inProgress = false)
+          )
       else if intersection.intersectedStack then
         val nextMap = state.map.insertTetromino(state.tetromino)
         Outcome(
