@@ -27,7 +27,7 @@ lazy val indigoTetris = project
     scalaJSLinkerConfig ~= { 
       _.withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(
-          ModuleSplitStyle.SmallModulesFor(List("com"))
+          ModuleSplitStyle.SmallModulesFor(List("pureframes.tetris"))
         )
       },
     // .withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
@@ -53,7 +53,7 @@ lazy val indigoTetris = project
       //   "Run the fully optimised game (requires Electron)"
       // ),
       // UsefulTask("d", "buildGameFull", "Build the fully optimised web version"),
-      UsefulTask("dev", "~ fastOptJS;indigoBuild", "Dev mode watcher")
+      // UsefulTask("dev", "~ fastOptJS;indigoBuild", "Dev mode watcher")
     ),
     logoColor        := scala.Console.MAGENTA,
     aliasColor       := scala.Console.YELLOW,
@@ -61,7 +61,9 @@ lazy val indigoTetris = project
     descriptionColor := scala.Console.WHITE
   )
 
+
 // addCommandAlias("buildGame", ";compile;fastOptJS;indigoBuild")
 // addCommandAlias("buildGameFull", ";compile;fullOptJS;indigoBuildFull")
-// addCommandAlias("runGame", ";compile;fastOptJS;indigoRun")
+addCommandAlias("dev", "~fastLinkJS")
+addCommandAlias("build", "fullLinkJS")
 // addCommandAlias("runGameFull", ";compile;fullOptJS;indigoRunFull")
