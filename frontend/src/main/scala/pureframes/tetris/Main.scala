@@ -6,6 +6,7 @@ import pureframes.tetris.game.ExternalCommand
 import pureframes.tetris.game.*
 import tyrian.Html.*
 import tyrian.*
+import tyrian.cmds.*
 
 import scala.scalajs.js.annotation.*
 
@@ -51,7 +52,6 @@ object Main extends TyrianApp[Msg, Model]:
     def view(model: Model): Html[Msg] =
         div(`class` := "main")(
             div(`class` := "game", id := gameDivId)(),
-            div(`class`:= "counter")(),
             div(`class`:= "btn")(
                 button(onClick(Msg.Pause))("Pause")
             ),
@@ -63,9 +63,6 @@ object Main extends TyrianApp[Msg, Model]:
             case m: ExternalCommand.UpdateProgress => Some(Msg.UpdateProgress(m.inProgress))
             case _ => None
         }
-
-    def main(args: Array[String]): Unit = 
-        Tyrian.start(document.getElementById("main"), init(Map()), update, view, subscriptions, 1024)
 
 case class Model(bridge: TyrianIndigoBridge[IO, ExternalCommand], gameInProgress: Boolean)
 object Model:

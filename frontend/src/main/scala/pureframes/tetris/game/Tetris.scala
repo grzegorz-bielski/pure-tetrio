@@ -31,6 +31,7 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       val gameConfig = GameConfig(
         viewport = bootData.viewport,
         clearColor = RGBA.Black,
+        // clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
       )
 
@@ -63,7 +64,7 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
   ): GlobalEvent => Outcome[GameModel] =
     case tyrianSubSystem.TyrianEvent.Receive(cmd) =>
       onExternalCommand(cmd, model)
-    //  Why can't I use `SceneEvent` as a param ??
+    //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
         tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.inProgress))
@@ -94,7 +95,7 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     cmd match
       case ExternalCommand.Pause =>
         Outcome(
-          // TODO: don't do it here ... or maybe use some lenses :vomit
+          // TODO: don't do it here  :vomit ... or maybe use some lenses
           model.copy(
             gameplay = model.gameplay.copy(
               input = model.gameplay.input.copy(
