@@ -10,19 +10,23 @@ npm run dev
 sbt "dev"
 ```
 
+## Prod
+```zsh
+sbt "build"
+```
+````zsh
+npm run build
+```
+
 TODO:
 
-setup:
-<!-- - controller setup -> derive all cmds from input state (?) -->
-- add tyrian (?)
-
-- higher walls
-- line clear animations
-- predict next few tetrominos
+features:
 - add scores
-- stages
-- hold mechanic
+- line clear animations
+- predict next few tetrominos (?)
+- stages (?)
 - block placement preview
+- hold mechanic
 - floating blocks falling down (cascade gravity mode)
 
 bugs:
@@ -31,8 +35,9 @@ bugs:
 <!-- - rotate + move -> rotate; kills the rotation -->
 
 
-nice to have:
+UI:
 - resizing
+- on screen controls (?)
 - centered overlays
 
 ideas: https://www.cmaas.de/tutorial-tetris-with-impact-js

@@ -12,10 +12,6 @@ import tyrian.TyrianSubSystem
 final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
 
-  // todo: trigger on event?
-  // val `blackify the screen` =
-  //    org.scalajs.dom.document.body.style = "background: black"
-
   def initialScene(bootData: BootData): Option[SceneName] =
     None
 
@@ -30,8 +26,8 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       val bootData = BootData.default
       val gameConfig = GameConfig(
         viewport = bootData.viewport,
-        clearColor = RGBA.Black,
-        // clearColor = RGBA.fromHexString("#242424"),
+        // clearColor = RGBA.Black,
+        clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
       )
 

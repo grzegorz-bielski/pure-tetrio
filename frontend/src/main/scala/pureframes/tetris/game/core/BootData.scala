@@ -18,13 +18,13 @@ object BootData:
     val magnificationLevel = 1
     val gridSquareSize     = 32 // game asset actual size
     val gridSize = BoundingBox(
-      x = 4,
+      x = 0,
       y = 2,
       width = 11,
-      height = 21
+      height = 22
     )
     val scale  = Vector2(1)
-    val width  = (20 * gridSquareSize * scale.x).toInt
+    val width  = (12 * gridSquareSize * scale.x).toInt
     val height = (25 * gridSquareSize * scale.y).toInt
 
     BootData(
