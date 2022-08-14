@@ -38,14 +38,15 @@ object GameplayModel:
     val grid = setupData.bootData.gridSize
 
     GameplayModel(
-      state = GameplayState.Initial(GameMap.walled(grid), 0, Batch.empty[Int]),
+      state = GameplayState
+        .Initial(GameMap.walled(grid), Progress.initial, Batch.empty[Int]),
       input = GameplayInput.initial(setupData.spawnPoint)
     )
 
   enum GameplayState:
     case Initial(
         map: GameMap,
-        score: Int,
+        progress: Progress,
         fullLines: Batch[Int]
     )
     case InProgress(
@@ -53,7 +54,7 @@ object GameplayModel:
         tetromino: Tetromino,
         lastUpdatedFalling: Seconds,
         fallDelay: Seconds,
-        score: Int,
+        progress: Progress,
         lastMovement: Option[Vector2]
     )
     case Paused(
@@ -63,30 +64,6 @@ object GameplayModel:
     case GameOver(
         finishedState: GameplayState
     )
-
-  case class Intersection(
-      movedTetromino: Tetromino,
-      intersections: Batch[MapElement],
-      point: Vector2
-  ):
-    lazy val intersects = !intersections.isEmpty
-
-    lazy val minimalMovement =
-      point == Vector2.zero || point.abs.max(1) == Vector2(1, 1)
-    lazy val horizontalMovement = point.x != 0
-    lazy val verticalMovement   = point.y != 0
-
-    lazy val stackIntersections = intersections.collect {
-      case e: MapElement.Floor  => e.point
-      case e: MapElement.Debris => e.point
-    }
-
-    lazy val intersectedStack =
-      !horizontalMovement && !stackIntersections.isEmpty
-
-    def sticksOutOfTheMap(topInternal: Int) =
-      intersectedStack && movedTetromino.positions.exists(_.y <= topInternal)
-
   extension (state: GameplayState)
     def onFrameTickPreCmd(
         ctx: GameContext
@@ -135,12 +112,12 @@ object GameplayModel:
         case s: GameplayState.Paused     => s.pausedState.map
         case s: GameplayState.GameOver   => s.finishedState.map
 
-    def score: Int =
+    def progress: Progress =
       state match
-        case s: GameplayState.Initial    => s.score
-        case s: GameplayState.InProgress => s.score
-        case s: GameplayState.Paused     => s.pausedState.score
-        case s: GameplayState.GameOver   => s.finishedState.score
+        case s: GameplayState.Initial    => s.progress
+        case s: GameplayState.InProgress => s.progress
+        case s: GameplayState.Paused     => s.pausedState.progress
+        case s: GameplayState.GameOver   => s.finishedState.progress
 
     def spawnTetromino(
         ctx: GameContext,
@@ -158,7 +135,7 @@ object GameplayModel:
           tetromino,
           ctx.gameTime.running,
           Seconds(1),
-          state.score,
+          state.progress,
           None
         )
       ).addGlobalEvents(
@@ -169,7 +146,7 @@ object GameplayModel:
       GameplayState
         .Initial(
           map = state.map.reset,
-          score = state.score,
+          progress = state.progress,
           fullLines = Batch.empty[Int]
         )
         .spawnTetromino(ctx, t)
@@ -221,57 +198,23 @@ object GameplayModel:
           }
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
-      // TODO: reuse `shiftTetrominoBy`
-      val lineBeforeFloor = state.map.bottomInternal
-      val linesToBottom   = lineBeforeFloor - state.tetromino.lowestPoint.y
+      val movment =
+        Movement.closestMovement(Vector2(0, state.map.bottomInternal), state)
 
-      val intersection = (0 to linesToBottom.toInt).find { y =>
-        state.map.intersects(state.tetromino.moveBy(Vector2(0, y)).positions)
-      }
+      lazy val nextState =
+        val nextTetromino = movment.movedTetromino
+        val nextMap       = state.map.insertTetromino(nextTetromino)
+        val fullLines     = nextMap.fullLinesWith(nextTetromino)
 
-      val movement = Vector2(
-        0,
-        intersection.map(_ - 1).map(_.toDouble).getOrElse(linesToBottom)
-      )
-      val movedTetromino = state.tetromino.moveBy(movement)
-      val sticksOutOfTheMap =
-        // movement decreased by 1 on intersections, so it can't be `<=`
-        movedTetromino.positions.exists(_.y < state.map.topInternal)
-
-      if sticksOutOfTheMap then
-        Outcome(GameplayState.GameOver(finishedState = state))
-          .addGlobalEvents(
-            GameplayEvent.ProgressUpdated(inProgress = false)
-          )
-      else
-        val nextMap = state.map.insertTetromino(movedTetromino)
         Outcome(
           GameplayState.Initial(
             map = nextMap,
-            score = state.score,
-            fullLines = nextMap.fullLinesWith(movedTetromino)
+            progress = state.progress,
+            fullLines = fullLines
           )
         )
 
-    def closestIntersections(point: Vector2): Intersection =
-      val range = Vector2.zero --> point
-
-      @scala.annotation.tailrec
-      def go(i: Int, prev: Option[Intersection]): Intersection =
-        val intersection =
-          val point          = range(i)
-          val movedTetromino = state.tetromino.moveBy(point)
-          val intersections = state.map.intersectsWith(movedTetromino.positions)
-          Intersection(movedTetromino, intersections, point)
-
-        prev match
-          case _ if intersection.intersects && intersection.minimalMovement =>
-            intersection
-          case Some(prev) if intersection.intersects => prev
-          case _ if i == range.length - 1            => intersection
-          case _ => go(i + 1, Some(intersection))
-
-      go(0, None)
+      state.moveTetrominoBy(movment, nextState)
 
     def shiftTetrominoBy(
         baseMovement: Vector2,
@@ -284,7 +227,8 @@ object GameplayModel:
         if a < 0 then a - 1
         else if a > 0 then a + 1
         else a
-      val movement = state.lastMovement
+
+      val movementVector = state.lastMovement
         .map { last =>
           lazy val pforce = Vector2(inputForce(last.x), inputForce(last.y))
           // println("pforce"       -> pforce)
@@ -303,43 +247,37 @@ object GameplayModel:
         }
         .getOrElse(baseMovement)
 
+      val movement = Movement.closestMovement(movementVector, state)
+
       state.moveTetrominoBy(
         movement,
-        intersection =>
-          Outcome(
-            state.copy(
-              tetromino = intersection.movedTetromino,
-              lastMovement = Some(intersection.point)
-            )
+        Outcome(
+          state.copy(
+            tetromino = movement.movedTetromino,
+            lastMovement = Some(movement.point)
           )
+        )
       )
 
     def moveTetrominoBy(
-        point: Vector2,
-        fn: Intersection => Outcome[GameplayState]
-        // ctx: GameContext
+        movement: Movement,
+        onMove: => Outcome[GameplayState]
     ): Outcome[GameplayState] =
-      val intersection = state.closestIntersections(point)
-      // pprint.pprintln(
-      //   "intersection.intersectedStack" -> intersection.intersectedStack
-      // )
-      // pprint.pprintln("intersection.point" -> intersection.point)
-
-      if intersection.sticksOutOfTheMap(state.map.topInternal) then
+      if movement.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))
           .addGlobalEvents(
             GameplayEvent.ProgressUpdated(inProgress = false)
           )
-      else if intersection.intersectedStack then
+      else if movement.intersectedStack then
         val nextMap = state.map.insertTetromino(state.tetromino)
         Outcome(
           GameplayState.Initial(
             map = nextMap,
-            score = state.score,
+            progress = state.progress,
             fullLines = nextMap.fullLinesWith(state.tetromino)
           )
         )
-      else if intersection.intersections.isEmpty then fn(intersection)
+      else if movement.intersections.isEmpty then onMove
       else Outcome(state.copy(lastMovement = None))
 
     def rotateTetromino(
@@ -366,15 +304,15 @@ object GameplayModel:
         if isMovingDown then
           Outcome(nextState) // reseting the counter for the next frame
         else
+          val movement = Movement.closestMovement(Vector2(0, 1), state)
           nextState.moveTetrominoBy(
-            Vector2(0, 1),
-            intersection =>
-              Outcome(
-                nextState.copy(
-                  tetromino = intersection.movedTetromino,
-                  lastMovement = None
-                )
+            movement,
+            Outcome(
+              nextState.copy(
+                tetromino = movement.movedTetromino,
+                lastMovement = None
               )
+            )
           )
       else Outcome(state)
 

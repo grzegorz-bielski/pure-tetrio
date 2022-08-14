@@ -21,7 +21,8 @@ npm run build
 TODO:
 
 features:
-- add scores
+- add levels (https://tetris.fandom.com/wiki/Tetris_(NES,_Nintendo))
+- add scores (https://tetris.wiki/Scoring - BPS ?)
 - line clear animations
 - predict next few tetrominos (?)
 - stages (?)
