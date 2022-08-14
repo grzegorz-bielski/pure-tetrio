@@ -14,6 +14,13 @@ extension (underlying: Point)
   def toVector2: Vector2 = Vector2.fromPoint(underlying)
 
 extension (underlying: Vector2)
+  def tuple: (Double, Double)                 = Tuples.to(underlying)
+  def fromTuple(t: (Double, Double)): Vector2 = Tuples.from[Vector2](t)
+  def mapCoords(fn: Double => Double): Vector2 =
+    Vector2(fn(underlying.x), fn(underlying.y))
+  def sameDirectionAs(another: Vector2): Boolean = 
+     underlying.x.sign == another.x.sign || underlying.y.sign == another.y.sign
+
   @targetName("vectorRange")
   def -->(end: Vector2): Batch[Vector2] =
     val start = underlying

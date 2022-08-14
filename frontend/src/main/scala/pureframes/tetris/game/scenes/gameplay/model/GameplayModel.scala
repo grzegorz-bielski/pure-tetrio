@@ -220,34 +220,14 @@ object GameplayModel:
         baseMovement: Vector2,
         ctx: GameContext
     ): Outcome[GameplayState] =
-      // TODO: this is a mess
-
-      // TODO: ease function, signal ?
-      val inputForce = (a: Double) =>
-        if a < 0 then a - 1
-        else if a > 0 then a + 1
-        else a
-
-      val movementVector = state.lastMovement
-        .map { last =>
-          lazy val pforce = Vector2(inputForce(last.x), inputForce(last.y))
-          // println("pforce"       -> pforce)
-          // println("last"         -> last)
-          // println("baseMovement" -> baseMovement)
-
-          val res =
-            if last.x < 0 && baseMovement.x < 0 || last.x > 0 && baseMovement.x > 0 then
-              pforce
-            else if last.y < 0 && baseMovement.y < 0 || last.y > 0 && baseMovement.y > 0 then
-              pforce
-            else baseMovement
-
-          // println("res" -> res)
-          res
-        }
-        .getOrElse(baseMovement)
-
-      val movement = Movement.closestMovement(movementVector, state)
+      val blocksPerQuickShift = 2
+      val movement = Movement.closestMovement(
+        state.lastMovement
+          .filter(_.sameDirectionAs(baseMovement))
+          .map(_.mapCoords(a => a + (a.sign * blocksPerQuickShift)))
+          .getOrElse(baseMovement),
+        state
+      )
 
       state.moveTetrominoBy(
         movement,
