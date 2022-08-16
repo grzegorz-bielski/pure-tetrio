@@ -1,4 +1,4 @@
-# Pure Tetris
+# Pure Tetrio
 
 ## Dev
 

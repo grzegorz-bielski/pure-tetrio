@@ -9,7 +9,7 @@ ThisBuild / scalafixOnCompile := true
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-lazy val puretetris = project
+lazy val puretetrio = project
   .in(file("."))
   .aggregate(frontend)
 
@@ -26,7 +26,7 @@ lazy val frontend = project
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(
-          ModuleSplitStyle.SmallModulesFor(List("pureframes.tetris"))
+          ModuleSplitStyle.SmallModulesFor(List("pureframes.tetrio"))
         )
         .withSourceMap(false) // TODO: source map are not correctly loaded in vite :sad
     }
