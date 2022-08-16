@@ -14,7 +14,7 @@ sbt "dev"
 ```zsh
 sbt "build"
 ```
-````zsh
+```zsh
 npm run build
 ```
 
