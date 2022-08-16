@@ -23,7 +23,7 @@ object BootData:
       width = 11,
       height = 22
     )
-    val scale  = Vector2(1)
+    val scale  = Vector2(0.75)
     val width  = (12 * gridSquareSize * scale.x).toInt
     val height = (25 * gridSquareSize * scale.y).toInt
 

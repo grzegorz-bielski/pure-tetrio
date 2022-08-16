@@ -17,7 +17,7 @@ import GameplayModel.*
 import GameplayCommand.*
 import RotationDirection.*
 
-case class GameplayModel(
+final case class GameplayModel(
     state: GameplayState,
     input: GameplayInput
 ):
@@ -139,25 +139,30 @@ object GameplayModel:
           None
         )
       ).addGlobalEvents(
-        GameplayEvent.ProgressUpdated(inProgress = true)
+        GameplayEvent.ProgressUpdated(state.progress, inProgress = true)
       )
 
     def reset(ctx: GameContext, t: Option[Tetromino]): Outcome[GameplayState] =
       GameplayState
         .Initial(
           map = state.map.reset,
-          progress = state.progress,
+          progress = Progress.initial,
           fullLines = Batch.empty[Int]
         )
         .spawnTetromino(ctx, t)
 
   extension (state: GameplayState.Initial)
     def removeFullLines: Outcome[GameplayState] =
+      val nextProgress = state.progress.addFullLines(state.fullLines.size)
       Outcome(
         state.copy(
-          map = state.map.removeFullLines(state.fullLines)
+          map = state.map.removeFullLines(state.fullLines),
+          progress = nextProgress
         )
       )
+        .addGlobalEvents(
+          GameplayEvent.ProgressUpdated(nextProgress, inProgress = true)
+        )
 
   extension (state: GameplayState.GameOver)
     def onCommand(
@@ -246,7 +251,7 @@ object GameplayModel:
       if movement.sticksOutOfTheMap(state.map.topInternal) then
         Outcome(GameplayState.GameOver(finishedState = state))
           .addGlobalEvents(
-            GameplayEvent.ProgressUpdated(inProgress = false)
+            GameplayEvent.ProgressUpdated(state.progress, inProgress = false)
           )
       else if movement.intersectedStack then
         val nextMap = state.map.insertTetromino(state.tetromino)

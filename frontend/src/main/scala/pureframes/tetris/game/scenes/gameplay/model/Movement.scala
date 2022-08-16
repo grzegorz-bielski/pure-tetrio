@@ -5,7 +5,7 @@ import pureframes.tetris.game.core.*
 
 import GameplayModel.*
 
-case class Movement private (
+final case class Movement private (
     movedTetromino: Tetromino,
     intersections: Batch[MapElement],
     point: Vector2

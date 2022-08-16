@@ -26,6 +26,7 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       val bootData = BootData.default
       val gameConfig = GameConfig(
         viewport = bootData.viewport,
+        // TODO: take it from config / Tyrian ?
         // clearColor = RGBA.Black,
         clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
@@ -63,7 +64,7 @@ final case class Tetris(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
-        tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.inProgress))
+        tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.progress, e.inProgress))
       )
     case _ => Outcome(model)
 
