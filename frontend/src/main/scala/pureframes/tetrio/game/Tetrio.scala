@@ -66,6 +66,9 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       Outcome(model).addGlobalEvents(
         tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.progress, e.inProgress))
       )
+    case e: ViewportResize => 
+      println(e)
+      Outcome(model)
     case _ => Outcome(model)
 
   def updateViewModel(

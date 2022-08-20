@@ -16,12 +16,31 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
 }
 
-body {
-  margin: 0 auto;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+* {
+  box-sizing: border-box;
+}
+
+html, body, .main, .game {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#game-container-indigo {
+  width: 100%;
+  height: 100vh;
+  /* height: calc(100vh - 10px); */
+  margin: 0;
+}
+
+.main {
+  position: relative;
+}
+
+.ui, .game {
+  position: absolute;
 }
