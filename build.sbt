@@ -29,7 +29,10 @@ lazy val frontend = project
           ModuleSplitStyle.SmallModulesFor(List("pureframes.tetrio"))
         )
         .withSourceMap(false) // TODO: source map are not correctly loaded in vite :sad
-    }
+    },
+    scalacOptions ++= Seq(
+      // "-language:strictEquality" TODO: fix bugs
+    )
   )
 
 addCommandAlias("dev", "~fastLinkJS")

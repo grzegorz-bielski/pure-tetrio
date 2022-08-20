@@ -1,6 +1,7 @@
 package pureframes.tetrio
 
 import cats.effect.IO
+import org.scalajs.dom
 import org.scalajs.dom.document
 import pureframes.tetrio.game.ExternalCommand
 import pureframes.tetrio.game.*
@@ -9,12 +10,30 @@ import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
 
+import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
 enum Msg:
   case StartGame
   case Pause
   case UpdateProgress(progress: Progress, inProgress: Boolean)
+
+@SuppressWarnings(Array("scalafix:DisableSyntax.null"))
+def waitForNodeToLaunch(gameNodeId: String, root: dom.Element, onDone: => Unit) =
+  if dom.document.getElementById(gameNodeId) != null then onDone
+  else
+    dom
+      .MutationObserver { (_, observer) =>
+        if dom.document.getElementById(gameNodeId) != null then
+          observer.disconnect()
+          onDone
+      }
+      .observe(
+        root,
+        new dom.MutationObserverInit:
+          subtree = true
+          childList = true
+      )
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
@@ -28,12 +47,13 @@ object Main extends TyrianApp[Msg, Model]:
       (
         model,
         Cmd.SideEffect {
-          Tetrio(model.bridge.subSystem(IndigoGameId(gameDivId)))
-            .launch(
-              gameDivId,
-              "width"  -> "550",
-              "height" -> "400"
-            )
+          waitForNodeToLaunch(
+            gameNodeId = gameDivId,
+            root = dom.document.body,
+            onDone =
+              Tetrio(model.bridge.subSystem(IndigoGameId(gameDivId)))
+                .launch(gameDivId)
+          )
         }
       )
     case Msg.Pause =>
@@ -86,3 +106,4 @@ object Model:
     gameInProgress = false,
     gameProgress = None
   )
+
