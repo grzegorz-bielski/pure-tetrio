@@ -8,6 +8,7 @@ import org.scalajs.dom.document
 import pureframes.tetrio.game.ExternalCommand
 import pureframes.tetrio.game.*
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
+import pureframes.tetrio.ui.Observers.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
@@ -18,29 +19,9 @@ import scala.scalajs.js.annotation.*
 enum Msg:
   case StartGame
   case Pause
+  case Noop
   case Resize(entries: js.Array[dom.ResizeObserverEntry])
   case UpdateProgress(progress: Progress, inProgress: Boolean)
-
-@SuppressWarnings(Array("scalafix:DisableSyntax.null"))
-def waitForNodeToLaunch(
-    gameNodeId: String,
-    root: dom.Element,
-    onDone: => Unit
-) =
-  if dom.document.getElementById(gameNodeId) != null then onDone
-  else
-    dom
-      .MutationObserver { (_, observer) =>
-        if dom.document.getElementById(gameNodeId) != null then
-          observer.disconnect()
-          onDone
-      }
-      .observe(
-        root,
-        new dom.MutationObserverInit:
-          subtree = true
-          childList = true
-      )
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
@@ -53,14 +34,12 @@ object Main extends TyrianApp[Msg, Model]:
     case Msg.StartGame =>
       (
         model,
-        Cmd.SideEffect {
-          waitForNodeToLaunch(
+        waitForNodeToLaunch[IO, Msg](
             gameNodeId = gameDivId,
             root = dom.document.body,
             onDone = Tetrio(model.bridge.subSystem(IndigoGameId(gameDivId)))
               .launch(gameDivId)
           )
-        }
       )
     case Msg.Pause =>
       (
@@ -76,9 +55,11 @@ object Main extends TyrianApp[Msg, Model]:
         Cmd.None
       )
 
-    case Msg.Resize(entries) => 
+    case Msg.Noop => (model, Cmd.None)
+
+    case Msg.Resize(entries) =>
       println("entries")
-        
+
       (
         model,
         Cmd.None
@@ -111,12 +92,13 @@ object Main extends TyrianApp[Msg, Model]:
       case _ => None
     }
 
-    // val resizer = resize[IO]
+    val resizer = resize[IO](gameDivId).map { (entries, _) =>
+      println("Msg.Resize")
+      // TODO: actual resize
+      Msg.Resize(entries)
+    }
 
-    Sub.Batch[IO, Msg](
-      indigoBridge,
-      resize[IO].map((entries, _) => Msg.Resize(entries) )
-    )
+    indigoBridge combine resizer
 
 case class Model(
     bridge: TyrianIndigoBridge[IO, ExternalCommand],
@@ -129,38 +111,3 @@ object Model:
     gameInProgress = false,
     gameProgress = None
   )
-
-type Entries = js.Array[dom.ResizeObserverEntry]
-type ResizeParams = (Entries, dom.ResizeObserver)
-
-def resize[F[_]: Sync]: Sub[F, ResizeParams] = 
-  resize("[resize-observer]")
-def resize[F[_]: Sync](id: String): Sub[F, ResizeParams] =
-  val acquire
-      : F[(Either[Throwable, ResizeParams] => Unit) => dom.ResizeObserver] =
-    Sync[F].delay { (cb: Either[Throwable, ResizeParams] => Unit) =>
-      println("ResizeObserverInit")
-      dom.ResizeObserver {(entries, params) => 
-        println("resize")
-        cb(Right((entries, params)))
-      }
-    }
-
-  val release: F[dom.ResizeObserver => F[Option[F[Unit]]]] =
-    Sync[F].delay { observer =>
-      Sync[F].delay {
-        Option(
-          Sync[F].delay {
-            observer.disconnect()
-          }
-        )
-      }
-    }
-
-  val task =
-    for
-      a <- acquire
-      r <- release
-    yield a andThen r
-
-  Sub.Observe(id, task)
