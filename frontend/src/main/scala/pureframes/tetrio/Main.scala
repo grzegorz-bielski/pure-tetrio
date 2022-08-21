@@ -3,7 +3,9 @@ package pureframes.tetrio
 import cats.effect.IO
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
+import indigo.shared.collections.NonEmptyBatch
 import org.scalajs.dom
+import org.scalajs.dom.*
 import org.scalajs.dom.document
 import pureframes.tetrio.game.ExternalCommand
 import pureframes.tetrio.game.*
@@ -20,12 +22,13 @@ enum Msg:
   case StartGame
   case Pause
   case Noop
-  case Resize(entries: js.Array[dom.ResizeObserverEntry])
+  case GameNodeMounted(element: Element)
+  case Resize(entries: NonEmptyBatch[ResizeObserverEntry])
   case UpdateProgress(progress: Progress, inProgress: Boolean)
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
-  val gameDivId = "game-container"
+  val gameNodeId = "game-container"
 
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) =
     (Model.init, Cmd.Emit(Msg.StartGame))
@@ -34,17 +37,15 @@ object Main extends TyrianApp[Msg, Model]:
     case Msg.StartGame =>
       (
         model,
-        waitForNodeToLaunch[IO, Msg](
-            gameNodeId = gameDivId,
-            root = dom.document.body,
-            onDone = Tetrio(model.bridge.subSystem(IndigoGameId(gameDivId)))
-              .launch(gameDivId)
-          )
+        Cmd.Run(
+          waitForNodeToMount[IO, Msg](gameNodeId, dom.document.body)
+        )(Msg.GameNodeMounted(_))
       )
+
     case Msg.Pause =>
       (
         model,
-        model.bridge.publish(IndigoGameId(gameDivId), ExternalCommand.Pause)
+        model.bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
       )
     case Msg.UpdateProgress(progress, inProgress) =>
       (
@@ -55,19 +56,31 @@ object Main extends TyrianApp[Msg, Model]:
         Cmd.None
       )
 
-    case Msg.Noop => (model, Cmd.None)
+    case Msg.Noop                  => (model, Cmd.None)
+    case Msg.GameNodeMounted(node) =>
+      // TODO: use node after new Indigo release
+      (
+        model,
+        Cmd.SideEffect {
+          Tetrio(model.bridge.subSystem(IndigoGameId(gameNodeId)))
+            .launch(gameNodeId)
+        }
+      )
 
     case Msg.Resize(entries) =>
-      println("entries")
+      val entry = entries.head
 
       (
         model,
-        Cmd.None
+        Cmd.SideEffect {
+          // window.devicePixelRatio
+          // entry.devicePixelContentBoxSize ???
+        }
       )
 
   def view(model: Model): Html[Msg] =
     div(`class` := "main")(
-      div(`class` := "game", id := gameDivId)(),
+      div(`class` := "game", id := gameNodeId)(),
       div(`class` := "ui")(
         div(`class` := "btn")(
           button(onClick(Msg.Pause))("Pause")
@@ -92,10 +105,8 @@ object Main extends TyrianApp[Msg, Model]:
       case _ => None
     }
 
-    val resizer = resize[IO](gameDivId).map { (entries, _) =>
-      println("Msg.Resize")
-      // TODO: actual resize
-      Msg.Resize(entries)
+    val resizer = resizeAwaitNode[IO, Msg](gameNodeId, dom.document.body).map {
+      (entries, _) =>  Msg.Resize(entries)
     }
 
     indigoBridge combine resizer

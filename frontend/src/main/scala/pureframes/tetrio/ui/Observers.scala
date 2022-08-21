@@ -2,9 +2,11 @@ package pureframes.tetrio.ui
 
 import cats.Monad
 import cats.effect.IO
+import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
-import org.scalajs.dom
+import indigo.shared.collections.NonEmptyBatch
+import org.scalajs.dom.*
 import org.scalajs.dom.document
 import pureframes.tetrio.game.ExternalCommand
 import pureframes.tetrio.game.*
@@ -17,54 +19,101 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
 object Observers:
-  type ResizeParams = (js.Array[dom.ResizeObserverEntry], dom.ResizeObserver)
-
-  // TODO: needs waitForNodeToLaunch
   def resize[F[_]: Sync](nodeId: String): Sub[F, ResizeParams] =
+    given ResizeObserverOptions = defaultResizeOptions
+
     resize(
-      s"<ResizeObserver-$nodeId>",
-      new dom.ResizeObserverOptions:
-        box = dom.ResizeObserverBoxOption.`content-box`
-      ,
-      dom.document.getElementById(nodeId)
+      id = s"<ResizeObserver-$nodeId>",
+      node = document.getElementById(nodeId)
     )
 
   def resize[F[_]: Sync](
       id: String,
-      options: dom.ResizeObserverOptions,
-      node: => dom.Element
+      node: => Element
+  )(using ResizeObserverOptions): Sub[F, ResizeParams] =
+    Sub.make[F, ResizeParams, ResizeObserver](id) { cb =>
+      Sync[F].delay(unafeResizeObserver(node, cb))
+
+    }(ob => Sync[F].delay(ob.disconnect()))
+
+  def resizeAwaitNode[F[_]: Async, Msg](
+      nodeId: String,
+      root: => Element
   ): Sub[F, ResizeParams] =
-    Sub.make[F, ResizeParams, dom.ResizeObserver](id) { cb =>
-      Sync[F].delay {
-        val observer = dom.ResizeObserver { (entries, params) =>
-          cb(Right((entries, params)))
-        }
+    given MutationObserverInit  = defaultMutationOptions
+    given ResizeObserverOptions = defaultResizeOptions
 
-        observer.observe(node, options)
-        observer
-      }
-    }(observer => Sync[F].delay(observer.disconnect()))
+    resizeAwaitNode(
+      id = s"AwaitResizeObserver-$nodeId",
+      node = document.getElementById(nodeId),
+      root = root
+    )
 
-  // TODO: make generic + Sub version ?
+  def resizeAwaitNode[F[_]: Async, Msg](
+      id: String,
+      node: => Element,
+      root: => Element
+  )(using
+      MutationObserverInit,
+      ResizeObserverOptions
+  ): Sub[F, ResizeParams] =
+    Sub.make[F, ResizeParams, ResizeObserver](id) { cb =>
+      waitForNodeToMount(node, root) *>
+        Sync[F].delay(unafeResizeObserver(node, cb))
+    }(ob => Sync[F].delay(ob.disconnect()))
+
+  def waitForNodeToMount[F[_]: Async, Msg](
+      nodeId: String,
+      root: => Element
+  ): F[Element] =
+    given MutationObserverInit = defaultMutationOptions
+
+    waitForNodeToMount(
+      document.getElementById(nodeId),
+      root
+    )
+
   @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
-  def waitForNodeToLaunch[F[_]: Sync, Msg](
-      gameNodeId: String,
-      root: => dom.Element,
-      onDone: => Unit
-  ): Cmd[F, Msg] =
-    Cmd.SideEffect {
-      if dom.document.getElementById(gameNodeId) != null then onDone
-      else
-        dom
-          .MutationObserver { (_, observer) =>
-            if dom.document.getElementById(gameNodeId) != null then
+  def waitForNodeToMount[F[_]: Async, Msg](node: => Element, root: => Element)(
+      using MutationObserverInit
+  ): F[Element] =
+    Async[F].async[Element] { cb =>
+      Sync[F].delay {
+        if node != null then
+          cb(Right(node))
+          None
+        else
+          val ob = MutationObserver { (_, observer) =>
+            if node != null then
               observer.disconnect()
-            onDone
+              cb(Right(node))
           }
-          .observe(
-            root,
-            new dom.MutationObserverInit:
-              subtree = true
-              childList = true
-          )
+
+          ob.observe(root, summon[MutationObserverInit])
+
+          Some(Sync[F].delay(ob.disconnect()))
+      }
     }
+
+  type AsyncCb[A] = Either[Throwable, A] => Unit
+  type ResizeParams = (NonEmptyBatch[ResizeObserverEntry], ResizeObserver)
+
+  val defaultMutationOptions: MutationObserverInit =
+    new MutationObserverInit:
+      subtree = true
+      childList = true
+
+  val defaultResizeOptions: ResizeObserverOptions =
+    new ResizeObserverOptions:
+      box = ResizeObserverBoxOption.`content-box`
+
+  private def unafeResizeObserver(
+      node: => Element,
+      cb: AsyncCb[ResizeParams]
+  )(using ResizeObserverOptions) =
+    val ob = ResizeObserver { (entries, params) =>
+      if !entries.isEmpty then 
+        cb(Right((NonEmptyBatch.point(entries.head), params)))
+    }
+    ob.observe(node, summon[ResizeObserverOptions])
+    ob
