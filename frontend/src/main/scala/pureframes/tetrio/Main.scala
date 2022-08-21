@@ -22,7 +22,7 @@ enum Msg:
   case StartGame
   case Pause
   case Noop
-  case GameNodeMounted(element: Element)
+  case GameNodeMounted(e: Element)
   case Resize(entries: NonEmptyBatch[ResizeObserverEntry])
   case UpdateProgress(progress: Progress, inProgress: Boolean)
 
@@ -33,12 +33,13 @@ object Main extends TyrianApp[Msg, Model]:
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) =
     (Model.init, Cmd.Emit(Msg.StartGame))
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
   def update(model: Model): Msg => (Model, Cmd[IO, Msg]) =
     case Msg.StartGame =>
       (
         model,
         Cmd.Run(
-          waitForNodeToMount[IO, Msg](gameNodeId, dom.document.body)
+          waitForNodeToMount[IO, Msg, Element](gameNodeId, dom.document.body)
         )(Msg.GameNodeMounted(_))
       )
 
@@ -55,28 +56,39 @@ object Main extends TyrianApp[Msg, Model]:
         ),
         Cmd.None
       )
-
-    case Msg.Noop                  => (model, Cmd.None)
-    case Msg.GameNodeMounted(node) =>
-      // TODO: use node after new Indigo release
+    case Msg.GameNodeMounted(gameNode) =>
       (
-        model,
+        model.copy(
+          gameNode = Some(gameNode)
+        ),
         Cmd.SideEffect {
+          // TODO: use node directly after new Indigo release
           Tetrio(model.bridge.subSystem(IndigoGameId(gameNodeId)))
-            .launch(gameNodeId)
+            .launch(
+              gameNodeId,
+              // TODO: why this have to be unsafe from the Scala side?
+              "width"  -> gameNode.clientWidth.toString,
+              "height" -> gameNode.clientHeight.toString
+            )
         }
       )
 
     case Msg.Resize(entries) =>
-      val entry = entries.head
-
       (
         model,
         Cmd.SideEffect {
-          // window.devicePixelRatio
-          // entry.devicePixelContentBoxSize ???
+          model.gameNode
+            .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
+            .foreach { canvas =>
+              val canvasSize = CanvasSize.unsafFromResizeEntry(entries.head)
+
+              canvas.width = canvasSize.displayWidth
+              canvas.height = canvasSize.displayHeight
+            }
         }
       )
+
+    case Msg.Noop => (model, Cmd.None)
 
   def view(model: Model): Html[Msg] =
     div(`class` := "main")(
@@ -105,20 +117,56 @@ object Main extends TyrianApp[Msg, Model]:
       case _ => None
     }
 
-    val resizer = resizeAwaitNode[IO, Msg](gameNodeId, dom.document.body).map {
-      (entries, _) =>  Msg.Resize(entries)
-    }
+    val resizer =
+      resizeAwaitNode[IO, Msg, HTMLCanvasElement](gameNodeId, dom.document.body)
+        .map { (entries, _) =>
+          Msg.Resize(entries)
+        }
 
     indigoBridge combine resizer
 
 case class Model(
     bridge: TyrianIndigoBridge[IO, ExternalCommand],
     gameInProgress: Boolean,
-    gameProgress: Option[Progress]
+    gameProgress: Option[Progress],
+    gameNode: Option[Element]
 )
 object Model:
   val init: Model = Model(
     bridge = TyrianIndigoBridge(),
     gameInProgress = false,
-    gameProgress = None
+    gameProgress = None,
+    gameNode = None
   )
+
+private case class CanvasSize(width: Double, height: Double, dpr: Double):
+  val displayWidth  = displaySize(width)
+  val displayHeight = displaySize(height)
+
+  private def displaySize(size: Double): Int = math.round(size * dpr).toInt
+object CanvasSize:
+  def unsafFromResizeEntry(entry: ResizeObserverEntry): CanvasSize =
+    // TODO: no entry.devicePixelContentBoxSize on scala-js dom
+    // CanvasSize(
+    //   entry.devicePixelContentBoxSize.head.inlineSize,
+    //   entry.devicePixelContentBoxSize.head.blockSize,
+    //   1
+    // )
+
+    if !js.isUndefined(entry.contentBoxSize.head) then
+      CanvasSize(
+        entry.contentBoxSize.head.inlineSize,
+        entry.contentBoxSize.head.blockSize,
+        window.devicePixelRatio
+      )
+    else
+      CanvasSize(
+        entry.contentRect.width,
+        entry.contentRect.height,
+        window.devicePixelRatio
+      )
+
+extension [A](underlying: Option[A])
+  // fp-ts like method
+  def mapNullable[B <: A](fn: A => B): Option[B] =
+    underlying.flatMap(a => Option(fn(a)))

@@ -23,10 +23,20 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
 
   def boot(flags: Map[String, String]): Outcome[BootResult[BootData]] =
     Outcome {
-      val bootData = BootData.default
+      val width  = flags.get("width").flatMap(_.toIntOption)
+      val height = flags.get("height").flatMap(_.toIntOption)
+
+      val defaultBootData = BootData.default
+      val bootData = (
+        for
+          w <- width
+          h <- height
+        yield defaultBootData.copy(viewport = GameViewport(w, h))
+      ).getOrElse(defaultBootData)
+
       val gameConfig = GameConfig(
         viewport = bootData.viewport,
-        // TODO: take it from config / Tyrian ?
+        // TODO: take it from flags ?
         // clearColor = RGBA.Black,
         clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
@@ -64,9 +74,11 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
-        tyrianSubSystem.send(ExternalCommand.UpdateProgress(e.progress, e.inProgress))
+        tyrianSubSystem.send(
+          ExternalCommand.UpdateProgress(e.progress, e.inProgress)
+        )
       )
-    case e: ViewportResize => 
+    case e: ViewportResize =>
       println(e)
       Outcome(model)
     case _ => Outcome(model)
