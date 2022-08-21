@@ -5,6 +5,7 @@ import cats.effect.IO
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
+import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 import tyrian.TyrianSubSystem
@@ -26,13 +27,22 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       val width  = flags.get("width").flatMap(_.toIntOption)
       val height = flags.get("height").flatMap(_.toIntOption)
 
-      val defaultBootData = BootData.default
       val bootData = (
         for
           w <- width
           h <- height
-        yield defaultBootData.copy(viewport = GameViewport(w, h))
-      ).getOrElse(defaultBootData)
+        yield BootData.fromBoundingBox(
+          BoundingBox(
+            x = 0,
+            y = 3,
+            // TODO: wrong spawn point, wrong height
+            // x = (w / 2 - BootData.gridWidthExternal) / BootData.gridSquareSize,
+            // y = (w / 2 - BootData.gridHeightExternal) /  BootData.gridSquareSize,
+            width = w,
+            height = h
+          )
+        )
+      ).getOrElse(BootData.default)
 
       val gameConfig = GameConfig(
         viewport = bootData.viewport,

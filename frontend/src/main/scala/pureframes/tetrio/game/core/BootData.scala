@@ -14,18 +14,33 @@ case class BootData(
     gameAssets: Assets
 )
 object BootData:
-  val default: BootData = {
-    val magnificationLevel = 1
-    val gridSquareSize     = 32 // game asset actual size
-    val gridSize = BoundingBox(
-      x = 0,
-      y = 2,
-      width = 11,
-      height = 22
+  val gridWidth          = 11
+  val gridWidthExternal  = gridWidth + 1
+  val gridHeight         = 22
+  val gridHeightExternal = gridHeight + 3
+  val gridSquareSize     = 32 // game asset actual size in px
+
+  private val magnificationLevel = 1
+  private val scale              = Vector2(1)
+
+  def default: BootData =
+    // minimal working sizes
+    fromBoundingBox(
+      BoundingBox(
+        x = 0,
+        y = 2,
+        width = (gridWidthExternal * gridSquareSize * scale.x).toInt,
+        height = (gridHeightExternal * gridSquareSize * scale.y).toInt
+      )
     )
-    val scale  = Vector2(0.75)
-    val width  = (12 * gridSquareSize * scale.x).toInt
-    val height = (25 * gridSquareSize * scale.y).toInt
+
+  def fromBoundingBox(boundingBox: BoundingBox): BootData =
+    val gridSize = BoundingBox(
+      x = boundingBox.x,
+      y = boundingBox.y,
+      width = gridWidth,
+      height = gridHeight
+    )
 
     BootData(
       gridSize = gridSize,
@@ -35,6 +50,5 @@ object BootData:
       gameAssets = Assets(
         tetrominos = Assets.Tetrominos(gridSquareSize)
       ),
-      viewport = GameViewport(width, height)
+      viewport = GameViewport(boundingBox.width.toInt, boundingBox.height.toInt)
     )
-  }

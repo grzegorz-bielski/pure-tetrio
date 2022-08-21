@@ -21,7 +21,7 @@ npm run build
 TODO:
 
 features:
-- make canvas full screen
+- grid centering
 - add levels 
     - (https://tetris.fandom.com/wiki/Tetris_(NES,_Nintendo))
     - https://harddrop.com/wiki/Back-to-Back
@@ -37,8 +37,9 @@ infra:
 - CI/CD & hosting - fe -> static site
 
 bugs:
-- lines clear not always works correctly...
-- stop continoous rotation
+- 0 blocks from the floor & after rotation - the descent time is discarded and tetromino is placed instantly (!)
+- lines clear not always works correctly... (?)
+- stop continuous rotation
 <!-- - skipped rotation animation on move -->
 <!-- - rotate + move -> rotate; kills the rotation -->
 
