@@ -16,8 +16,6 @@ object GameplayView:
       model: GameplayModel,
       viewModel: GameplayViewModel
   ): Outcome[SceneUpdateFragment] =
-    // val bootData = context.startUpData.bootData
-
     Outcome(
       SceneUpdateFragment.empty.addLayers(
         Layer(
@@ -76,23 +74,23 @@ object GameplayView:
       viewModel: GameplayViewModel,
       ctx: GameContext
   ): SceneNode =
+    val bootData = ctx.startUpData.bootData
+    // val halfSquareShift = bootData.gridSquareSize / 2
+    val halfSquareShift = 0
+
     state match
       case state: GameplayState.InProgress =>
         val positions =
-          // model.tetromino.positions.map(gridPointToPoint(bootData.gridSquareSize))
           viewModel.tetrominoPositions(ctx)
         val graphic = blockGraphic(
           state.tetromino.extractOrdinal,
-          ctx.startUpData.bootData.gameAssets.tetrominos
+          bootData.gameAssets.tetrominos
         )
-
-        //  gridPointToPoint(bootData.gridSquareSize) andThen 
 
         Group(
           positions
-            .map(
-              // gridPointToPoint(bootData.gridSquareSize) andThen graphic.moveTo
-              graphic.moveTo
+            .map(p => 
+              graphic.moveTo(p - halfSquareShift)
             )
         )
 
@@ -112,7 +110,9 @@ object GameplayView:
     )
 
   def gridVectorToPoint(gridSquareSize: Int)(gridVector: Vector2): Point =
-   (gridVector * gridSquareSize).toPoint
+    // val halfSquareShift = gridSquareSize / 2
+    val halfSquareShift = 0
+    (gridVector * gridSquareSize - halfSquareShift).toPoint
 
   def blockGraphic(
       ord: Tetromino.Ordinal,

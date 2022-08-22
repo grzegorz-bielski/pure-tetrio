@@ -7,8 +7,5 @@ object SetupData:
   def initial(bootData: BootData): SetupData =
     SetupData(
       bootData,
-      spawnPoint = Vector2(
-        x = math.floor(bootData.gridSize.width / 2), 
-        y = bootData.gridSize.y + 1
-      )
+      bootData.spawnPoint
     )

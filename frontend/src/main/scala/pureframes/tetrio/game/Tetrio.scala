@@ -8,6 +8,7 @@ import indigo.shared.datatypes.*
 import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
+import snabbdom.h.apply
 import tyrian.TyrianSubSystem
 
 final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
@@ -31,17 +32,7 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
         for
           w <- width
           h <- height
-        yield BootData.fromBoundingBox(
-          BoundingBox(
-            x = 0,
-            y = 3,
-            // TODO: wrong spawn point, wrong height
-            // x = (w / 2 - BootData.gridWidthExternal) / BootData.gridSquareSize,
-            // y = (w / 2 - BootData.gridHeightExternal) /  BootData.gridSquareSize,
-            width = w,
-            height = h
-          )
-        )
+        yield BootData.fromScreenSize(w, h)
       ).getOrElse(BootData.default)
 
       val gameConfig = GameConfig(

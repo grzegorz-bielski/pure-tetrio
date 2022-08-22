@@ -131,12 +131,12 @@ object GameplayModel:
 
       Outcome[GameplayState.InProgress](
         GameplayState.InProgress(
-          state.map,
-          tetromino,
-          ctx.gameTime.running,
-          Seconds(1),
-          state.progress,
-          None
+          map = state.map,
+          tetromino = tetromino,
+          lastUpdatedFalling = ctx.gameTime.running,
+          fallDelay = Seconds(1),
+          progress = state.progress,
+          lastMovement = None
         )
       ).addGlobalEvents(
         GameplayEvent.ProgressUpdated(state.progress, inProgress = true)

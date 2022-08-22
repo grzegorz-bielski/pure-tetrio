@@ -11,7 +11,8 @@ case class BootData(
     gridSquareSize: Int,
     magnificationLevel: Int,
     viewport: GameViewport,
-    gameAssets: Assets
+    gameAssets: Assets,
+    spawnPoint: Vector2
 )
 object BootData:
   val gridWidth          = 11
@@ -22,6 +23,16 @@ object BootData:
 
   private val magnificationLevel = 1
   private val scale              = Vector2(1)
+
+  def fromScreenSize(width: Int, height: Int): BootData =
+    fromBoundingBox(
+      BoundingBox(
+        x = (width / 2 / gridSquareSize) - gridWidth / 2 ,
+        y = (height / 2 / gridSquareSize) - gridHeight / 2 ,
+        width = width,
+        height = height
+      )
+    )
 
   def default: BootData =
     // minimal working sizes
@@ -50,5 +61,10 @@ object BootData:
       gameAssets = Assets(
         tetrominos = Assets.Tetrominos(gridSquareSize)
       ),
-      viewport = GameViewport(boundingBox.width.toInt, boundingBox.height.toInt)
+      viewport =
+        GameViewport(boundingBox.width.toInt, boundingBox.height.toInt),
+      spawnPoint = Vector2(
+        x = gridSize.x + math.floor(gridSize.width / 2),
+        y = gridSize.y + 1
+      )
     )
