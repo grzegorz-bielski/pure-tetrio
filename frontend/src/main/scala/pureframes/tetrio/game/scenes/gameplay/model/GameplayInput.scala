@@ -3,6 +3,8 @@ package game.scenes.gameplay.model
 
 import indigo.IndigoLogger.*
 import indigo.*
+import indigo.scenes.Lens
+import indigo.scenes.*
 import indigo.shared.datatypes.Vector2
 import indigo.shared.events.KeyboardEvent.KeyDown
 import pureframes.tetrio.game.core.*
@@ -18,6 +20,8 @@ final case class GameplayInput(
     spawnPoint: Vector2,
     cmds: Queue[GameplayCommand]
 ):
+  def appendCmd(cmd: GameplayCommand): GameplayInput =
+    copy(cmds = cmds :+ cmd)
 
   def onFrameEnd: GameplayInput =
     copy(cmds = Queue.empty[GameplayCommand])
@@ -28,15 +32,15 @@ final case class GameplayInput(
       case _            => this
 
   def isMoving(ctx: GameContext): Boolean =
-     ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
+    ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
       case m: Move => true
-      case _ => false
-     }
+      case _       => false
+    }
 
   def isMovingDown(ctx: GameContext): Boolean =
     ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
       case m: Move => m.point.y > 0
-      case _ => false
+      case _       => false
     }
 
   private lazy val produceCommands =
@@ -65,5 +69,10 @@ final case class GameplayInput(
     case Key.KEY_R => Reset
 
 object GameplayInput:
+  val lens: Lens[GameplayModel, GameplayInput] = Lens(
+    _.input,
+    (m, i) => m.copy(input = i)
+  )
+
   def initial(spawnPoint: Vector2): GameplayInput =
     GameplayInput(spawnPoint = spawnPoint, cmds = Queue.empty[GameplayCommand])

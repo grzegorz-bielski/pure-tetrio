@@ -3,6 +3,7 @@ package game.scenes.gameplay.model
 
 import indigo.IndigoLogger.*
 import indigo.*
+import indigo.scenes.Lens
 import indigo.shared.Outcome
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.KeyboardEvent.KeyDown

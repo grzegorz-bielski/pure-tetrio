@@ -25,18 +25,9 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
 
   def boot(flags: Map[String, String]): Outcome[BootResult[BootData]] =
     Outcome {
-      val width  = flags.get("width").flatMap(_.toIntOption)
-      val height = flags.get("height").flatMap(_.toIntOption)
-
-      val bootData = (
-        for
-          w <- width
-          h <- height
-        yield BootData.fromScreenSize(w, h)
-      ).getOrElse(BootData.default)
-
+      val bootData = BootData.fromFlags(flags)
       val gameConfig = GameConfig(
-        viewport = bootData.viewport,
+        viewport = bootData.initialViewport,
         // TODO: take it from flags ?
         // clearColor = RGBA.Black,
         clearColor = RGBA.fromHexString("#242424"),
@@ -57,7 +48,7 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       startupData: SetupData,
       model: GameModel
   ): Outcome[GameViewModel] =
-    Outcome(GameViewModel.initial)
+    Outcome(GameViewModel.initial(startupData))
 
   def setup(
       bootData: BootData,
@@ -79,9 +70,9 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
           ExternalCommand.UpdateProgress(e.progress, e.inProgress)
         )
       )
-    case e: ViewportResize =>
-      println(e)
-      Outcome(model)
+    // case e: ViewportResize =>
+    // println(e)
+    // Outcome(model)
     case _ => Outcome(model)
 
   def updateViewModel(
@@ -89,7 +80,13 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       model: GameModel,
       viewModel: GameViewModel
   ): GlobalEvent => Outcome[GameViewModel] =
-    _ => Outcome(viewModel)
+
+    case e: ViewportResize =>
+      Outcome(
+        GameplayScene.viewModelLens
+          .modify(viewModel, _.onViewportResize(e.gameViewPort))
+      )
+    case _ => Outcome(viewModel)
 
   def present(
       context: GameContext,
@@ -108,13 +105,8 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     cmd match
       case ExternalCommand.Pause =>
         Outcome(
-          // TODO: don't do it here  :vomit ... or maybe use some lenses
-          model.copy(
-            gameplay = model.gameplay.copy(
-              input = model.gameplay.input.copy(
-                cmds = model.gameplay.input.cmds :+ GameplayCommand.Pause
-              )
-            )
-          )
+          // TODO: don't do it here ?
+          GameplayScene.modelInputLens
+            .modify(model, _.appendCmd(GameplayCommand.Pause))
         )
       case _ => Outcome(model)

@@ -32,6 +32,8 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       (m, sm) => m.copy(gameplay = sm)
     )
 
+  val modelInputLens = modelLens andThen GameplayInput.lens
+
   val viewModelLens: Lens[GameViewModel, SceneViewModel] =
     Lens(
       _.gameplay,

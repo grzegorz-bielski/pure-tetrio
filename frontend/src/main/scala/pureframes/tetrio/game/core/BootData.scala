@@ -4,13 +4,14 @@ package game.core
 import indigo.GameViewport
 import indigo.shared.datatypes.Vector2
 import indigoextras.geometry.BoundingBox
+import pureframes.tetrio.game.core.*
 
 case class BootData(
     gridSize: BoundingBox,
     scale: Vector2,
     gridSquareSize: Int,
     magnificationLevel: Int,
-    viewport: GameViewport,
+    initialViewport: GameViewport,
     gameAssets: Assets,
     spawnPoint: Vector2
 )
@@ -22,35 +23,33 @@ object BootData:
   val gridSquareSize     = 32 // game asset actual size in px
 
   private val magnificationLevel = 1
-  private val scale              = Vector2(1)
+  // TODO: should be based on dpr
+  private val scale              = Vector2(2) 
 
-  def fromScreenSize(width: Int, height: Int): BootData =
-    fromBoundingBox(
-      BoundingBox(
-        x = (width / 2 / gridSquareSize) - gridWidth / 2 ,
-        y = (height / 2 / gridSquareSize) - gridHeight / 2 ,
-        width = width,
-        height = height
-      )
-    )
+  def fromFlags(flags: Map[String, String]): BootData = 
+    val width  = flags.get("width").flatMap(_.toIntOption)
+    val height = flags.get("height").flatMap(_.toIntOption)
 
-  def default: BootData =
-    // minimal working sizes
-    fromBoundingBox(
-      BoundingBox(
-        x = 0,
-        y = 2,
-        width = (gridWidthExternal * gridSquareSize * scale.x).toInt,
-        height = (gridHeightExternal * gridSquareSize * scale.y).toInt
-      )
-    )
+    val initialViewPort = (
+      for
+        w <- width
+        h <- height
+      yield CanvasSize.unsafeFromClientSizes(w, h).toViewport
+    ).getOrElse(GameViewport(500, 600))
 
-  def fromBoundingBox(boundingBox: BoundingBox): BootData =
+    fromInitalViewport(initialViewPort)
+
+  def default: BootData = 
+    fromInitalViewport(GameViewport(500, 600))
+
+  def fromInitalViewport(initialViewport: GameViewport): BootData =
     val gridSize = BoundingBox(
-      x = boundingBox.x,
-      y = boundingBox.y,
-      width = gridWidth,
-      height = gridHeight
+      x = 0,
+      y = 2,
+      width = gridWidthExternal,
+      height = gridHeightExternal
+      // width = (gridWidthExternal * gridSquareSize * scale.x).toInt,
+      // height = (gridHeightExternal * gridSquareSize * scale.y).toInt
     )
 
     BootData(
@@ -61,8 +60,7 @@ object BootData:
       gameAssets = Assets(
         tetrominos = Assets.Tetrominos(gridSquareSize)
       ),
-      viewport =
-        GameViewport(boundingBox.width.toInt, boundingBox.height.toInt),
+      initialViewport = initialViewport,
       spawnPoint = Vector2(
         x = gridSize.x + math.floor(gridSize.width / 2),
         y = gridSize.y + 1

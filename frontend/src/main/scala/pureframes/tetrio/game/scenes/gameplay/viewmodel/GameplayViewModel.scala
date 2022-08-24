@@ -10,68 +10,57 @@ import indigoextras.subsystems.Automata
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
 
-import GameplayModel.GameplayState
+import GameplayViewModel.*
+import GameplayModel.*
 
-enum GameplayViewModel:
-  case Empty()
-  case InProgress(
-      prevTetrominoPositions: Option[NonEmptyBatch[Vector2]],
-      targetTetrominoPositions: NonEmptyBatch[Vector2],
-      from: Seconds
-  )
+case class GameplayViewModel(state: State, viewport: GameViewport):
+  def onViewportResize(nextViewport: GameViewport): GameplayViewModel =
+    copy(viewport = nextViewport)
 
-object GameplayViewModel:
-  def initial: GameplayViewModel.Empty = GameplayViewModel.Empty()
-
-  // TODO: move to view ?
-  extension (viewModel: GameplayViewModel)
-    def tetrominoPositions(ctx: GameContext): Batch[Point] =
-      lazy val ctxGrindPoint = toGridPoint(ctx).andThen(_.toPoint)
-      lazy val targetPositions = (vm: GameplayViewModel.InProgress) =>
-        vm.targetTetrominoPositions.map(ctxGrindPoint)
-
-      viewModel match
-        // format: off
-        case vm @ GameplayViewModel.InProgress(Some(prevTetrominoPositions), _, _) =>
-           (prevTetrominoPositions.map(ctxGrindPoint) zip targetPositions(vm))
-                .map(
-                  Signal
-                    .Lerp(_, _, Seconds(0.093))
-                    .at(ctx.gameTime.running - vm.from)
-                ).toBatch
-        // format: on
-        case vm: GameplayViewModel.InProgress => targetPositions(vm).toBatch
-        case _                                => Batch.empty
-
-    def onFrameTick(
-        ctx: GameContext,
-        model: GameplayModel
-    ): Outcome[GameplayViewModel] =
-      (model.state, viewModel) match
-        case (m: GameplayState.InProgress, vm: GameplayViewModel.InProgress) =>
-          if vm.targetTetrominoPositions == m.tetromino.positions then
-            Outcome(vm)
-          else
-            Outcome(
-              GameplayViewModel.InProgress(
+  def onFrameTick(
+      ctx: GameContext,
+      model: GameplayModel
+  ): Outcome[GameplayViewModel] =
+    (model.state, state) match
+      case (m: GameplayState.InProgress, vm: State.InProgress) =>
+        if vm.targetTetrominoPositions == m.tetromino.positions then
+          Outcome(this)
+        else
+          Outcome(
+            copy(
+              state = State.InProgress(
                 prevTetrominoPositions = Some(vm.targetTetrominoPositions),
                 targetTetrominoPositions = m.tetromino.positions,
                 from = ctx.gameTime.running
               )
             )
-
-        case (m: GameplayState.InProgress, _: GameplayViewModel.Empty) =>
-          Outcome(
-            GameplayViewModel.InProgress(
+          )
+      case (m: GameplayState.InProgress, _: State.Empty) =>
+        Outcome(
+          copy(
+            state = State.InProgress(
               prevTetrominoPositions = None,
               targetTetrominoPositions = m.tetromino.positions,
               from = ctx.gameTime.running
             )
           )
+        )
+      case (m: GameplayState.Initial, _) =>
+        Outcome(copy(state = State.Empty()))
+      case _ => Outcome(this)
 
-        case (m: GameplayState.Initial, _) => 
-          Outcome(GameplayViewModel.Empty())
-        case _ => Outcome(viewModel)
 
-def toGridPoint(ctx: GameContext)(point: Vector2) =
-  point * ctx.startUpData.bootData.gridSquareSize
+object GameplayViewModel:
+  def initial(viewport: GameViewport): GameplayViewModel =
+    GameplayViewModel(
+      state = State.Empty(),
+      viewport = viewport
+    )
+
+  enum State:
+    case Empty()
+    case InProgress(
+        prevTetrominoPositions: Option[NonEmptyBatch[Vector2]],
+        targetTetrominoPositions: NonEmptyBatch[Vector2],
+        from: Seconds
+    )

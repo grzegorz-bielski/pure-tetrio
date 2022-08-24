@@ -16,6 +16,9 @@ extension (underlying: Point)
 extension [T](underlying: IndexedSeq[T])
   def toBatch: Batch[T] = Batch.fromIndexedSeq(underlying)
 
+extension [T](underyling: Option[T])
+  def toBatch: Batch[T] = Batch.fromOption(underyling)
+
 extension (underlying: Vector2)
   def tuple: (Double, Double)                 = Tuples.to(underlying)
   def fromTuple(t: (Double, Double)): Vector2 = Tuples.from[Vector2](t)

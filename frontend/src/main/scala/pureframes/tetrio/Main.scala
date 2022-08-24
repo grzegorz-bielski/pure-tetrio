@@ -7,8 +7,8 @@ import indigo.shared.collections.NonEmptyBatch
 import org.scalajs.dom
 import org.scalajs.dom.*
 import org.scalajs.dom.document
-import pureframes.tetrio.game.ExternalCommand
 import pureframes.tetrio.game.*
+import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
 import pureframes.tetrio.ui.Observers.*
 import tyrian.Html.*
@@ -82,8 +82,10 @@ object Main extends TyrianApp[Msg, Model]:
             .foreach { canvas =>
               val canvasSize = CanvasSize.unsafFromResizeEntry(entries.head)
 
-              canvas.width = canvasSize.displayWidth
-              canvas.height = canvasSize.displayHeight
+              println("canvasSize" -> canvasSize)
+
+              canvas.width = canvasSize.drawingBufferWidth
+              canvas.height = canvasSize.drawingBufferHeight
             }
         }
       )
@@ -138,33 +140,6 @@ object Model:
     gameProgress = None,
     gameNode = None
   )
-
-private case class CanvasSize(width: Double, height: Double, dpr: Double):
-  val displayWidth  = displaySize(width)
-  val displayHeight = displaySize(height)
-
-  private def displaySize(size: Double): Int = math.round(size * dpr).toInt
-object CanvasSize:
-  def unsafFromResizeEntry(entry: ResizeObserverEntry): CanvasSize =
-    // TODO: no entry.devicePixelContentBoxSize on scala-js dom
-    // CanvasSize(
-    //   entry.devicePixelContentBoxSize.head.inlineSize,
-    //   entry.devicePixelContentBoxSize.head.blockSize,
-    //   1
-    // )
-
-    if !js.isUndefined(entry.contentBoxSize.head) then
-      CanvasSize(
-        entry.contentBoxSize.head.inlineSize,
-        entry.contentBoxSize.head.blockSize,
-        window.devicePixelRatio
-      )
-    else
-      CanvasSize(
-        entry.contentRect.width,
-        entry.contentRect.height,
-        window.devicePixelRatio
-      )
 
 extension [A](underlying: Option[A])
   // fp-ts like method
