@@ -35,35 +35,31 @@ object GameplayView:
       viewModel: GameplayViewModel,
       ctx: GameContext
   ): SceneNode =
-    import ctx.startUpData.bootData.{gridSize, gridSquareSize, scale}
+    import ctx.startUpData.bootData.scale
 
     Group(
       drawMap(model.state, ctx) ++ drawTetromino(model.state, viewModel, ctx)
     )
       .scaleBy(scale)
       .moveBy(
-        Point(
-          x =
-            (viewModel.viewport.width / 2 - gridSize.width * gridSquareSize * scale.x / 2).toInt,
-          y =
-            (viewModel.viewport.height / 2 - gridSize.height * gridSquareSize * scale.y / 2).toInt
-        )
+        viewModel.gameMapCoords(ctx)
       )
 
   // todo: separate scene ?
   def drawOverlay(state: GameplayState, ctx: GameContext): Option[SceneNode] =
+    import ctx.startUpData.bootData.scale
     val point = state.map.grid.position.toPoint
-    // val scale = ctx.startUpData.bootData.scale
 
     state match
       case s: GameplayState.Paused =>
-        Some(drawTextBox("Paused", point))
+        Some(drawTextBox("Paused", point, scale))
       case s: GameplayState.GameOver =>
-        Some(drawTextBox("Game Over", point))
+        Some(drawTextBox("Game Over", point, scale))
       case _ => None
 
-  def drawTextBox(text: String, p: Point): SceneNode =
+  def drawTextBox(text: String, p: Point, scale: Vector2): SceneNode =
     TextBox(text)
+      .scaleBy(scale)
       .moveTo(p)
       .withColor(RGBA.White)
       .withFontSize(Pixels(30))

@@ -24,12 +24,9 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
     EventFilters.Permissive
 
   def boot(flags: Map[String, String]): Outcome[BootResult[BootData]] =
-    Outcome {
-      val bootData = BootData.fromFlags(flags)
+    BootData.fromFlags(flags).map { bootData =>
       val gameConfig = GameConfig(
         viewport = bootData.initialViewport,
-        // TODO: take it from flags ?
-        // clearColor = RGBA.Black,
         clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
       )

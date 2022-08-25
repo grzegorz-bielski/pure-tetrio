@@ -1,7 +1,9 @@
 package pureframes.tetrio
 package game.core
 
+import cats.syntax.all.*
 import indigo.GameViewport
+import indigo.shared.Outcome
 import indigo.shared.datatypes.Vector2
 import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
@@ -22,45 +24,45 @@ object BootData:
   val gridHeightExternal = gridHeight + 3
   val gridSquareSize     = 32 // game asset actual size in px
 
+  val defaultCanvasSize =
+    CanvasSize(500, 600, 1)
+
   private val magnificationLevel = 1
-  // TODO: should be based on dpr
-  private val scale              = Vector2(2) 
 
-  def fromFlags(flags: Map[String, String]): BootData = 
-    val width  = flags.get("width").flatMap(_.toIntOption)
-    val height = flags.get("height").flatMap(_.toIntOption)
+  def fromFlags(flags: Map[String, String]): Outcome[BootData] =
+    Outcome {
+      val initialCanvasSize =
+        (
+          flags.get("width").flatMap(_.toIntOption),
+          flags.get("height").flatMap(_.toIntOption)
+        )
+          .mapN(CanvasSize.unsafeFromClientSizes)
+          .getOrElse(defaultCanvasSize)
 
-    val initialViewPort = (
-      for
-        w <- width
-        h <- height
-      yield CanvasSize.unsafeFromClientSizes(w, h).toViewport
-    ).getOrElse(GameViewport(500, 600))
+      fromCanvasSize(initialCanvasSize)
+    }
 
-    fromInitalViewport(initialViewPort)
+  def default: BootData =
+    fromCanvasSize(defaultCanvasSize)
 
-  def default: BootData = 
-    fromInitalViewport(GameViewport(500, 600))
-
-  def fromInitalViewport(initialViewport: GameViewport): BootData =
+  def fromCanvasSize(canvasSize: CanvasSize): BootData =
     val gridSize = BoundingBox(
       x = 0,
       y = 2,
       width = gridWidthExternal,
       height = gridHeightExternal
-      // width = (gridWidthExternal * gridSquareSize * scale.x).toInt,
-      // height = (gridHeightExternal * gridSquareSize * scale.y).toInt
     )
 
     BootData(
       gridSize = gridSize,
-      scale = scale,
+      // TODO: dpr could be changed during gameplay -> moving game to different screen
+      scale = Vector2(canvasSize.dpr),
       gridSquareSize = gridSquareSize,
       magnificationLevel = magnificationLevel,
       gameAssets = Assets(
         tetrominos = Assets.Tetrominos(gridSquareSize)
       ),
-      initialViewport = initialViewport,
+      initialViewport = canvasSize.toViewport,
       spawnPoint = Vector2(
         x = gridSize.x + math.floor(gridSize.width / 2),
         y = gridSize.y + 1

@@ -21,7 +21,6 @@ npm run build
 TODO:
 
 features:
-- grid centering
 - add levels 
     - (https://tetris.fandom.com/wiki/Tetris_(NES,_Nintendo))
     - https://harddrop.com/wiki/Back-to-Back
@@ -40,11 +39,11 @@ bugs:
 - 0 blocks from the floor & after rotation - the descent time is discarded and tetromino is placed instantly (!)
 - lines clear not always works correctly... (?)
 - stop continuous rotation
+- debounce resizing
 <!-- - skipped rotation animation on move -->
 <!-- - rotate + move -> rotate; kills the rotation -->
 
 UI:
-- resizing
 - on screen controls (?)
 - centered overlays
 

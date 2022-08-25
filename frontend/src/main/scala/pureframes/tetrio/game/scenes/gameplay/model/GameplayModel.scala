@@ -227,13 +227,13 @@ object GameplayModel:
         ctx: GameContext
     ): Outcome[GameplayState] =
       val blocksPerQuickShift = 2
-      val movement = Movement.closestMovement(
-        state.lastMovement
+
+      val movementVector =   state.lastMovement
           .filter(_.sameDirectionAs(baseMovement))
           .map(_.mapCoords(a => a + (a.sign * blocksPerQuickShift)))
-          .getOrElse(baseMovement),
-        state
-      )
+          .getOrElse(baseMovement)
+
+      val movement = Movement.closestMovement(movementVector, state)
 
       state.moveTetrominoBy(
         movement,
@@ -277,6 +277,7 @@ object GameplayModel:
           .getOrElse(state)
       )
 
+    // should work by increasing gravity without affecting movement controlls
     def autoTetrominoDescent(
         ctx: GameContext,
         isMovingDown: Boolean

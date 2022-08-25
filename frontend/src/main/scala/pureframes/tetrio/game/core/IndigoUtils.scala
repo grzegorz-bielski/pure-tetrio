@@ -25,7 +25,9 @@ extension (underlying: Vector2)
   def mapCoords(fn: Double => Double): Vector2 =
     Vector2(fn(underlying.x), fn(underlying.y))
   def sameDirectionAs(another: Vector2): Boolean =
-    underlying.x.sign == another.x.sign || underlying.y.sign == another.y.sign
+    // TODO: can this be smarter ?
+    (underlying.x.sign == another.x.sign && another.x != 0) ||
+      (underlying.y.sign == another.y.sign && another.y != 0)
 
   @targetName("vectorRange")
   def -->(end: Vector2): Batch[Vector2] =

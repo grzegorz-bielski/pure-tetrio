@@ -17,6 +17,16 @@ case class GameplayViewModel(state: State, viewport: GameViewport):
   def onViewportResize(nextViewport: GameViewport): GameplayViewModel =
     copy(viewport = nextViewport)
 
+  def gameMapCoords(ctx: GameContext): Point =
+    import ctx.startUpData.bootData.{gridSize, gridSquareSize, scale}
+
+    Point(
+      x =
+        (viewport.width / 2 - gridSize.width * gridSquareSize * scale.x / 2).toInt,
+      y =
+        (viewport.height / 2 - gridSize.height * gridSquareSize * scale.y / 2).toInt
+    )
+
   def onFrameTick(
       ctx: GameContext,
       model: GameplayModel
@@ -48,7 +58,6 @@ case class GameplayViewModel(state: State, viewport: GameViewport):
       case (m: GameplayState.Initial, _) =>
         Outcome(copy(state = State.Empty()))
       case _ => Outcome(this)
-
 
 object GameplayViewModel:
   def initial(viewport: GameViewport): GameplayViewModel =

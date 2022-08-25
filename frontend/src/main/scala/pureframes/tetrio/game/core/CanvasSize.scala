@@ -1,5 +1,6 @@
 package pureframes.tetrio.game.core
 
+import indigo.shared.Outcome
 import indigo.shared.config.GameViewport
 import org.scalajs.dom
 import org.scalajs.dom.*
@@ -17,12 +18,15 @@ case class CanvasSize(width: Double, height: Double, dpr: Double):
   val drawingBufferWidth  = displaySize(width)
   val drawingBufferHeight = displaySize(height)
 
-  def toViewport: GameViewport = 
+  def toViewport: GameViewport =
     GameViewport(drawingBufferWidth, drawingBufferHeight)
 
   private def displaySize(size: Double): Int = math.round(size * dpr).toInt
 
 object CanvasSize:
+  def fromClientSize(width: Int, heigth: Int): Outcome[CanvasSize] =
+    Outcome(unsafeFromClientSizes(width, heigth))
+
   def unsafeFromClientSizes(width: Int, heigt: Int): CanvasSize =
     CanvasSize(
       width,
