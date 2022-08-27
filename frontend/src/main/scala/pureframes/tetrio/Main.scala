@@ -23,7 +23,7 @@ enum Msg:
   case Pause
   case Noop
   case GameNodeMounted(e: Element)
-  case Resize(entries: NonEmptyBatch[ResizeObserverEntry])
+  case Resize(canvasSize: CanvasSize)
   case UpdateProgress(progress: Progress, inProgress: Boolean)
 
 @JSExportTopLevel("TyrianApp")
@@ -73,21 +73,23 @@ object Main extends TyrianApp[Msg, Model]:
         }
       )
 
-    case Msg.Resize(entries) =>
+    case Msg.Resize(canvasSize) =>
       (
         model,
-        Cmd.SideEffect {
-          model.gameNode
-            .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
-            .foreach { canvas =>
-              val canvasSize = CanvasSize.unsafFromResizeEntry(entries.head)
-
-              println("canvasSize" -> canvasSize)
-
-              canvas.width = canvasSize.drawingBufferWidth
-              canvas.height = canvasSize.drawingBufferHeight
-            }
-        }
+        Cmd.merge(
+          Cmd.SideEffect {
+            model.gameNode
+              .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
+              .foreach { canvas =>
+                canvas.width = canvasSize.drawingBufferWidth
+                canvas.height = canvasSize.drawingBufferHeight
+              }
+          },
+          model.bridge.publish(
+            IndigoGameId(gameNodeId),
+            ExternalCommand.CanvasResize(canvasSize)
+          )
+        )
       )
 
     case Msg.Noop => (model, Cmd.None)
@@ -120,9 +122,13 @@ object Main extends TyrianApp[Msg, Model]:
     }
 
     val resizer =
+      // TODO: we also need to listen for dpr changes and debounce this whole mess
       resizeAwaitNode[IO, Msg, HTMLCanvasElement](gameNodeId, dom.document.body)
         .map { (entries, _) =>
-          Msg.Resize(entries)
+          // TODO: this should be in suspended and handled in flatMap...
+          val size = CanvasSize.unsafFromResizeEntry(entries.head)
+
+          Msg.Resize(size)
         }
 
     indigoBridge combine resizer

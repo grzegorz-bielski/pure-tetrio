@@ -26,7 +26,7 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
   def boot(flags: Map[String, String]): Outcome[BootResult[BootData]] =
     BootData.fromFlags(flags).map { bootData =>
       val gameConfig = GameConfig(
-        viewport = bootData.initialViewport,
+        viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
         clearColor = RGBA.fromHexString("#242424"),
         magnification = bootData.magnificationLevel
       )
@@ -58,8 +58,13 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       context: GameContext,
       model: GameModel
   ): GlobalEvent => Outcome[GameModel] =
-    case tyrianSubSystem.TyrianEvent.Receive(cmd) =>
-      onExternalCommand(cmd, model)
+    case tyrianSubSystem.TyrianEvent.Receive(ExternalCommand.Pause) =>
+        Outcome(
+          // TODO: don't do it here ?
+          GameplayScene.modelInputLens
+            .modify(model, _.appendCmd(GameplayCommand.Pause))
+        )
+
     //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
@@ -67,9 +72,7 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
           ExternalCommand.UpdateProgress(e.progress, e.inProgress)
         )
       )
-    // case e: ViewportResize =>
-    // println(e)
-    // Outcome(model)
+
     case _ => Outcome(model)
 
   def updateViewModel(
@@ -78,11 +81,12 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       viewModel: GameViewModel
   ): GlobalEvent => Outcome[GameViewModel] =
 
-    case e: ViewportResize =>
-      Outcome(
-        GameplayScene.viewModelLens
-          .modify(viewModel, _.onViewportResize(e.gameViewPort))
-      )
+    case tyrianSubSystem.TyrianEvent.Receive(cmd: ExternalCommand.CanvasResize) =>
+        Outcome( 
+          GameplayScene.viewModelLens
+            .modify(viewModel, _.onCanvasResize(cmd.canvasSize))
+        )
+
     case _ => Outcome(viewModel)
 
   def present(
@@ -94,16 +98,3 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       SceneUpdateFragment.empty
         .addLayer(Layer(BindingKey("game")))
     }
-
-  private def onExternalCommand(
-      cmd: ExternalCommand,
-      model: GameModel
-  ): Outcome[GameModel] =
-    cmd match
-      case ExternalCommand.Pause =>
-        Outcome(
-          // TODO: don't do it here ?
-          GameplayScene.modelInputLens
-            .modify(model, _.appendCmd(GameplayCommand.Pause))
-        )
-      case _ => Outcome(model)

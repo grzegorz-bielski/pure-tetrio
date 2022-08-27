@@ -13,7 +13,7 @@ case class BootData(
     scale: Vector2,
     gridSquareSize: Int,
     magnificationLevel: Int,
-    initialViewport: GameViewport,
+    initialCanvasSize: CanvasSize,
     gameAssets: Assets,
     spawnPoint: Vector2
 )
@@ -55,14 +55,13 @@ object BootData:
 
     BootData(
       gridSize = gridSize,
-      // TODO: dpr could be changed during gameplay -> moving game to different screen
-      scale = Vector2(canvasSize.dpr),
+      scale = canvasSize.scale ,
       gridSquareSize = gridSquareSize,
       magnificationLevel = magnificationLevel,
       gameAssets = Assets(
         tetrominos = Assets.Tetrominos(gridSquareSize)
       ),
-      initialViewport = canvasSize.toViewport,
+      initialCanvasSize = canvasSize,
       spawnPoint = Vector2(
         x = gridSize.x + math.floor(gridSize.width / 2),
         y = gridSize.y + 1

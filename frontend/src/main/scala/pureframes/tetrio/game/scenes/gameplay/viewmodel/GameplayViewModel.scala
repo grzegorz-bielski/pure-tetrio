@@ -13,18 +13,19 @@ import pureframes.tetrio.game.scenes.gameplay.model.*
 import GameplayViewModel.*
 import GameplayModel.*
 
-case class GameplayViewModel(state: State, viewport: GameViewport):
-  def onViewportResize(nextViewport: GameViewport): GameplayViewModel =
-    copy(viewport = nextViewport)
+case class GameplayViewModel(state: State, canvasSize: CanvasSize):
+  def onCanvasResize(nextCanvasSize: CanvasSize): GameplayViewModel =
+    copy(canvasSize = nextCanvasSize)
 
+  lazy val gameMapScale: Vector2 = canvasSize.scale
   def gameMapCoords(ctx: GameContext): Point =
-    import ctx.startUpData.bootData.{gridSize, gridSquareSize, scale}
+    import ctx.startUpData.bootData.{gridSize, gridSquareSize}
 
     Point(
       x =
-        (viewport.width / 2 - gridSize.width * gridSquareSize * scale.x / 2).toInt,
+        (canvasSize.drawingBufferWidth / 2 - gridSize.width * gridSquareSize * gameMapScale.x / 2).toInt,
       y =
-        (viewport.height / 2 - gridSize.height * gridSquareSize * scale.y / 2).toInt
+        (canvasSize.drawingBufferHeight / 2 - gridSize.height * gridSquareSize * gameMapScale.y / 2).toInt
     )
 
   def onFrameTick(
@@ -60,10 +61,10 @@ case class GameplayViewModel(state: State, viewport: GameViewport):
       case _ => Outcome(this)
 
 object GameplayViewModel:
-  def initial(viewport: GameViewport): GameplayViewModel =
+  def initial(canvasSize: CanvasSize): GameplayViewModel =
     GameplayViewModel(
       state = State.Empty(),
-      viewport = viewport
+      canvasSize = canvasSize
     )
 
   enum State:

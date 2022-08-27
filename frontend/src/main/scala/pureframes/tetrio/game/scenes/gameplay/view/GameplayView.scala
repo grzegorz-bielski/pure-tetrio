@@ -35,12 +35,10 @@ object GameplayView:
       viewModel: GameplayViewModel,
       ctx: GameContext
   ): SceneNode =
-    import ctx.startUpData.bootData.scale
-
     Group(
       drawMap(model.state, ctx) ++ drawTetromino(model.state, viewModel, ctx)
     )
-      .scaleBy(scale)
+      .scaleBy(viewModel.gameMapScale)
       .moveBy(
         viewModel.gameMapCoords(ctx)
       )

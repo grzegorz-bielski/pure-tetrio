@@ -10,5 +10,5 @@ final case class GameViewModel(gameplay: GameplayViewModel)
 
 object GameViewModel:
   def initial(startupData: SetupData) = GameViewModel(
-    gameplay = GameplayViewModel.initial(startupData.bootData.initialViewport)
+    gameplay = GameplayViewModel.initial(startupData.bootData.initialCanvasSize)
   )
