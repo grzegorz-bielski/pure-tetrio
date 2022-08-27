@@ -23,7 +23,7 @@
   box-sizing: border-box;
 }
 
-html, body, .main, .game {
+.main, .game {
   width: 100%;
   height: 100vh;
   margin: 0;

@@ -11,6 +11,7 @@ import pureframes.tetrio.game.*
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
 import pureframes.tetrio.ui.Observers.*
+import pureframes.tetrio.ui.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
@@ -25,6 +26,7 @@ enum Msg:
   case GameNodeMounted(e: Element)
   case Resize(canvasSize: CanvasSize)
   case UpdateProgress(progress: Progress, inProgress: Boolean)
+  case ControlsUpdate(m: Controls.Msg)
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
@@ -56,6 +58,15 @@ object Main extends TyrianApp[Msg, Model]:
         ),
         Cmd.None
       )
+
+    case Msg.ControlsUpdate(msg) =>
+      (
+        model.copy(
+          controls = Controls.update(msg, model.controls)
+        ),
+        Cmd.None
+      )
+    
     case Msg.GameNodeMounted(gameNode) =>
       (
         model.copy(
@@ -98,8 +109,9 @@ object Main extends TyrianApp[Msg, Model]:
     div(`class` := "main")(
       div(`class` := "game", id := gameNodeId)(),
       div(`class` := "ui")(
-        div(`class` := "btn")(
-          button(onClick(Msg.Pause))("Pause")
+        div(`class` := "btns")(
+          button(onClick(Msg.Pause))("Pause"),
+          Controls.view(model.controls).map(Msg.ControlsUpdate(_))
         ),
         div()(s"Is in progress ${model.gameInProgress}"),
         model.gameProgress
@@ -137,14 +149,16 @@ case class Model(
     bridge: TyrianIndigoBridge[IO, ExternalCommand],
     gameInProgress: Boolean,
     gameProgress: Option[Progress],
-    gameNode: Option[Element]
+    gameNode: Option[Element],
+    controls: Controls.Model
 )
 object Model:
   val init: Model = Model(
     bridge = TyrianIndigoBridge(),
     gameInProgress = false,
     gameProgress = None,
-    gameNode = None
+    gameNode = None,
+    controls = Controls.init
   )
 
 extension [A](underlying: Option[A])

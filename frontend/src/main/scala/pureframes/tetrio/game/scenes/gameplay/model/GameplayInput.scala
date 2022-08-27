@@ -46,10 +46,10 @@ final case class GameplayInput(
   private lazy val produceCommands =
     inputMappings.andThen(cmds.enqueue).orElse(_ => cmds)
 
-  private lazy val inputMappings =
+  lazy val inputMappings =
     debugMappings orElse gameMappings
 
-  private lazy val gameMappings: PartialFunction[Key, GameplayCommand] =
+  lazy val gameMappings: PartialFunction[Key, GameplayCommand] =
     case Key.SPACE       => HardDrop
     case Key.LEFT_ARROW  => Move(Vector2(-1, 0))
     case Key.RIGHT_ARROW => Move(Vector2(1, 0))
@@ -58,7 +58,7 @@ final case class GameplayInput(
     case Key.KEY_W       => Rotate(Clockwise)
     case Key.KEY_P       => Pause
 
-  private lazy val debugMappings: PartialFunction[Key, GameplayCommand] =
+  lazy val debugMappings: PartialFunction[Key, GameplayCommand] =
     case Key.KEY_I => SpawnTetromino(Tetromino.i(spawnPoint))
     case Key.KEY_J => SpawnTetromino(Tetromino.j(spawnPoint))
     case Key.KEY_L => SpawnTetromino(Tetromino.l(spawnPoint))
