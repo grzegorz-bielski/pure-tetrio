@@ -31,10 +31,6 @@ class GameMapSpec extends FunSuite:
         RotationState.Clockwise
       )
 
-    pprint.pprintln(
-      standardMap.walls.toJSArray.minBy(_.point.x) ->  standardMap.walls.toJSArray.maxBy(_.point.x)
-    )
-
     val lines = standardMap
       .insertDebris(
         // TODO: better way of describing maps?

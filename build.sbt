@@ -28,7 +28,9 @@ lazy val frontend = project
         .withModuleSplitStyle(
           ModuleSplitStyle.SmallModulesFor(List("pureframes.tetrio"))
         )
-        .withSourceMap(false) // TODO: source map are not correctly loaded in vite :sad
+        .withSourceMap(
+          false
+        ) // TODO: source map are not correctly loaded in vite :sad
     },
     scalacOptions ++= Seq(
       // "-language:strictEquality" TODO: fix bugs
