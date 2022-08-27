@@ -261,7 +261,7 @@ object GameplayModel:
             map = nextMap,
             progress = state.progress,
             fullLines = nextMap.fullLinesWith(state.tetromino)
-          )
+        )
         )
       else if movement.intersections.isEmpty then onMove
       else Outcome(state.copy(lastMovement = None))
