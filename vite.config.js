@@ -6,6 +6,7 @@ const feModuleName = "frontend"
 const getAppPath = suffix => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
 
 export default defineConfig({
+    base: "pure-tetrio", // GHP specific
     resolve: {
         alias: [
             {
