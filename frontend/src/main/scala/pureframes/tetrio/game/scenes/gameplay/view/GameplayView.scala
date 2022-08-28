@@ -3,6 +3,10 @@ package game.scenes.gameplay.view
 
 import indigo.*
 import indigo.scenes.*
+import indigo.shared.datatypes.RGBA
+import indigo.shared.datatypes.Rectangle.apply
+import indigo.shared.datatypes.Size
+import indigo.shared.scenegraph.Shape
 import indigoextras.geometry.Vertex
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -92,10 +96,16 @@ object GameplayView:
       case _ => Batch.empty[SceneNode]
 
   def drawDebris(e: MapElement.Debris, ctx: GameContext) =
-    blockGraphic(
-      e.tetrominoOrdinal,
-      ctx.startUpData.bootData.gameAssets.tetrominos
-    )
+    import ctx.startUpData.bootData.{gameAssets, gridSquareSize}
+
+    e.tetrominoOrdinal
+      .map(blockGraphic(_, gameAssets.tetrominos))
+      .getOrElse(
+        Shape.Box(
+          Rectangle(Size(gridSquareSize)),
+          Fill.Color(RGBA.SlateGray)
+        )
+      )
       .moveTo(
         toGridPoint(ctx)(e.point).toPoint
       )

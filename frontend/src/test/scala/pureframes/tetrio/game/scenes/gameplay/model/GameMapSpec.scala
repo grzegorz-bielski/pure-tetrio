@@ -10,7 +10,7 @@ import indigoextras.geometry.BoundingBox
 import indigoextras.geometry.BoundingBox.apply
 import indigoextras.geometry.Vertex
 import munit.FunSuite
-import pureframes.tetrio.game.core.BootData
+import pureframes.tetrio.game.core.*
 
 class GameMapSpec extends FunSuite:
   test("fullLinesWith - empty map") {
@@ -66,9 +66,39 @@ class GameMapSpec extends FunSuite:
     )
   }
 
-  def standardMap = GameMap.walled(BoundingBox(
-    x = 0,
-    y = 2,
-    width = 11,
-    height = 25
-  ))
+  // test("fullLinesWith - from game plan") {
+
+      //   val gamePlan = """
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |..........
+      // |.........I
+      // |DDDDDDD..I
+      // |DDDDDDDD.I
+      // |DDDDDDDDDI
+      // """
+
+
+  // }
+
+  def standardMap = GameMap.walled(
+    BoundingBox(
+      x = 0,
+      y = 2,
+      width = 11,
+      height = 25
+    )
+  )
+

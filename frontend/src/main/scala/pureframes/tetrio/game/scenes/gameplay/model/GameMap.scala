@@ -46,7 +46,7 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
     insertDebris(t.positions.toBatch, t.extractOrdinal)
 
   def insertDebris(pos: Batch[Vector2], ord: Tetromino.Ordinal): GameMap =
-    insertElements(pos.map(MapElement.Debris(_, ord)))
+    insertElements(pos.map(MapElement.Debris(_, Some(ord))))
 
   def insertWall(pos: Batch[Vector2]): GameMap =
     insertElements(pos.map(MapElement.Wall(_)))
@@ -76,6 +76,7 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
       }
       .getOrElse(this)
 
+  // TODO: do we need this method ?
   def fullLinesWith(t: Tetromino): Batch[Int] =
     val ys = t.highestPoint.y.toInt to t.lowestPoint.y.toInt
 
@@ -101,10 +102,53 @@ object GameMap:
       .insertFloor(grid.bottomLeft --> grid.bottomRight)
       .insertWall(grid.topLeft --> grid.bottomLeft)
 
+  def fromGamePlan(plan: String): GameMap =
+    val lines = plan
+      .stripMargin('|')
+      .split("\n")
+      .toBatch
+      .collect {
+        case str if !str.isBlank => str.toBatch.zipWithIndex
+      }
+      .zipWithIndex
+
+    val spawnOffset = 2
+    val wallOffset = 1
+
+    def debrisOf(x: Int, y: Int, ordinal: Option[Tetromino.Ordinal]) =
+      MapElement.Debris(Vector2(x + wallOffset, y + spawnOffset), ordinal)
+
+    val elements = lines.flatMap { (line, y) =>
+      line.collect {
+        case ('D', x) => debrisOf(x, y, None)
+        case ('I', x) => debrisOf(x, y, Some(0))
+        case ('J', x) => debrisOf(x, y, Some(1))
+        case ('L', x) => debrisOf(x, y, Some(2))
+        case ('O', x) => debrisOf(x, y, Some(3))
+        case ('S', x) => debrisOf(x, y, Some(4))
+        case ('T', x) => debrisOf(x, y, Some(5))
+        case ('Z', x) => debrisOf(x, y, Some(6))
+      }
+    }
+
+    val height = lines.size
+    val width  = lines.head._1.size + wallOffset
+
+    GameMap
+      .walled(
+        BoundingBox(
+          x = 0,
+          y = spawnOffset,
+          width = width,
+          height = height
+        )
+      )
+      .insertElements(elements)
+
 enum MapElement derives CanEqual:
   case Wall(point: Vector2)
   case Floor(point: Vector2)
-  case Debris(point: Vector2, tetrominoOrdinal: Tetromino.Ordinal)
+  case Debris(point: Vector2, tetrominoOrdinal: Option[Tetromino.Ordinal])
 
 extension (underlying: MapElement)
   def point = underlying match

@@ -18,7 +18,7 @@ case class BootData(
     spawnPoint: Vector2
 )
 object BootData:
-  val gridWidth          = 11
+  val gridWidth          = 10
   val gridWidthExternal  = gridWidth + 1
   val gridHeight         = 22
   val gridHeightExternal = gridHeight + 3

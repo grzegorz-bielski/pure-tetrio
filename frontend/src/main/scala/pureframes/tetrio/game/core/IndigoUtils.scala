@@ -1,6 +1,7 @@
 package pureframes.tetrio
 package game.core
 
+import cats.kernel.Monoid
 import indigo.Point
 import indigo.Vector2
 import indigo.shared.collections.Batch
@@ -18,6 +19,12 @@ extension [T](underlying: IndexedSeq[T])
 
 extension [T](underyling: Option[T])
   def toBatch: Batch[T] = Batch.fromOption(underyling)
+
+extension [T](underlying: Array[T])
+  def toBatch: Batch[T] = Batch.fromArray(underlying)
+
+given [A]: Monoid[Batch[A]] =
+  Monoid.instance(Batch.empty, _ ++ _)
 
 extension (underlying: Vector2)
   def tuple: (Double, Double)                 = Tuples.to(underlying)

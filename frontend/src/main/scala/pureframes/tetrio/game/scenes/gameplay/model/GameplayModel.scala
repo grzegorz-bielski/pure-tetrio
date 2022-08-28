@@ -40,6 +40,7 @@ object GameplayModel:
 
     GameplayModel(
       state = GameplayState
+        // .Initial(GameMap.fromGamePlan(gamePlan), Progress.initial, Batch.empty[Int]),
         .Initial(GameMap.walled(grid), Progress.initial, Batch.empty[Int]),
       input = GameplayInput.initial(setupData.spawnPoint)
     )
