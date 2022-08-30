@@ -25,8 +25,8 @@ final case class Movement private (
   lazy val intersectedStack =
     !horizontalMovement && !stackIntersections.isEmpty
 
-  def sticksOutOfTheMap(topInternal: Int) =
-    intersectedStack && movedTetromino.positions.exists(_.y <= topInternal)
+  def sticksOutOfTheMap(gameOverLine: Int) =
+    intersectedStack && movedTetromino.positions.exists(_.y <= gameOverLine)
 
 object Movement:
   def closestMovement(

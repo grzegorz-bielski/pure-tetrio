@@ -21,9 +21,9 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
   lazy val bottomInternal: Int = grid.bottom.toInt - 1
   lazy val topInternal: Int    = grid.top.toInt // no wall
   lazy val leftInternal: Int   = grid.left.toInt + 1
-  lazy val rigthInternal: Int  = grid.right.toInt - 1
+  lazy val rightInternal: Int  = grid.right.toInt - 1
 
-  lazy val xs = leftInternal to rigthInternal
+  lazy val xs = leftInternal to rightInternal
 
   def intersects(position: Vector2): Boolean =
     !intersectsWith(position).isEmpty

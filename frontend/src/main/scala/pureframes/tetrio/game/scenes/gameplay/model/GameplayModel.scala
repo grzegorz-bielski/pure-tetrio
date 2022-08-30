@@ -40,7 +40,6 @@ object GameplayModel:
 
     GameplayModel(
       state = GameplayState
-        // .Initial(GameMap.fromGamePlan(gamePlan), Progress.initial, Batch.empty[Int]),
         .Initial(GameMap.walled(grid), Progress.initial, Batch.empty[Int]),
       input = GameplayInput.initial(setupData.spawnPoint)
     )
@@ -67,9 +66,7 @@ object GameplayModel:
         finishedState: GameplayState
     )
   extension (state: GameplayState)
-    def onFrameTickPreCmd(
-        ctx: GameContext
-    ): Outcome[GameplayState] =
+    def onFrameTickPreCmd(ctx: GameContext): Outcome[GameplayState] =
       state match
         case s: GameplayState.Initial =>
           s.removeFullLines.flatMap(_.spawnTetromino(ctx, None))
@@ -205,11 +202,11 @@ object GameplayModel:
           }
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
-      val movment =
+      val movement =
         Movement.closestMovement(Vector2(0, state.map.bottomInternal), state)
 
       lazy val nextState =
-        val nextTetromino = movment.movedTetromino
+        val nextTetromino = movement.movedTetromino
         val nextMap       = state.map.insertTetromino(nextTetromino)
         val fullLines     = nextMap.fullLinesWith(nextTetromino)
 
@@ -221,7 +218,7 @@ object GameplayModel:
           )
         )
 
-      state.moveTetrominoBy(movment, nextState)
+      state.moveTetrominoBy(ctx, movement, nextState)
 
     def shiftTetrominoBy(
         baseMovement: Vector2,
@@ -229,14 +226,15 @@ object GameplayModel:
     ): Outcome[GameplayState] =
       val blocksPerQuickShift = 2
 
-      val movementVector =   state.lastMovement
-          .filter(_.sameDirectionAs(baseMovement))
-          .map(_.mapCoords(a => a + (a.sign * blocksPerQuickShift)))
-          .getOrElse(baseMovement)
+      val movementVector = state.lastMovement
+        .filter(_.sameDirectionAs(baseMovement))
+        .map(_.mapCoords(a => a + (a.sign * blocksPerQuickShift)))
+        .getOrElse(baseMovement)
 
       val movement = Movement.closestMovement(movementVector, state)
 
       state.moveTetrominoBy(
+        ctx,
         movement,
         Outcome(
           state.copy(
@@ -247,10 +245,13 @@ object GameplayModel:
       )
 
     def moveTetrominoBy(
+        ctx: GameContext,
         movement: Movement,
         onMove: => Outcome[GameplayState]
     ): Outcome[GameplayState] =
-      if movement.sticksOutOfTheMap(state.map.topInternal) then
+      import ctx.startUpData.bootData.gameOverLine
+
+      if movement.sticksOutOfTheMap(gameOverLine) then
         Outcome(GameplayState.GameOver(finishedState = state))
           .addGlobalEvents(
             GameplayEvent.ProgressUpdated(state.progress, inProgress = false)
@@ -262,7 +263,7 @@ object GameplayModel:
             map = nextMap,
             progress = state.progress,
             fullLines = nextMap.fullLinesWith(state.tetromino)
-        )
+          )
         )
       else if movement.intersections.isEmpty then onMove
       else Outcome(state.copy(lastMovement = None))
@@ -278,7 +279,7 @@ object GameplayModel:
           .getOrElse(state)
       )
 
-    // should work by increasing gravity without affecting movement controlls
+    // should work by increasing gravity without affecting movement controls
     def autoTetrominoDescent(
         ctx: GameContext,
         isMovingDown: Boolean
@@ -290,10 +291,11 @@ object GameplayModel:
           state.copy(lastUpdatedFalling = running)
 
         if isMovingDown then
-          Outcome(nextState) // reseting the counter for the next frame
+          Outcome(nextState) // resetting the counter for the next frame
         else
           val movement = Movement.closestMovement(Vector2(0, 1), state)
           nextState.moveTetrominoBy(
+            ctx,
             movement,
             Outcome(
               nextState.copy(

@@ -15,7 +15,8 @@ case class BootData(
     magnificationLevel: Int,
     initialCanvasSize: CanvasSize,
     gameAssets: Assets,
-    spawnPoint: Vector2
+    spawnPoint: Vector2,
+    gameOverLine: Int
 )
 object BootData:
   val gridWidth          = 10
@@ -65,5 +66,6 @@ object BootData:
       spawnPoint = Vector2(
         x = gridSize.x + math.floor(gridSize.width / 2),
         y = gridSize.y + 1
-      )
+      ),
+      gameOverLine = gridSize.top.toInt + 2
     )
