@@ -10,6 +10,8 @@ import indigoextras.geometry.Vertex
 import scala.annotation.tailrec
 import scala.annotation.targetName
 
+import scalajs.js
+
 extension (underlying: Point)
   def toVertex: Vertex   = Vertex.fromPoint(underlying)
   def toVector2: Vector2 = Vector2.fromPoint(underlying)
@@ -17,11 +19,14 @@ extension (underlying: Point)
 extension [T](underlying: IndexedSeq[T])
   def toBatch: Batch[T] = Batch.fromIndexedSeq(underlying)
 
-extension [T](underyling: Option[T])
-  def toBatch: Batch[T] = Batch.fromOption(underyling)
+extension [T](underlying: Option[T])
+  def toBatch: Batch[T] = Batch.fromOption(underlying)
 
 extension [T](underlying: Array[T])
   def toBatch: Batch[T] = Batch.fromArray(underlying)
+
+extension [T](underlying: js.Array[T])
+  def toBatch: Batch[T] = Batch.fromJSArray(underlying)
 
 given [A]: Monoid[Batch[A]] =
   Monoid.instance(Batch.empty, _ ++ _)
@@ -29,6 +34,7 @@ given [A]: Monoid[Batch[A]] =
 extension (underlying: Vector2)
   def tuple: (Double, Double)                 = Tuples.to(underlying)
   def fromTuple(t: (Double, Double)): Vector2 = Tuples.from[Vector2](t)
+  def toVertex: Vertex                        = Vertex.fromVector2(underlying)
   def mapCoords(fn: Double => Double): Vector2 =
     Vector2(fn(underlying.x), fn(underlying.y))
   def sameDirectionAs(another: Vector2): Boolean =

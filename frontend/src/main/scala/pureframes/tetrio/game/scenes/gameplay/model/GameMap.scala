@@ -13,9 +13,9 @@ import pureframes.tetrio.game.core.*
 import scala.annotation.tailrec
 
 final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
-  lazy val mapElements = quadTree.toBatch
-  lazy val walls       = mapElements.collect { case e: MapElement.Wall => e }
-  lazy val debris      = mapElements.collect { case e: MapElement.Debris => e }
+  lazy val elements = quadTree.toBatch
+  lazy val walls    = elements.collect { case e: MapElement.Wall => e }
+  lazy val debris   = elements.collect { case e: MapElement.Debris => e }
 
   // map size without walls
   lazy val bottomInternal: Int = grid.bottom.toInt - 1
@@ -39,7 +39,8 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
 
   def insertElements(elements: Batch[MapElement]): GameMap =
     copy(
-      quadTree = quadTree.insertElements(elements.map(e => e -> Vertex.fromVector2(e.point))).prune
+      quadTree =
+        quadTree.insertElements(elements.map(e => e -> e.point.toVertex)).prune
     )
 
   def insertTetromino(t: Tetromino): GameMap =
@@ -55,26 +56,24 @@ final case class GameMap(grid: BoundingBox, quadTree: QuadTree[MapElement]):
     insertElements(pos.map(MapElement.Floor(_)))
 
   def removeFullLines(ys: Batch[Int]): GameMap =
-    ys.toJSArray.minOption
-      .map { yMin =>
-        val withRemovedLines = ys
-          .foldLeft(quadTree) { (acc, y) =>
-            xs.foldLeft(acc) { (acc, x) =>
-              acc.removeElement(Vertex(x.toDouble, y.toDouble))
-            }
-          }
-
-        val withMovedDebris = withRemovedLines.update {
-          case e: MapElement.Debris if e.point.y <= yMin =>
-            val nextPoint = e.point.moveBy(Vector2(0, ys.size))
-            e.copy(point = nextPoint) -> Vertex.fromVector2(nextPoint)
+    val mapElements = ys
+      .foldLeft(quadTree.toBatch) { (acc, y) =>
+        val moved = acc.collect {
+          case e: MapElement.Debris if e.point.y < y =>
+            e.copy(point = e.point.moveBy(Vector2(0, 1)))
         }
 
-        copy(
-          quadTree = withMovedDebris.prune
-        )
+        val rest = acc.collect {
+          case e: MapElement.Debris if e.point.y > y          => e
+          case e @ (_: MapElement.Floor | _: MapElement.Wall) => e
+        }
+
+        moved ++ rest
       }
-      .getOrElse(this)
+
+    copy(
+      quadTree = QuadTree(mapElements.map(e => e -> e.point.toVertex))
+    )
 
   // TODO: do we need this method ?
   def fullLinesWith(t: Tetromino): Batch[Int] =
@@ -93,9 +92,15 @@ object GameMap:
     val gridSize = grid.size + grid.position + Vertex.one
     GameMap(grid, QuadTree.empty[MapElement](gridSize))
 
+  def fromElements(elements: Batch[MapElement]): GameMap =
+    GameMap(
+      grid = BoundingBox.fromVertexCloud(elements.map(_.point.toVertex)),
+      quadTree = QuadTree(elements.map(e => e -> e.point.toVertex))
+    )
+
   def walled(grid: BoundingBox): GameMap =
-    import pureframes.tetrio.game.core.given // scalafix error when importen on top (?)
-    
+    import pureframes.tetrio.game.core.given // scalafix error when imported on top (?)
+
     GameMap(grid)
       // .insertWalls(grid.topLeft --> grid.topRight) // no top wall
       .insertWall(grid.topRight --> grid.bottomRight)
@@ -113,7 +118,7 @@ object GameMap:
       .zipWithIndex
 
     val spawnOffset = 2
-    val wallOffset = 1
+    val wallOffset  = 1
 
     def debrisOf(x: Int, y: Int, ordinal: Option[Tetromino.Ordinal]) =
       MapElement.Debris(Vector2(x + wallOffset, y + spawnOffset), ordinal)

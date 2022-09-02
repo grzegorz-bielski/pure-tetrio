@@ -37,7 +37,6 @@ infra:
 
 bugs:
 - 0 blocks from the floor & after rotation - the descent time is discarded and tetromino is placed instantly (!)
-- lines clear not always works correctly... (?)
 - stop continuous rotation
 - debounce resizing
 <!-- - skipped rotation animation on move -->

@@ -153,9 +153,11 @@ object GameplayModel:
   extension (state: GameplayState.Initial)
     def removeFullLines: Outcome[GameplayState] =
       val nextProgress = state.progress.addFullLines(state.fullLines.size)
+      val nextMap      = state.map.removeFullLines(state.fullLines)
+
       Outcome(
         state.copy(
-          map = state.map.removeFullLines(state.fullLines),
+          map = nextMap,
           progress = nextProgress
         )
       )

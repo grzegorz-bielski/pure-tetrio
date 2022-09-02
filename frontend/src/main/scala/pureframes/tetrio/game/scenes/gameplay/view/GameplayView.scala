@@ -67,7 +67,7 @@ object GameplayView:
       .withFontSize(Pixels(30))
 
   def drawMap(state: GameplayState, ctx: GameContext): Batch[SceneNode] =
-    state.map.mapElements.map {
+    state.map.elements.map {
       case e: MapElement.Debris =>
         drawDebris(e, ctx)
       case e: (MapElement.Wall | MapElement.Floor) =>
