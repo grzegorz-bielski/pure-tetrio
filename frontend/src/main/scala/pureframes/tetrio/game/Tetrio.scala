@@ -2,6 +2,7 @@ package pureframes.tetrio
 package game
 
 import cats.effect.IO
+import cats.effect.kernel.Async
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
@@ -11,9 +12,8 @@ import pureframes.tetrio.game.scenes.gameplay.*
 import snabbdom.h.apply
 import tyrian.TyrianSubSystem
 
-final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
+final case class Tetrio[F[_]: Async](tyrianSubSystem: TyrianSubSystem[F, ExternalCommand])
     extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
-
   def initialScene(bootData: BootData): Option[SceneName] =
     None
 
@@ -98,3 +98,5 @@ final case class Tetrio(tyrianSubSystem: TyrianSubSystem[IO, ExternalCommand])
       SceneUpdateFragment.empty
         .addLayer(Layer(BindingKey("game")))
     }
+object Tetrio:
+  val gameNodeId = "game-container"

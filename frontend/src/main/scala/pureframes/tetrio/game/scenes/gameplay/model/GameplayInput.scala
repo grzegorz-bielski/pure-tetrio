@@ -54,6 +54,7 @@ final case class GameplayInput(
     case Key.LEFT_ARROW  => Move(Vector2(-1, 0))
     case Key.RIGHT_ARROW => Move(Vector2(1, 0))
     case Key.DOWN_ARROW  => Move(Vector2(0, 1))
+    case Key.UP_ARROW    => Rotate(Clockwise)
     case Key.KEY_Q       => Rotate(CounterClockwise)
     case Key.KEY_W       => Rotate(Clockwise)
     case Key.KEY_P       => Pause

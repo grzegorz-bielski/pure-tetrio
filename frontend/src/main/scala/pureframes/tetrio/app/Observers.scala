@@ -1,4 +1,4 @@
-package pureframes.tetrio.ui
+package pureframes.tetrio.app
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync

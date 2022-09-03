@@ -1,4 +1,4 @@
-package pureframes.tetrio.ui
+package pureframes.tetrio.app
 import tyrian.Html.*
 import tyrian.*
 
