@@ -68,7 +68,7 @@ object Observers:
       root
     )
 
-  // TODO: cancal on timeout if node is not found
+  // TODO: cancel on timeout if node is not found
   @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
   def waitForNodeToMount[F[_]: Async, Msg,  Node <: Element](node: => Node, root: => Element)(
       using MutationObserverInit

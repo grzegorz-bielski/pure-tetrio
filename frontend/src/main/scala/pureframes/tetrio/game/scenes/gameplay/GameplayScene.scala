@@ -56,13 +56,12 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
   }
 
   def updateViewModel(
-      context: GameContext,
+      ctx: GameContext,
       model: SceneModel,
       viewModel: SceneViewModel
-  ): GlobalEvent => Outcome[SceneViewModel] = {
-    case FrameTick => viewModel.onFrameTick(context, model)
+  ): GlobalEvent => Outcome[SceneViewModel] =
+    case FrameTick => viewModel.onFrameTick(model, ctx)
     case _         => Outcome(viewModel)
-  }
 
   def present(
       ctx: GameContext,

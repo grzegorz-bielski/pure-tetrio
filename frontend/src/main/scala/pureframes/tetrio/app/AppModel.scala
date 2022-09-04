@@ -23,76 +23,75 @@ case class AppModel[F[_]: Async](
     gameNode: Option[Element],
     controls: Controls.Model
 ):
-    @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
-    val update: AppMsg => (AppModel[F], Cmd[F, AppMsg]) = 
-        case AppMsg.StartGame =>
-            (
-                this,
-                Cmd.Run(
-                waitForNodeToMount[F, AppMsg, Element](gameNodeId, dom.document.body)
-                )(AppMsg.GameNodeMounted(_))
-            )
+  @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
+  val update: AppMsg => (AppModel[F], Cmd[F, AppMsg]) =
+    case AppMsg.StartGame =>
+      (
+        this,
+        Cmd.Run(
+          waitForNodeToMount[F, AppMsg, Element](gameNodeId, dom.document.body)
+        )(AppMsg.GameNodeMounted(_))
+      )
 
-        case AppMsg.Pause =>
-            (
-                this,
-                bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
-            )
-        case AppMsg.UpdateProgress(progress, inProgress) =>
-            (
-                copy(
-                gameProgress = Some(progress),
-                gameInProgress = inProgress
-                ),
-                Cmd.None
-            )
+    case AppMsg.Pause =>
+      (
+        this,
+        bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
+      )
+    case AppMsg.UpdateProgress(progress, inProgress) =>
+      (
+        copy(
+          gameProgress = Some(progress),
+          gameInProgress = inProgress
+        ),
+        Cmd.None
+      )
 
-        case AppMsg.ControlsUpdate(msg) =>
-            (
-                copy(
-                controls = Controls.update(msg, controls)
-                ),
-                Cmd.None
-            )
-        
-        case AppMsg.GameNodeMounted(gameNode) =>
-            (
-                copy(
-                gameNode = Some(gameNode)
-                ),
-                Cmd.SideEffect {
-                // TODO: use node directly after new Indigo release
-                Tetrio(bridge.subSystem(IndigoGameId(gameNodeId)))
-                    .launch(
-                    gameNodeId,
-                    // TODO: why this have to be unsafe from the Scala side?
-                    "width"  -> gameNode.clientWidth.toString,
-                    "height" -> gameNode.clientHeight.toString
-                    )
-                }
-            )
+    case AppMsg.ControlsUpdate(msg) =>
+      (
+        copy(
+          controls = Controls.update(msg, controls)
+        ),
+        Cmd.None
+      )
 
-        case AppMsg.Resize(canvasSize) =>
-            (
-                this,
-                Cmd.merge(
-                Cmd.SideEffect {
-                    gameNode
-                    .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
-                    .foreach { canvas =>
-                        canvas.width = canvasSize.drawingBufferWidth
-                        canvas.height = canvasSize.drawingBufferHeight
-                    }
-                },
-                bridge.publish(
-                    IndigoGameId(gameNodeId),
-                    ExternalCommand.CanvasResize(canvasSize)
-                )
-                )
+    case AppMsg.GameNodeMounted(gameNode) =>
+      (
+        copy(
+          gameNode = Some(gameNode)
+        ),
+        Cmd.SideEffect {
+          // TODO: use node directly after new Indigo release
+          Tetrio(bridge.subSystem(IndigoGameId(gameNodeId)))
+            .launch(
+              gameNodeId,
+              // TODO: why this have to be unsafe from the Scala side?
+              "width"  -> gameNode.clientWidth.toString,
+              "height" -> gameNode.clientHeight.toString
             )
+        }
+      )
 
-        case AppMsg.Noop => (this, Cmd.None)
+    case AppMsg.Resize(canvasSize) =>
+      (
+        this,
+        Cmd.merge(
+          Cmd.SideEffect {
+            gameNode
+              .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
+              .foreach { canvas =>
+                canvas.width = canvasSize.drawingBufferWidth
+                canvas.height = canvasSize.drawingBufferHeight
+              }
+          },
+          bridge.publish(
+            IndigoGameId(gameNodeId),
+            ExternalCommand.CanvasResize(canvasSize)
+          )
+        )
+      )
 
+    case AppMsg.Noop => (this, Cmd.None)
 
 object AppModel:
   def init[F[_]: Async]: AppModel[F] = AppModel[F](

@@ -20,35 +20,36 @@ object GameplayView:
       model: GameplayModel,
       viewModel: GameplayViewModel
   ): Outcome[SceneUpdateFragment] =
+    given GameContext = ctx
+
     Outcome(
       SceneUpdateFragment.empty.addLayers(
         Layer(
           BindingKey("game"),
-          drawGame(model, viewModel, ctx)
+          drawGame(model, viewModel)
         )
           .withMagnification(ctx.startUpData.bootData.magnificationLevel),
         Layer(
           BindingKey("overlay"),
-          drawOverlay(model.state, ctx).toBatch
+          drawOverlay(model.state).toBatch
         )
       )
     )
 
   def drawGame(
       model: GameplayModel,
-      viewModel: GameplayViewModel,
-      ctx: GameContext
-  ): SceneNode =
+      viewModel: GameplayViewModel
+  )(using GameContext): SceneNode =
     Group(
-      drawMap(model.state, ctx) ++ drawTetromino(model.state, viewModel, ctx)
+      drawMap(model.state) ++ drawTetromino(model.state, viewModel)
     )
       .scaleBy(viewModel.gameMapScale)
       .moveBy(
-        viewModel.gameMapCoords(ctx)
+        viewModel.gameMapCoords
       )
 
   // todo: separate scene ?
-  def drawOverlay(state: GameplayState, ctx: GameContext): Option[SceneNode] =
+  def drawOverlay(state: GameplayState)(using ctx: GameContext): Option[SceneNode] =
     import ctx.startUpData.bootData.scale
     val point = state.map.grid.position.toPoint
 
@@ -66,19 +67,16 @@ object GameplayView:
       .withColor(RGBA.White)
       .withFontSize(Pixels(30))
 
-  def drawMap(state: GameplayState, ctx: GameContext): Batch[SceneNode] =
+  def drawMap(state: GameplayState)(using GameContext): Batch[SceneNode] =
     state.map.elements.map {
-      case e: MapElement.Debris =>
-        drawDebris(e, ctx)
-      case e: (MapElement.Wall | MapElement.Floor) =>
-        drawBoundries(e, ctx)
+      case e: MapElement.Debris                    => drawDebris(e)
+      case e: (MapElement.Wall | MapElement.Floor) => drawBoundaries(e)
     }
 
   def drawTetromino(
       state: GameplayState,
-      viewModel: GameplayViewModel,
-      ctx: GameContext
-  ): Batch[SceneNode] =
+      viewModel: GameplayViewModel
+  )(using ctx: GameContext): Batch[SceneNode] =
     val bootData = ctx.startUpData.bootData
 
     state match
@@ -88,14 +86,14 @@ object GameplayView:
           bootData.gameAssets.tetrominos
         )
 
-        tetrominoPositions(viewModel, ctx)
+        viewModel.currentTetrominoPositions
           .map(graphic.moveTo)
 
       case s: GameplayState.Paused =>
-        drawTetromino(s.pausedState, viewModel, ctx)
+        drawTetromino(s.pausedState, viewModel)
       case _ => Batch.empty[SceneNode]
 
-  def drawDebris(e: MapElement.Debris, ctx: GameContext) =
+  def drawDebris(e: MapElement.Debris)(using ctx: GameContext) =
     import ctx.startUpData.bootData.{gameAssets, gridSquareSize}
 
     e.tetrominoOrdinal
@@ -107,12 +105,12 @@ object GameplayView:
         )
       )
       .moveTo(
-        toGridPoint(ctx)(e.point).toPoint
+        GameplayViewModel.toGridPoint(e.point).toPoint
       )
 
-  def drawBoundries(e: MapElement, ctx: GameContext) =
+  def drawBoundaries(e: MapElement)(using ctx: GameContext) =
     ctx.startUpData.bootData.gameAssets.tetrominos.wall.moveTo(
-      toGridPoint(ctx)(e.point).toPoint
+      GameplayViewModel.toGridPoint(e.point).toPoint
     )
 
   def blockGraphic(
@@ -127,27 +125,3 @@ object GameplayView:
       case 4 => graphics.s
       case 5 => graphics.t
       case 6 => graphics.z
-
-  def tetrominoPositions(
-      viewModel: GameplayViewModel,
-      ctx: GameContext
-  ): Batch[Point] =
-    lazy val ctxGrindPoint = toGridPoint(ctx).andThen(_.toPoint)
-    lazy val targetPositions = (state: GameplayViewModel.State.InProgress) =>
-      state.targetTetrominoPositions.map(ctxGrindPoint)
-
-    viewModel.state match
-      // format: off
-      case vm @ GameplayViewModel.State.InProgress(Some(prevTetrominoPositions), _, _) =>
-          (prevTetrominoPositions.map(ctxGrindPoint) zip targetPositions(vm))
-              .map(
-                Signal
-                  .Lerp(_, _, Seconds(0.093))
-                  .at(ctx.gameTime.running - vm.from)
-              ).toBatch
-      // format: on
-      case vm: GameplayViewModel.State.InProgress => targetPositions(vm).toBatch
-      case _                                      => Batch.empty
-
-  def toGridPoint(ctx: GameContext)(point: Vector2) =
-    point * ctx.startUpData.bootData.gridSquareSize

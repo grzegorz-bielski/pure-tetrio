@@ -281,7 +281,6 @@ object GameplayModel:
           .getOrElse(state)
       )
 
-    // should work by increasing gravity without affecting movement controls
     def autoTetrominoDescent(
         ctx: GameContext,
         isMovingDown: Boolean

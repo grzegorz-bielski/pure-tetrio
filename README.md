@@ -32,15 +32,7 @@ features:
 - hold mechanic
 - floating blocks falling down (cascade gravity mode)
 
-infra:
-- CI/CD & hosting - fe -> static site
-
 bugs:
-- broken descent
-<!-- - 0 blocks from the floor & after rotation - the descent time is discarded and tetromino is placed instantly (!) -->
-<!-- - stop continuous rotation -->
-<!-- - skipped rotation animation on move -->
-<!-- - rotate + move -> rotate; kills the rotation -->
 - debounce resizing
 
 UI:
