@@ -1,29 +1,27 @@
 package pureframes.tetrio.app
 
+import pureframes.css.*
+import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
 
-object AppView:
-  def view[F[_]](model: AppModel[F]): Html[AppMsg] =
-    div(`class` := "main")(
-      div(`class` := "game", id := gameNodeId)(),
-      div(`class` := "ui")(
-        div(`class` := "btns")(
-          button(onClick(AppMsg.Pause))("Pause"),
-          Controls.view(model.controls).map(AppMsg.ControlsUpdate(_))
-        ),
-        div()(s"Is in progress ${model.gameInProgress}"),
-        model.gameProgress
-          .map { progress =>
-            ul()(
-              li()(s"level: ${progress.level}"),
-              li()(s"lines: ${progress.lines}"),
-              li()(s"score: ${progress.score}")
-            )
-          }
-          .getOrElse(div()) // TODO: how to present empty elements?
-      )
+object AppView extends Styles:
+  def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
+    div(`class` := styles.className)(
+      IndigoWrapper.view,
+      Stats.view,
+      ScreenControls.view
     )
+
+  val styles = css"""
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    margin: 0 auto;
+    overflow: hidden;
+  """
 

@@ -1,0 +1,51 @@
+.AppView-81f2bc4f {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    margin: 0 auto;
+    overflow: hidden;
+  }.ScreenControls-c2d85686 {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+
+        button {
+            color: tomato;
+        }
+    }.Button-3e65deb7 {
+        border-radius: 8px;
+        border: 1px solid transparent;
+        padding: 0.6em 1.2em;
+        font-size: 1em;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color 0.25s;
+
+        &:hover  {
+            border-color: #646cff;
+        }
+
+        &:focus,
+        &:focus-visible {
+            outline: 4px auto -webkit-focus-ring-color;
+        }
+    }.IndigoWrapper-05863cf3 {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+
+    #game-container-indigo {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+    }
+  }.Stats-5bfafa95 {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }

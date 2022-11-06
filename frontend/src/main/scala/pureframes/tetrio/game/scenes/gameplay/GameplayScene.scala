@@ -51,8 +51,8 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
       model: SceneModel
   ): GlobalEvent => Outcome[SceneModel] = {
     case e: InputEvent => model.onInput(e, ctx)
-    case FrameTick    => model.onFrameTick(ctx)
-    case _            => Outcome(model)
+    case FrameTick     => model.onFrameTick(ctx)
+    case _             => Outcome(model)
   }
 
   def updateViewModel(

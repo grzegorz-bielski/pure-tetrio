@@ -1,11 +1,10 @@
-package pureframes.tetrio.app
+package pureframes.tetrio.app.components
+
 import tyrian.Html.*
 import tyrian.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
-
-// import pureframes.tetrio.game.scenes.gameplay.model.
 
 object Controls:
   opaque type Model = Boolean

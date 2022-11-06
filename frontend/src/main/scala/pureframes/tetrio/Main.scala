@@ -28,7 +28,7 @@ object Main extends TyrianApp[AppMsg, AppModel[IO]]:
     model.update
 
   def view(model: AppModel[IO]): Html[AppMsg] =
-    AppView.view(model)
+    AppView.view(using model)
 
   def subscriptions(model: AppModel[IO]): Sub[IO, AppMsg] =
     AppSubs.all(model)

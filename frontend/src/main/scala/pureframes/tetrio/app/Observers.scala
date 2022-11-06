@@ -95,12 +95,12 @@ object Observers:
   type ResizeParams = (NonEmptyBatch[ResizeObserverEntry], ResizeObserver)
 
   val defaultMutationOptions: MutationObserverInit =
-    new MutationObserverInit:
+    new:
       subtree = true
       childList = true
 
   val defaultResizeOptions: ResizeObserverOptions =
-    new ResizeObserverOptions:
+    new:
       box = ResizeObserverBoxOption.`content-box`
 
   private def unafeResizeObserver[E <: Element](

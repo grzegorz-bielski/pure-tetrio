@@ -1,6 +1,5 @@
 package pureframes.tetrio.app
 
-// import cats.effect.IO
 import cats.effect.kernel.Async
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
@@ -9,6 +8,7 @@ import org.scalajs.dom
 import org.scalajs.dom.*
 import org.scalajs.dom.document
 import pureframes.tetrio.app.Observers.*
+import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import pureframes.tetrio.game.*
 import pureframes.tetrio.game.core.*
@@ -89,6 +89,13 @@ case class AppModel[F[_]: Async](
             ExternalCommand.CanvasResize(canvasSize)
           )
         )
+      )
+
+
+    case AppMsg.Input(cmd) =>
+      (
+        this,
+        bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Input(cmd))
       )
 
     case AppMsg.Noop => (this, Cmd.None)
