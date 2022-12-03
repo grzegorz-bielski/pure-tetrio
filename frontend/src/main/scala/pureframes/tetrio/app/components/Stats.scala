@@ -7,7 +7,7 @@ import pureframes.tetrio.game.Tetrio.*
 import tyrian.Html.*
 import tyrian.*
 
-object Stats extends Styles:
+object Stats extends Styled:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
     div(`class` := styles.className)(
       div(

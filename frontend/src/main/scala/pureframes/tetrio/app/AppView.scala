@@ -7,7 +7,7 @@ import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
 
-object AppView extends Styles:
+object AppView extends Styled:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
     div(`class` := styles.className)(
       IndigoWrapper.view,

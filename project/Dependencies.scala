@@ -29,7 +29,7 @@ object Dependencies {
   object Pureframes {
     val deps: Deps = Def.setting {
       Seq(
-        "pureframes" %%% "css-core" % "0.1.0-SNAPSHOT"
+        "eu.pureframes" %%% "css-core" % "0.0.1-SNAPSHOT"
       )
     }
   }

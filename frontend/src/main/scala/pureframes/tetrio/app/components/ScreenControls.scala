@@ -5,7 +5,7 @@ import pureframes.tetrio.app.AppMsg
 import tyrian.Html.*
 import tyrian.*
 
-object ScreenControls extends Styles:
+object ScreenControls extends Styled:
   def view: Html[AppMsg] =
     div(
       `class` := styles.className
@@ -16,11 +16,11 @@ object ScreenControls extends Styles:
     )
 
   val styles = css"""
-        position: absolute;
-        bottom: 0;
-        right: 0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
 
-        button {
-            color: tomato;
-        }
-    """
+    button {
+        color: tomato;
+    }
+  """

@@ -6,7 +6,7 @@ import pureframes.tetrio.game.Tetrio
 import tyrian.Html.*
 import tyrian.*
 
-object IndigoWrapper extends Styles:
+object IndigoWrapper extends Styled:
   def view[M]: Html[M] =
     div(`class` := styles.className, id := Tetrio.gameNodeId)()
 
@@ -18,8 +18,8 @@ object IndigoWrapper extends Styles:
     padding: 0;
 
     #game-container-indigo {
-        width: 100%;
-        height: 100vh;
-        margin: 0;
+      width: 100%;
+      height: 100vh;
+      margin: 0;
     }
   """

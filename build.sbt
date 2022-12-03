@@ -2,12 +2,15 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += Dependencies.organizeImports.value.head
-ThisBuild / organization      := "pureframes"
+ThisBuild / organization      := "eu.pureframes"
 ThisBuild / scalaVersion      := IO.read(file("./scalaVersion.txt"))
 ThisBuild / version           := "0.0.1"
 ThisBuild / scalafixOnCompile := true
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
+ThisBuild / resolvers +=
+  "sonatype-s01-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val puretetrio = project
   .in(file("."))
@@ -32,6 +35,7 @@ lazy val frontend = project
         .withSourceMap(
           false
         ) // TODO: source map are not correctly loaded in vite :sad
+          // check: https://www.npmjs.com/package/source-map-support (?)
     },
     scalaJSUseMainModuleInitializer := true,
     scalacOptions ++= Seq(
