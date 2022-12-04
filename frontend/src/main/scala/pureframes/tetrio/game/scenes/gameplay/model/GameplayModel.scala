@@ -3,10 +3,10 @@ package game.scenes.gameplay.model
 
 import indigo.IndigoLogger.*
 import indigo.*
-import indigo.scenes.Lens
 import indigo.shared.Outcome
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.KeyboardEvent.KeyDown
+import indigo.shared.utils.Lens
 import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*

@@ -3,7 +3,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
   object Indigo {
-    val version = "0.13.0"
+    val version = "0.14.0"
 
     val deps: Deps = Def.setting {
       Seq(
@@ -15,7 +15,7 @@ object Dependencies {
   }
 
   object Tyrian {
-    val version = "0.5.1"
+    val version = "0.6.0"
 
     val deps: Deps = Def.setting {
       Seq(

@@ -47,25 +47,25 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
     Set()
 
   def updateModel(
-      ctx: GameContext,
+      ctx: SceneContext[SetupData],
       model: SceneModel
   ): GlobalEvent => Outcome[SceneModel] = {
-    case e: InputEvent => model.onInput(e, ctx)
-    case FrameTick     => model.onFrameTick(ctx)
+    case e: InputEvent => model.onInput(e, ctx.frameContext)
+    case FrameTick     => model.onFrameTick(ctx.frameContext)
     case _             => Outcome(model)
   }
 
   def updateViewModel(
-      ctx: GameContext,
+      ctx: SceneContext[SetupData],
       model: SceneModel,
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] =
-    case FrameTick => viewModel.onFrameTick(model, ctx)
+    case FrameTick => viewModel.onFrameTick(model, ctx.frameContext)
     case _         => Outcome(viewModel)
 
   def present(
-      ctx: GameContext,
+      ctx: SceneContext[SetupData],
       model: SceneModel,
       viewModel: SceneViewModel
   ): Outcome[SceneUpdateFragment] =
-    GameplayView.present(ctx, model, viewModel)
+    GameplayView.present(ctx.frameContext, model, viewModel)

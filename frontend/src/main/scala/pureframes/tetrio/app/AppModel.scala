@@ -80,6 +80,8 @@ case class AppModel[F[_]: Async](
             gameNode
               .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
               .foreach { canvas =>
+                println("canvas" -> canvas)
+
                 canvas.width = canvasSize.drawingBufferWidth
                 canvas.height = canvasSize.drawingBufferHeight
               }

@@ -3,7 +3,7 @@ package game.scenes.gameplay.model
 
 import indigo.*
 import indigo.shared.collections.Batch
-import indigo.shared.collections.Batch.Unapply.*
+import indigo.syntax.==:
 import pureframes.tetrio.game.core.*
 
 /** SRS rotation system https://harddrop.com/wiki/SRS
@@ -54,7 +54,7 @@ object SRS:
         offsets: Batch[(Vector2, Vector2)]
     ): Option[NonEmptyBatch[Vector2]] =
       offsets match
-        case (prevOffset, nextOffset) :: xs =>
+        case (prevOffset, nextOffset) ==: xs =>
           val endOffset   = prevOffset - nextOffset
           val withOffsets = rotatedPositions.map(_ + endOffset)
           if intersects(withOffsets) then findMatchingOffset(xs)

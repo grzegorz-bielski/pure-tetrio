@@ -7,8 +7,10 @@ import tyrian.Html.*
 import tyrian.*
 
 object IndigoWrapper extends Styled:
+  val nodeId = Tetrio.gameNodeId
+
   def view[M]: Html[M] =
-    div(`class` := styles.className, id := Tetrio.gameNodeId)()
+    div(`class` := styles.className, id := nodeId)()
 
   val styles = css"""
     position: absolute;
@@ -17,7 +19,7 @@ object IndigoWrapper extends Styled:
     margin: 0;
     padding: 0;
 
-    #game-container-indigo {
+    > canvas {
       width: 100%;
       height: 100vh;
       margin: 0;

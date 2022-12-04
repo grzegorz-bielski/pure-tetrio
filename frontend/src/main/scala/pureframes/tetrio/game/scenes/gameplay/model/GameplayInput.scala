@@ -3,10 +3,10 @@ package game.scenes.gameplay.model
 
 import indigo.IndigoLogger.*
 import indigo.*
-import indigo.scenes.Lens
 import indigo.scenes.*
 import indigo.shared.datatypes.Vector2
 import indigo.shared.events.KeyboardEvent.KeyDown
+import indigo.shared.utils.Lens
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
