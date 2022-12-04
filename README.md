@@ -39,6 +39,11 @@ UI:
 - on screen controls (?)
 - centered overlays
 
+setup:
+- split vendor chunk from app chunks (borked)
+- add sourcemaps (borked)
+- move vite-pure-css plugin to pure-css repo and publish
+
 ideas: 
 - https://www.cmaas.de/tutorial-tetris-with-impact-js
 - https://tetr.io/

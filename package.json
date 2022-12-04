@@ -7,11 +7,16 @@
   "scripts": {
     "dev": "vite --config ./vite.config.js dev ./frontend",
     "build": "vite --config ./vite.config.js build ./frontend",
-    "preview": "vite --config ./vite.config.js preview ./frontend"
+    "preview": "vite --config ./vite.config.js preview ./frontend",
+    "test": "vitest"
   },
   "devDependencies": {
+    "@rollup/pluginutils": "^5.0.2",
+    "@types/node": "^18.11.10",
     "postcss": "^8.4.16",
     "postcss-nested": "^5.0.6",
-    "vite": "^3.0.7"
+    "typescript": "^4.9.3",
+    "vite": "^3.0.7",
+    "vitest": "^0.25.3"
   }
 }

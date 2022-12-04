@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "types": [
+       "vitest/importMeta"
+      ],
+      "lib": ["ESNext"],
+      "module": "ESNext",
+      "moduleResolution": "Node"
+    }
+  }
