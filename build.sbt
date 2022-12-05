@@ -9,8 +9,8 @@ ThisBuild / scalafixOnCompile := true
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-// ThisBuild / resolvers +=
-//   "sonatype-s01-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
+ThisBuild / resolvers +=
+  "sonatype-s01-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val puretetrio = project
   .in(file("."))
