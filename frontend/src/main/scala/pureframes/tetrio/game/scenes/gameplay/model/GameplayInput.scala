@@ -51,9 +51,9 @@ final case class GameplayInput(
 
   lazy val gameMappings: PartialFunction[Key, GameplayCommand] =
     case Key.SPACE       => HardDrop
-    case Key.LEFT_ARROW  => Move(Vector2(-1, 0))
-    case Key.RIGHT_ARROW => Move(Vector2(1, 0))
-    case Key.DOWN_ARROW  => Move(Vector2(0, 1))
+    case Key.LEFT_ARROW  => MoveLeft
+    case Key.RIGHT_ARROW => MoveRight
+    case Key.DOWN_ARROW  => MoveDown
     case Key.UP_ARROW    => Rotate(Clockwise)
     case Key.KEY_Q       => Rotate(CounterClockwise)
     case Key.KEY_W       => Rotate(Clockwise)

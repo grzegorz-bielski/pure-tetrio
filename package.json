@@ -5,7 +5,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vite --config ./vite.config.js dev ./frontend",
+    "dev": "vite --config ./vite.config.js dev ./frontend --host",
     "build": "vite --config ./vite.config.js build ./frontend",
     "preview": "vite --config ./vite.config.js preview ./frontend",
     "test": "vitest"

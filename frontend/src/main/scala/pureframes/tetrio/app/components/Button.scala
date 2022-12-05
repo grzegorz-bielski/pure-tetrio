@@ -11,21 +11,22 @@ object Button extends Styled:
 
   def apply[M](attributes: Attr[M]*)(children: Elem[M]*): Html[M] =
     button(
-      (`class` := styles.className) +: attributes.toList
+      (cls := styles.className) +: attributes.toList
     )(children.toList)
 
-
-  val fontSize = "1em"
 
   val styles = css"""
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
-    font-size: $fontSize;
     font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: border-color 0.25s;
+
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 
     &:hover {
       border-color: #646cff;
@@ -35,9 +36,4 @@ object Button extends Styled:
     &:focus-visible {
       outline: 4px auto -webkit-focus-ring-color;
     }
-  """
-
-  val active = css"""
-    background: tomato;
-    color: black;
   """

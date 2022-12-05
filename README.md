@@ -33,7 +33,9 @@ features:
 - floating blocks falling down (cascade gravity mode)
 
 bugs:
-- debounce resizing
+- debounce resizing (!)
+    - refactor subs to fs2
+    - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
 
 UI:
 - on screen controls (?)

@@ -12,6 +12,10 @@ object GameplayCommand:
     case HardDrop
     case Pause
   export GameCommand.*
+  
+  val MoveLeft = Move(Vector2(-1, 0))
+  val MoveRight = Move(Vector2(1, 0))
+  val MoveDown = Move(Vector2(0, 1))
 
   enum DebugCommand extends GameplayCommand:
     case Reset

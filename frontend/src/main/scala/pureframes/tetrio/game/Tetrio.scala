@@ -58,6 +58,12 @@ final case class Tetrio[F[_]: Async](tyrianSubSystem: TyrianSubSystem[F, Externa
       context: GameContext,
       model: GameModel
   ): GlobalEvent => Outcome[GameModel] =
+    case tyrianSubSystem.TyrianEvent.Receive(ExternalCommand.Input(cmd)) =>
+      Outcome(
+        GameplayScene.modelInputLens
+            .modify(model, _.appendCmd(cmd))
+      )
+
     case tyrianSubSystem.TyrianEvent.Receive(ExternalCommand.Pause) =>
         Outcome(
           // TODO: don't do it here ?
