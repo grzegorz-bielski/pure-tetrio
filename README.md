@@ -38,13 +38,18 @@ bugs:
     - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
 
 UI:
-- on screen controls (?)
+- on screen controls
+    - long press -> repeat inputs
+    - better UI
 - centered overlays
 
 setup:
 - split vendor chunk from app chunks (borked)
 - add sourcemaps (borked)
 - move vite-pure-css plugin to pure-css repo and publish
+- use std and node types from scalablytyped
+- hot-reload (?)
+    - https://github.com/scala-js/scala-js/issues/4643
 
 ideas: 
 - https://www.cmaas.de/tutorial-tetris-with-impact-js

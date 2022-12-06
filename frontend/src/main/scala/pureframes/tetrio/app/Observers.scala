@@ -8,6 +8,7 @@ import org.scalajs.dom.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
+import cats.effect.kernel.Resource
 
 object Observers:
   def resize[F[_]: Sync](nodeId: String): Sub[F, ResizeParams] =
@@ -113,3 +114,22 @@ object Observers:
     }
     ob.observe(node, summon[ResizeObserverOptions])
     ob
+
+
+  def resizeObserver[E <: Element, F[_]: Async](
+      node: => E,
+      cb: AsyncCb[ResizeParams]
+  )(using ResizeObserverOptions): Resource[F, ResizeObserver] =
+    Resource.make(
+      Sync[F].delay {
+        val ob = ResizeObserver { (entries, params) =>
+          if !entries.isEmpty then
+            cb(Right((NonEmptyBatch.point(entries.head), params)))
+        }
+        ob.observe(node, summon[ResizeObserverOptions])
+        ob
+      }
+    )(ob => Sync[F].delay(ob.disconnect()))
+
+// TODO: update cats-effect
+// https://fs2.io/#/guide?id=asynchronous-effects-callbacks-invoked-multiple-times

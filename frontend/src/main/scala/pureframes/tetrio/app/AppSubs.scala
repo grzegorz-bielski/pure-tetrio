@@ -26,7 +26,7 @@ object AppSubs:
       case _ => None
     }
 
-    val resizer =
+    val screenResizer =
       // TODO: we also need to listen for dpr changes and debounce this whole mess
       Observers
         .resizeAwaitNode[F, AppMsg, HTMLCanvasElement](
@@ -40,4 +40,4 @@ object AppSubs:
           AppMsg.Resize(size)
         }
 
-    indigoBridge combine resizer
+    indigoBridge combine screenResizer
