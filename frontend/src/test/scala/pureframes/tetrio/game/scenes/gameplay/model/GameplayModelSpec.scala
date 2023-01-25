@@ -52,5 +52,6 @@ class GameplayModelSpec extends FunSuite:
       lastUpdatedFalling = Seconds(0.5),
       fallDelay = Seconds(1),
       progress = Progress.initial,
-      lastMovement = None
+      lastMovement = None,
+      held = None
     )
