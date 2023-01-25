@@ -9,6 +9,7 @@ object GameplayCommand:
   enum GameCommand extends GameplayCommand:
     case Move(point: Vector2)
     case Rotate(direction: RotationDirection)
+    case SwapHeld
     case HardDrop
     case Pause
   export GameCommand.*

@@ -29,7 +29,6 @@ features:
 - predict next few tetrominos (?)
 - stages (?)
 - block placement preview
-- hold mechanic
 - floating blocks falling down (cascade gravity mode)
 
 bugs:
@@ -50,6 +49,7 @@ setup:
 - use std and node types from scalablytyped
 - hot-reload (?)
     - https://github.com/scala-js/scala-js/issues/4643
+- sbt task for stylesheets gen?
 
 ideas: 
 - https://www.cmaas.de/tutorial-tetris-with-impact-js

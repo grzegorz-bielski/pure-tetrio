@@ -41,7 +41,9 @@ object GameplayView:
       viewModel: GameplayViewModel
   )(using GameContext): SceneNode =
     Group(
-      drawMap(model.state) ++ drawTetromino(model.state, viewModel)
+      drawMap(model.state) ++ drawTetromino(model.state, viewModel) ++ drawHeld(
+        model.state
+      )
     )
       .scaleBy(viewModel.gameMapScale)
       .moveBy(
@@ -49,7 +51,9 @@ object GameplayView:
       )
 
   // todo: separate scene ?
-  def drawOverlay(state: GameplayState)(using ctx: GameContext): Option[SceneNode] =
+  def drawOverlay(state: GameplayState)(using
+      ctx: GameContext
+  ): Option[SceneNode] =
     import ctx.startUpData.bootData.scale
     val point = state.map.grid.position.toPoint
 
@@ -73,25 +77,31 @@ object GameplayView:
       case e: (MapElement.Wall | MapElement.Floor) => drawBoundaries(e)
     }
 
+  def drawHeld(state: GameplayState)(using ctx: GameContext): Batch[SceneNode] =
+    state match
+      case state: GameplayState.InProgress =>
+        state.held.map(tetrominoGraphic).toBatch
+      case _ =>
+        Batch.empty
+
   def drawTetromino(
       state: GameplayState,
       viewModel: GameplayViewModel
   )(using ctx: GameContext): Batch[SceneNode] =
-    val bootData = ctx.startUpData.bootData
-
     state match
-      case state: GameplayState.InProgress =>
-        val graphic = blockGraphic(
-          state.tetromino.extractOrdinal,
-          bootData.gameAssets.tetrominos
-        )
-
+      case s: GameplayState.InProgress =>
         viewModel.currentTetrominoPositions
-          .map(graphic.moveTo)
+          .map(tetrominoGraphic(s.tetromino).moveTo)
 
       case s: GameplayState.Paused =>
         drawTetromino(s.pausedState, viewModel)
       case _ => Batch.empty[SceneNode]
+
+  def tetrominoGraphic(tetromino: Tetromino)(using ctx: GameContext) =
+    blockGraphic(
+      tetromino.extractOrdinal,
+      ctx.startUpData.bootData.gameAssets.tetrominos
+    )
 
   def drawDebris(e: MapElement.Debris)(using ctx: GameContext) =
     import ctx.startUpData.bootData.{gameAssets, gridSquareSize}

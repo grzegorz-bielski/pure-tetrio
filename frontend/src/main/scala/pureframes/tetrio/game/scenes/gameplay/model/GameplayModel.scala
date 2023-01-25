@@ -40,15 +40,29 @@ object GameplayModel:
 
     GameplayModel(
       state = GameplayState
-        .Initial(GameMap.walled(grid), Progress.initial, Batch.empty[Int]),
+        .Initial(
+          GameMap.walled(grid),
+          Progress.initial,
+          Batch.empty[Int],
+          Option.empty[Tetromino]
+        ),
       input = GameplayInput.initial(setupData.spawnPoint)
     )
+
+  def spawnTetrominoPiece(ctx: GameContext): Tetromino =
+    Tetromino.spawn(
+      side = ctx.dice.rollFromZero(7)
+    )(ctx.startUpData.spawnPoint)
+
+  def spawnTetrominoPiece(ctx: GameContext, side: Int): Tetromino =
+    Tetromino.spawn(side)(ctx.startUpData.spawnPoint)
 
   enum GameplayState:
     case Initial(
         map: GameMap,
         progress: Progress,
-        fullLines: Batch[Int]
+        fullLines: Batch[Int],
+        held: Option[Tetromino]
     )
     case InProgress(
         map: GameMap,
@@ -56,7 +70,8 @@ object GameplayModel:
         lastUpdatedFalling: Seconds,
         fallDelay: Seconds,
         progress: Progress,
-        lastMovement: Option[Vector2]
+        lastMovement: Option[Vector2],
+        held: Option[Tetromino]
     )
     case Paused(
         pausedState: GameplayState
@@ -66,6 +81,12 @@ object GameplayModel:
         finishedState: GameplayState
     )
   extension (state: GameplayState)
+    def heldTetromino: Option[Tetromino] =
+      state match
+        case s: GameplayState.Initial    => s.held
+        case s: GameplayState.InProgress => s.held
+        case _                           => None
+
     def onFrameTickPreCmd(ctx: GameContext): Outcome[GameplayState] =
       state match
         case s: GameplayState.Initial =>
@@ -122,11 +143,7 @@ object GameplayModel:
         ctx: GameContext,
         t: Option[Tetromino]
     ): Outcome[GameplayState.InProgress] =
-      val tetromino = t.getOrElse {
-        Tetromino.spawn(
-          side = ctx.dice.rollFromZero(7)
-        )(ctx.startUpData.spawnPoint)
-      }
+      val tetromino = t.getOrElse(spawnTetrominoPiece(ctx))
 
       Outcome[GameplayState.InProgress](
         GameplayState.InProgress(
@@ -135,7 +152,8 @@ object GameplayModel:
           lastUpdatedFalling = ctx.gameTime.running,
           fallDelay = Seconds(1),
           progress = state.progress,
-          lastMovement = None
+          lastMovement = None,
+          held = state.heldTetromino
         )
       ).addGlobalEvents(
         GameplayEvent.ProgressUpdated(state.progress, inProgress = true)
@@ -146,7 +164,8 @@ object GameplayModel:
         .Initial(
           map = state.map.reset,
           progress = Progress.initial,
-          fullLines = Batch.empty[Int]
+          fullLines = Batch.empty[Int],
+          held = None
         )
         .spawnTetromino(ctx, t)
 
@@ -196,12 +215,30 @@ object GameplayModel:
         case HardDrop          => state.hardDrop(ctx)
         case SpawnTetromino(tetromino) =>
           state.spawnTetromino(ctx, Some(tetromino))
-        case Reset => state.reset(ctx, None)
-        case Pause => state.pause
+        case Reset    => state.reset(ctx, None)
+        case SwapHeld => state.swapHeld(ctx)
+        case Pause    => state.pause
         case Composite(cmds) =>
           cmds.foldLeft(Outcome[GameplayState](state)) { (state, cmd) =>
             state.flatMap(_.onCommand(ctx, cmd))
           }
+
+    def swapHeld(ctx: GameContext): Outcome[GameplayState] =
+      val toHold = spawnTetrominoPiece(ctx, state.tetromino.ordinal)
+
+      Outcome(
+        state.held.fold(
+          state.copy(
+            held = Some(toHold),
+            tetromino = spawnTetrominoPiece(ctx)
+          )
+        )(held =>
+          state.copy(
+            held = Some(toHold),
+            tetromino = held
+          )
+        )
+      )
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
       val movement =
@@ -216,7 +253,8 @@ object GameplayModel:
           GameplayState.Initial(
             map = nextMap,
             progress = state.progress,
-            fullLines = fullLines
+            fullLines = fullLines,
+            held = state.held
           )
         )
 
@@ -264,7 +302,8 @@ object GameplayModel:
           GameplayState.Initial(
             map = nextMap,
             progress = state.progress,
-            fullLines = nextMap.fullLinesWith(state.tetromino)
+            fullLines = nextMap.fullLinesWith(state.tetromino),
+            held = state.held
           )
         )
       else if movement.intersections.isEmpty then onMove
