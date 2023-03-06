@@ -26,7 +26,6 @@ features:
     - https://harddrop.com/wiki/Back-to-Back
 - add scores (https://tetris.wiki/Scoring - BPS ?)
 - line clear animations
-- predict next few tetrominos (?)
 - stages (?)
 - block placement preview
 - floating blocks falling down (cascade gravity mode)
@@ -37,9 +36,8 @@ bugs:
     - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
 
 UI:
-- on screen controls
-    - long press -> repeat inputs
-    - better UI
+- add gesture controls
+- remove screen controls
 - centered overlays
 
 setup:

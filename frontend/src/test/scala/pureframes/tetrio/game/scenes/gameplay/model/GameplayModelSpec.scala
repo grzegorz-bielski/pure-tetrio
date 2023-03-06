@@ -53,5 +53,6 @@ class GameplayModelSpec extends FunSuite:
       fallDelay = Seconds(1),
       progress = Progress.initial,
       lastMovement = None,
-      held = None
+      held = None,
+      next = Tetromino.o(Vector2(9, 1))
     )

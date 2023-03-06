@@ -41,9 +41,10 @@ object GameplayView:
       viewModel: GameplayViewModel
   )(using GameContext): SceneNode =
     Group(
-      drawMap(model.state) ++ drawTetromino(model.state, viewModel) ++ drawHeld(
-        model.state
-      )
+      drawMap(model.state) ++
+        drawTetromino(model.state, viewModel) ++
+        drawHeld(model.state) ++
+        drawNext(model.state)
     )
       .scaleBy(viewModel.gameMapScale)
       .moveBy(
@@ -83,6 +84,14 @@ object GameplayView:
         state.held.map(tetrominoGraphic).toBatch
       case _ =>
         Batch.empty
+
+  def drawNext(state: GameplayState)(using ctx: GameContext): Batch[SceneNode] =
+    import ctx.startUpData.bootData.{gridSize, gridSquareSize}
+
+    state match
+      case state: GameplayState.InProgress =>
+        Batch(tetrominoGraphic(state.next).moveBy(Point(gridSize.width.toInt * gridSquareSize, 0)))
+      case _ => Batch.empty
 
   def drawTetromino(
       state: GameplayState,
