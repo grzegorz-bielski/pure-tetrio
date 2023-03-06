@@ -150,7 +150,7 @@ object GameplayModel:
         GameplayState.InProgress(
           map = state.map,
           lastUpdatedFalling = ctx.gameTime.running,
-          fallDelay = Seconds(1),
+          fallDelay = state.progress.fallDelay,
           progress = state.progress,
           lastMovement = None,
           held = state.heldTetromino,

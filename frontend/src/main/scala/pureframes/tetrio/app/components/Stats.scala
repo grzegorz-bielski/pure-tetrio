@@ -14,7 +14,6 @@ object Stats extends Styled:
         button(onClick(AppMsg.Pause))("Pause"),
         Controls.view(model.controls).map(AppMsg.ControlsUpdate(_))
       ),
-      div(s"Is in progress ${model.gameInProgress}"),
       model.gameProgress
         .map { progress =>
           ul()(
