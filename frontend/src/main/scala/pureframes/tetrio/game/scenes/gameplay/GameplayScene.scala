@@ -49,11 +49,13 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
   def updateModel(
       ctx: SceneContext[SetupData],
       model: SceneModel
-  ): GlobalEvent => Outcome[SceneModel] = {
+  ): GlobalEvent => Outcome[SceneModel] = 
     case e: InputEvent => model.onInput(e, ctx.frameContext)
     case FrameTick     => model.onFrameTick(ctx.frameContext)
+    case AreaTapped => 
+      println("updateModel" -> "AreaTapped")
+      Outcome(model)
     case _             => Outcome(model)
-  }
 
   def updateViewModel(
       ctx: SceneContext[SetupData],
