@@ -10,10 +10,10 @@ import indigoextras.geometry.Polygon
 import indigoextras.subsystems.Automata
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
+import pureframes.tetrio.game.scenes.gameplay.viewmodel.TapGestureArea
 
 import GameplayViewModel.*
 import GameplayModel.*
-
 case class GameplayViewModel(state: State, canvasSize: CanvasSize, gestureArea: TapGestureArea):
   def onCanvasResize(nextCanvasSize: CanvasSize): GameplayViewModel =
     copy(canvasSize = nextCanvasSize)
@@ -92,7 +92,9 @@ object GameplayViewModel:
       canvasSize = canvasSize,
       gestureArea = TapGestureArea(
           Polygon.fromRectangle(canvasSize.toDrawingBufferViewport.toRectangle),
-          AreaTapped
+          n => 
+            println(s"tapped: $n")
+            AreaTapped
       )
     )
 
