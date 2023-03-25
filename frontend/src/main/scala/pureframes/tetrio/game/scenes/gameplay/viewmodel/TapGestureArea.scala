@@ -1,6 +1,5 @@
 package pureframes.tetrio.game.scenes.gameplay.viewmodel
 
-import indigo.logger
 import indigo.shared.FrameContext
 import indigo.shared.Outcome
 import indigo.shared.collections.Batch
