@@ -53,6 +53,8 @@ final case class GameplayInput(
         Outcome(appendCmd(GameplayCommand.MoveLeft))
       case GestureEvent.Panned(Direction.Right) =>
         Outcome(appendCmd(GameplayCommand.MoveRight))
+      case GestureEvent.Panned(Direction.Down) => 
+        Outcome(appendCmd(GameplayCommand.MoveDown))
       case _ =>
         Outcome(this)
 

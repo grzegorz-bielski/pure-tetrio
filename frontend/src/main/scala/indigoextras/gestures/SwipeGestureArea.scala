@@ -8,7 +8,6 @@ import indigo.shared.datatypes.Rectangle
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.PointerEvent
 import indigo.shared.events.PointerEvent.*
-import indigo.shared.input.Pointers
 import indigo.shared.time.GameTime
 import indigo.shared.time.Millis
 import indigo.shared.time.Seconds

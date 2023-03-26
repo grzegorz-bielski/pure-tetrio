@@ -8,7 +8,6 @@ import indigo.shared.datatypes.Rectangle
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.PointerEvent
 import indigo.shared.events.PointerEvent.*
-import indigo.shared.input.Pointers
 import indigo.shared.time.GameTime
 import indigo.shared.time.Millis
 import indigo.shared.time.Seconds
@@ -69,7 +68,7 @@ final case class PanGestureArea private (
 object PanGestureArea:
   final case class Options(threshold: Int)
   object Options:
-    val default = Options(threshold = 10)
+    val default = Options(threshold = 7)
 
   def apply(
       area: Polygon.Closed,

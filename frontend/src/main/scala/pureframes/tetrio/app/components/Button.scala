@@ -24,10 +24,6 @@ object Button extends Styled:
     cursor: pointer;
     transition: border-color 0.25s;
 
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-
     &:hover {
       border-color: #646cff;
     }
