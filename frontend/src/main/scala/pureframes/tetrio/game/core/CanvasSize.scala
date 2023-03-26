@@ -3,6 +3,7 @@ package pureframes.tetrio.game.core
 import indigo.shared.Outcome
 import indigo.shared.config.GameViewport
 import indigo.shared.datatypes.Vector2
+import indigoextras.geometry.Polygon
 import org.scalajs.dom
 import org.scalajs.dom.*
 
@@ -28,6 +29,9 @@ case class CanvasSize(displayWidth: Double, displayHeight: Double, dpr: Double):
   def toDrawingBufferViewport: GameViewport =
     GameViewport(drawingBufferWidth, drawingBufferHeight)
 
+  def toPolygon: Polygon.Closed =
+    Polygon.fromRectangle(toDrawingBufferViewport.toRectangle)
+
   private def drawingBufferSize(size: Double): Int =
     math.round(size * dpr).toInt
 
@@ -44,7 +48,6 @@ object CanvasSize:
 
   def unsafFromResizeEntry(entry: ResizeObserverEntry): CanvasSize =
     // TODO: no entry.devicePixelContentBoxSize on scala-js dom :sad
-
 
     // CanvasSize(
     //   entry.devicePixelContentBoxSize.head.inlineSize,

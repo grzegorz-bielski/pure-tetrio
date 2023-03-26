@@ -11,7 +11,6 @@ def run =
   JSRender.toFiles(
     directory = "frontend/styles",
     AppView,
-    ScreenControls,
     Button,
     IndigoWrapper,
     Stats

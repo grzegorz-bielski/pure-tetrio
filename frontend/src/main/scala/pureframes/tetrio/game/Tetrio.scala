@@ -12,8 +12,11 @@ import pureframes.tetrio.game.scenes.gameplay.*
 import snabbdom.h.apply
 import tyrian.TyrianSubSystem
 
-final case class Tetrio[F[_]: Async](tyrianSubSystem: TyrianSubSystem[F, ExternalCommand])
-    extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
+final case class Tetrio[F[_]: Async](
+    tyrianSubSystem: TyrianSubSystem[F, ExternalCommand]
+) extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
+  import tyrianSubSystem.TyrianEvent.Receive as FromTyrian
+
   def initialScene(bootData: BootData): Option[SceneName] =
     None
 
@@ -58,18 +61,24 @@ final case class Tetrio[F[_]: Async](tyrianSubSystem: TyrianSubSystem[F, Externa
       context: GameContext,
       model: GameModel
   ): GlobalEvent => Outcome[GameModel] =
-    case tyrianSubSystem.TyrianEvent.Receive(ExternalCommand.Input(cmd)) =>
+    case FromTyrian(ExternalCommand.Input(cmd)) =>
       Outcome(
         GameplayScene.modelInputLens
-            .modify(model, _.appendCmd(cmd))
+          .modify(model, _.appendCmd(cmd))
       )
 
-    case tyrianSubSystem.TyrianEvent.Receive(ExternalCommand.Pause) =>
-        Outcome(
-          // TODO: don't do it here ?
-          GameplayScene.modelInputLens
-            .modify(model, _.appendCmd(GameplayCommand.Pause))
-        )
+    case FromTyrian(ExternalCommand.Pause) =>
+      Outcome(
+        // TODO: don't do it here ?
+        GameplayScene.modelInputLens
+          .modify(model, _.appendCmd(GameplayCommand.Pause))
+      )
+
+    case FromTyrian(cmd: ExternalCommand.CanvasResize) =>
+      Outcome(
+        GameplayScene.modelInputLens
+          .modify(model, _.onCanvasResize(cmd.canvasSize))
+      )
 
     //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
@@ -87,11 +96,11 @@ final case class Tetrio[F[_]: Async](tyrianSubSystem: TyrianSubSystem[F, Externa
       viewModel: GameViewModel
   ): GlobalEvent => Outcome[GameViewModel] =
 
-    case tyrianSubSystem.TyrianEvent.Receive(cmd: ExternalCommand.CanvasResize) =>
-        Outcome( 
-          GameplayScene.viewModelLens
-            .modify(viewModel, _.onCanvasResize(cmd.canvasSize))
-        )
+    case FromTyrian(cmd: ExternalCommand.CanvasResize) =>
+      Outcome(
+        GameplayScene.viewModelLens
+          .modify(viewModel, _.onCanvasResize(cmd.canvasSize))
+      )
 
     case _ => Outcome(viewModel)
 

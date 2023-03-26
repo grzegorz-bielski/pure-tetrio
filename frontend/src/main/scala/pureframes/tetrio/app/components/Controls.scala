@@ -43,26 +43,37 @@ object Controls:
       // TODO: use dynamic game control mappings and infer it from there
       List(
         h1("Controls"),
-        h2("Standard"),
+        h2("Keyboard"),
         ul(
-          li("Key.SPACE       => HardDrop"),
-          li("Key.LEFT_ARROW  => Move(Vector2(-1, 0))"),
-          li("Key.RIGHT_ARROW => Move(Vector2(1, 0))"),
-          li("Key.DOWN_ARROW  => Move(Vector2(0, 1))"),
-          li("Key.KEY_Q       => Rotate(CounterClockwise)"),
-          li("Key.KEY_W       => Rotate(Clockwise)"),
-          li("Key.KEY_P       => Pause")
+          li("Space       - Hard Drop"),
+          li("Left Arrow  - Move Left"),
+          li("Right Arrow - Move Right"),
+          li("Down Arrow  - Move Down"),
+          li("Up Arrow    - Rotate Clockwise"),
+          li("Q           - Rotate Counter Clockwise"),
+          li("W           - Rotate Clockwise"),
+          li("P           - Pause"),
+          li("H           - Hold / Swap"),
         ),
-        h2("Debug"),
+        h2("Keyboard (Debug)"),
         ul(
-          li("Key.KEY_I => SpawnTetromino(Tetromino.i(spawnPoint))"),
-          li("Key.KEY_J => SpawnTetromino(Tetromino.j(spawnPoint))"),
-          li("Key.KEY_L => SpawnTetromino(Tetromino.l(spawnPoint))"),
-          li("Key.KEY_O => SpawnTetromino(Tetromino.o(spawnPoint))"),
-          li("Key.KEY_S => SpawnTetromino(Tetromino.s(spawnPoint))"),
-          li("Key.KEY_T => SpawnTetromino(Tetromino.t(spawnPoint))"),
-          li("Key.KEY_Z => SpawnTetromino(Tetromino.z(spawnPoint))"),
-          li("Key.KEY_R => Reset")
+          li("I - Spawn I Tetromino"),
+          li("J - Spawn J Tetromino"),
+          li("L - Spawn L Tetromino"),
+          li("O - Spawn O Tetromino"),
+          li("S - Spawn S Tetromino"),
+          li("T - Spawn T Tetromino"),
+          li("Z - Spawn Z Tetromino"),
+          li("R - Reset")
+        ),
+        h2("Touch / Mouse"),
+        ul(
+          li("Swipe Down - Hard Drop"),
+          li("Pan Left   - Move Left"),
+          li("Pan Right  - Move Right"),
+          li("Pan Down   - Move Down"),
+          li("Swipe Up   - Hold / Swap"),
+          li("Tap        - Rotate Clockwise"),
         )
       )
     )

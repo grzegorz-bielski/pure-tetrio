@@ -11,8 +11,7 @@ object AppView extends Styled:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
     div(`class` := styles.className)(
       IndigoWrapper.view,
-      Stats.view,
-      ScreenControls.view
+      Stats.view
     )
 
   val styles = css"""

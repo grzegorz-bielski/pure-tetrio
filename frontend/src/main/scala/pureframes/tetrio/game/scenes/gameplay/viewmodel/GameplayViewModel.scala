@@ -6,6 +6,7 @@ import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
+import indigoextras.geometry.Polygon
 import indigoextras.subsystems.Automata
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -13,7 +14,10 @@ import pureframes.tetrio.game.scenes.gameplay.model.*
 import GameplayViewModel.*
 import GameplayModel.*
 
-case class GameplayViewModel(state: State, canvasSize: CanvasSize):
+case class GameplayViewModel(
+    state: State,
+    canvasSize: CanvasSize
+):
   def onCanvasResize(nextCanvasSize: CanvasSize): GameplayViewModel =
     copy(canvasSize = nextCanvasSize)
 

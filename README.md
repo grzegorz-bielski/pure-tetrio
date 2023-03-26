@@ -21,14 +21,11 @@ npm run build
 TODO:
 
 features:
-- add levels 
-    - (https://tetris.fandom.com/wiki/Tetris_(NES,_Nintendo))
-    - https://harddrop.com/wiki/Back-to-Back
-- add scores (https://tetris.wiki/Scoring - BPS ?)
-- line clear animations
-- stages (?)
 - block placement preview
-- floating blocks falling down (cascade gravity mode)
+- line clear animations
+- game over animations
+- live leader board
+- cascade gravity mode (?)
 
 bugs:
 - debounce resizing (!)
@@ -50,5 +47,4 @@ setup:
 - sbt task for stylesheets gen?
 
 ideas: 
-- https://www.cmaas.de/tutorial-tetris-with-impact-js
 - https://tetr.io/

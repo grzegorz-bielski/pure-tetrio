@@ -23,5 +23,6 @@ object IndigoWrapper extends Styled:
       width: 100%;
       height: 100vh;
       margin: 0;
+      touch-action: none;
     }
   """

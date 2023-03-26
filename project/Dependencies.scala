@@ -3,7 +3,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
   object Indigo {
-    val version = "0.14.0"
+    val version = "0.14.1-SNAPSHOT"
 
     val deps: Deps = Def.setting {
       Seq(
