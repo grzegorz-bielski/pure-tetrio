@@ -10,15 +10,13 @@ import indigoextras.geometry.Polygon
 import indigoextras.subsystems.Automata
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
-import pureframes.tetrio.game.scenes.gameplay.viewmodel.TapGestureArea
 
 import GameplayViewModel.*
 import GameplayModel.*
+
 case class GameplayViewModel(
     state: State,
-    canvasSize: CanvasSize,
-    tapGestureArea: TapGestureArea,
-    swipeGestureArea: SwipeGestureArea
+    canvasSize: CanvasSize
 ):
   def onCanvasResize(nextCanvasSize: CanvasSize): GameplayViewModel =
     copy(canvasSize = nextCanvasSize)
@@ -52,20 +50,13 @@ case class GameplayViewModel(
   ): Outcome[GameplayViewModel] =
     given GameContext = ctx
 
-    val gestureAreas =
-      tapGestureArea.update combine swipeGestureArea.update
-
     (model.state, state) match
       case (m: GameplayState.InProgress, vm: State.InProgress) =>
         if vm.targetTetrominoPositions == m.tetromino.positions then
-          gestureAreas.map((tg, sg) =>
-            copy(tapGestureArea = tg, swipeGestureArea = sg)
-          )
+          Outcome(this)
         else
-          gestureAreas.map((tg, sg) =>
+          Outcome(
             copy(
-              tapGestureArea = tg,
-              swipeGestureArea = sg,
               state = State.InProgress(
                 prevTetrominoPositions =
                   currentTetrominoPositions.map(_.toVector),
@@ -75,10 +66,8 @@ case class GameplayViewModel(
             )
           )
       case (m: GameplayState.InProgress, _: State.Empty) =>
-        gestureAreas.map((tg, sg) =>
+        Outcome(
           copy(
-            tapGestureArea = tg,
-            swipeGestureArea = sg,
             state = State.InProgress(
               prevTetrominoPositions = Batch.empty,
               targetTetrominoPositions = m.tetromino.positions,
@@ -87,17 +76,8 @@ case class GameplayViewModel(
           )
         )
       case (m: GameplayState.Initial, _) =>
-        gestureAreas.map((tg, sg) =>
-          copy(
-            tapGestureArea = tg,
-            swipeGestureArea = sg,
-            state = State.Empty()
-          )
-        )
-      case _ =>
-        gestureAreas.map((tg, sg) =>
-          copy(tapGestureArea = tg, swipeGestureArea = sg)
-        )
+        Outcome(copy(state = State.Empty()))
+      case _ => Outcome(this)
 
 object GameplayViewModel:
   val fromGrindPoint: GameContext ?=> Vector2 => Point =
@@ -109,19 +89,7 @@ object GameplayViewModel:
   def initial(canvasSize: CanvasSize): GameplayViewModel =
     GameplayViewModel(
       state = State.Empty(),
-      canvasSize = canvasSize,
-      tapGestureArea = TapGestureArea(
-        Polygon.fromRectangle(canvasSize.toDrawingBufferViewport.toRectangle),
-        n =>
-          println(s"tapped: $n")
-          AreaTapped
-      ),
-      swipeGestureArea = SwipeGestureArea(
-        Polygon.fromRectangle(canvasSize.toDrawingBufferViewport.toRectangle),
-        dir =>
-          println(s"swiped: $dir")
-          AreaSwiped
-      )
+      canvasSize = canvasSize
     )
 
   enum State:

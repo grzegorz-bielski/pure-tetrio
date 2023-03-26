@@ -1,4 +1,4 @@
-package pureframes.tetrio.game.scenes.gameplay.viewmodel
+package indigoextras.gestures
 
 import indigo.shared.FrameContext
 import indigo.shared.Outcome
@@ -23,9 +23,11 @@ final case class TapGestureArea private (
     state: State,
     options: Options
 ) derives CanEqual:
-  def update(using ctx: FrameContext[?]): Outcome[TapGestureArea] =
-    update(ctx.inputState.pointers, ctx.gameTime)
-  def update(pointers: Pointers, time: GameTime): Outcome[TapGestureArea] =
+  def resize(nextArea: Polygon.Closed): TapGestureArea = 
+    copy(area = nextArea)
+  def update(e: PointerEvent, ctx: FrameContext[?]): Outcome[TapGestureArea] =
+    update(e, ctx.gameTime)
+  def update(e: PointerEvent, time: GameTime): Outcome[TapGestureArea] =
     val fn: PartialFunction[PointerEvent, Outcome[State]] =
       state match
         case State.Initial => {
@@ -53,10 +55,9 @@ final case class TapGestureArea private (
             else Outcome(State.Initial)
         }
 
-    pointers.pointerEvents
-      .collectFirst(fn)
-      .getOrElse(Outcome(state))
-      .map(s => copy(state = s))
+    fn
+      .andThen(_.map(s => copy(state = s)))
+      .applyOrElse(e, _ => Outcome(this))
 
 object TapGestureArea:
   /** @param time
@@ -93,6 +94,9 @@ object TapGestureArea:
       onTap: (TapCount => GlobalEvent)*
   ): TapGestureArea =
     apply(area, Options.default, onTap*)
+
+  def apply(area: Polygon.Closed): TapGestureArea =
+    apply(area, Options.default, GestureEvent.AreaTapped(_))
 
   type TapCount = Int
   type Handler = TapCount => Batch[GlobalEvent]

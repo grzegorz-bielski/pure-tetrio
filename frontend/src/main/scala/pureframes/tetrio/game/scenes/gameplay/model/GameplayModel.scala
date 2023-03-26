@@ -8,6 +8,7 @@ import indigo.shared.events.GlobalEvent
 import indigo.shared.events.KeyboardEvent.KeyDown
 import indigo.shared.utils.Lens
 import indigoextras.geometry.BoundingBox
+import indigoextras.gestures.GestureEvent
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 
@@ -23,9 +24,7 @@ final case class GameplayModel(
     input: GameplayInput
 ):
   def onInput(e: InputEvent, ctx: GameContext): Outcome[GameplayModel] =
-    Outcome(
-      copy(input = input.onInput(e, ctx))
-    )
+    input.onInput(e, ctx).map(i => copy(input = i))
 
   def onFrameTick(ctx: GameContext): Outcome[GameplayModel] =
     for
@@ -33,6 +32,12 @@ final case class GameplayModel(
       state <- state.consumeCommands(ctx, input)
       state <- state.onFrameTickPostCmd(ctx, input)
     yield GameplayModel(state = state, input = input.onFrameEnd)
+
+  def onCanvasResize(nextCanvasSize: CanvasSize): GameplayModel =
+    copy(input = input.onCanvasResize(nextCanvasSize))
+
+  def onGesture(e: GestureEvent): Outcome[GameplayModel] = 
+    input.onGesture(e).map(i => copy(input = i))
 
 object GameplayModel:
   def initial(setupData: SetupData): GameplayModel =
@@ -47,7 +52,7 @@ object GameplayModel:
           Option.empty[Tetromino],
           Option.empty[Tetromino]
         ),
-      input = GameplayInput.initial(setupData.spawnPoint)
+      input = GameplayInput.initial(setupData.spawnPoint, setupData.bootData.initialCanvasSize)
     )
 
   def spawnTetrominoPiece(ctx: GameContext): Tetromino =

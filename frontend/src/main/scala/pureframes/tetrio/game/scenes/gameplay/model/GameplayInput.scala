@@ -8,6 +8,8 @@ import indigo.shared.datatypes.Vector2
 import indigo.shared.events.KeyboardEvent.KeyDown
 import indigo.shared.events.PointerEvent
 import indigo.shared.utils.Lens
+import indigoextras.geometry.Polygon
+import indigoextras.gestures.*
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -19,18 +21,54 @@ import RotationDirection.*
 
 final case class GameplayInput(
     spawnPoint: Vector2,
-    cmds: Queue[GameplayCommand]
+    cmds: Queue[GameplayCommand],
+    tapGestureArea: TapGestureArea,
+    swipeGestureArea: SwipeGestureArea
 ):
+  def onCanvasResize(nextCanvasSize: CanvasSize): GameplayInput =
+    val gestureArea = nextCanvasSize.toPolygon
+
+    copy(
+      tapGestureArea = tapGestureArea.resize(gestureArea),
+      swipeGestureArea = swipeGestureArea.resize(gestureArea)
+    )
+
   def appendCmd(cmd: GameplayCommand): GameplayInput =
     copy(cmds = cmds :+ cmd)
 
   def onFrameEnd: GameplayInput =
     copy(cmds = Queue.empty[GameplayCommand])
 
-  def onInput(e: InputEvent, ctx: GameContext): GameplayInput =
+  def onGesture(e: GestureEvent): Outcome[GameplayInput] =
     e match
-      case KeyDown(key) => copy(cmds = produceCommands(key))
-      case _            => this
+      case GestureEvent.AreaTapped(_) =>
+        Outcome(appendCmd(GameplayCommand.Rotate(RotationDirection.Clockwise)))
+      case GestureEvent.AreaSwiped(Direction.Up) =>
+        Outcome(appendCmd(GameplayCommand.SwapHeld))
+      case GestureEvent.AreaSwiped(Direction.Down) =>
+        Outcome(appendCmd(GameplayCommand.HardDrop))
+      case _ =>
+        Outcome(this)
+
+  def onInput(e: InputEvent, ctx: GameContext): Outcome[GameplayInput] =
+    e match
+      case KeyDown(key)    => onKeyDown(key)
+      case e: PointerEvent => onPointerEvent(e, ctx)
+      case _               => Outcome(this)
+
+  private def onKeyDown(key: Key): Outcome[GameplayInput] =
+    Outcome(copy(cmds = produceKeyboardCommands(key)))
+
+  private def onPointerEvent(
+      e: PointerEvent,
+      ctx: GameContext
+  ): Outcome[GameplayInput] =
+    val gestureAreas =
+      tapGestureArea.update(e, ctx) combine swipeGestureArea.update(e, ctx)
+
+    gestureAreas.map { (tg, sg) =>
+      copy(tapGestureArea = tg, swipeGestureArea = sg)
+    }
 
   def isMoving(ctx: GameContext): Boolean =
     ctx.inputState.keyboard.keysDown.collect(gameMappings).exists {
@@ -44,7 +82,7 @@ final case class GameplayInput(
       case _       => false
     }
 
-  private lazy val produceCommands =
+  private lazy val produceKeyboardCommands =
     inputMappings.andThen(cmds.enqueue).orElse(_ => cmds)
 
   lazy val inputMappings =
@@ -78,5 +116,12 @@ object GameplayInput:
     (m, i) => m.copy(input = i)
   )
 
-  def initial(spawnPoint: Vector2): GameplayInput =
-    GameplayInput(spawnPoint = spawnPoint, cmds = Queue.empty[GameplayCommand])
+  def initial(spawnPoint: Vector2, canvasSize: CanvasSize): GameplayInput =
+    val gestureArea = canvasSize.toPolygon
+
+    GameplayInput(
+      spawnPoint = spawnPoint,
+      cmds = Queue.empty[GameplayCommand],
+      tapGestureArea = TapGestureArea(gestureArea),
+      swipeGestureArea = SwipeGestureArea(gestureArea)
+    )

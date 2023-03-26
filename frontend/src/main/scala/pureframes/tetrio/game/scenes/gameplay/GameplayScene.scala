@@ -7,6 +7,7 @@ import indigo.scenes.*
 import indigo.shared.Outcome
 import indigo.shared.events.InputEvent
 import indigo.shared.events.KeyboardEvent.KeyDown
+import indigoextras.gestures.GestureEvent
 import pureframes.tetrio.game.*
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
@@ -49,13 +50,11 @@ object GameplayScene extends Scene[SetupData, GameModel, GameViewModel]:
   def updateModel(
       ctx: SceneContext[SetupData],
       model: SceneModel
-  ): GlobalEvent => Outcome[SceneModel] = 
-    case e: InputEvent => model.onInput(e, ctx.frameContext)
-    case FrameTick     => model.onFrameTick(ctx.frameContext)
-    case AreaTapped => 
-      println("updateModel" -> "AreaTapped")
-      Outcome(model)
-    case _             => Outcome(model)
+  ): GlobalEvent => Outcome[SceneModel] =
+    case e: InputEvent   => model.onInput(e, ctx.frameContext)
+    case e: GestureEvent => model.onGesture(e)
+    case FrameTick       => model.onFrameTick(ctx.frameContext)
+    case _               => Outcome(model)
 
   def updateViewModel(
       ctx: SceneContext[SetupData],

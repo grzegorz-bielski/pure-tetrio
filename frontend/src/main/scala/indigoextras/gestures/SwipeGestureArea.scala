@@ -1,4 +1,4 @@
-package pureframes.tetrio.game.scenes.gameplay.viewmodel
+package indigoextras.gestures
 
 import indigo.shared.FrameContext
 import indigo.shared.Outcome
@@ -23,9 +23,11 @@ final case class SwipeGestureArea private (
     state: State,
     options: Options
 ) derives CanEqual:
-  def update(using ctx: FrameContext[?]): Outcome[SwipeGestureArea] =
-    update(ctx.inputState.pointers, ctx.gameTime)
-  def update(pointers: Pointers, time: GameTime): Outcome[SwipeGestureArea] =
+  def resize(nextArea: Polygon.Closed): SwipeGestureArea = 
+    copy(area = nextArea)
+  def update(e: PointerEvent, ctx: FrameContext[?]): Outcome[SwipeGestureArea] =
+    update(e, ctx.gameTime)
+  def update(e: PointerEvent, time: GameTime): Outcome[SwipeGestureArea] =
     val fn: PartialFunction[PointerEvent, Outcome[State]] =
       state match
         case State.Initial => {
@@ -57,10 +59,9 @@ final case class SwipeGestureArea private (
             Outcome(State.Initial)
         }
 
-    pointers.pointerEvents
-      .collectFirst(fn)
-      .getOrElse(Outcome(state))
-      .map(s => copy(state = s))
+    fn
+      .andThen(_.map(s => copy(state = s)))
+      .applyOrElse(e, _ => Outcome(this))
 
 object SwipeGestureArea:
   /** @param velocity
@@ -68,9 +69,7 @@ object SwipeGestureArea:
     */
   final case class Options(velocity: Double)
   object Options:
-    val default = Options(
-      velocity = 0.3
-    )
+    val default = Options(velocity = 0.3)
 
   def apply(
       area: Polygon.Closed,
@@ -88,8 +87,8 @@ object SwipeGestureArea:
   ): SwipeGestureArea =
     apply(area, Options.default, onSwipe*)
 
-  enum Direction:
-    case Up, Down, Left, Right
+  def apply(area: Polygon.Closed): SwipeGestureArea =
+    apply(area, Options.default, GestureEvent.AreaSwiped(_))
 
   type Handler = Direction => Batch[GlobalEvent]
 
