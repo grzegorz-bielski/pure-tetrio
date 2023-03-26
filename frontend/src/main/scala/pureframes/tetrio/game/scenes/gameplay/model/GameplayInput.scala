@@ -23,14 +23,16 @@ final case class GameplayInput(
     spawnPoint: Vector2,
     cmds: Queue[GameplayCommand],
     tapGestureArea: TapGestureArea,
-    swipeGestureArea: SwipeGestureArea
+    swipeGestureArea: SwipeGestureArea,
+    panGestureArea: PanGestureArea
 ):
   def onCanvasResize(nextCanvasSize: CanvasSize): GameplayInput =
     val gestureArea = nextCanvasSize.toPolygon
 
     copy(
       tapGestureArea = tapGestureArea.resize(gestureArea),
-      swipeGestureArea = swipeGestureArea.resize(gestureArea)
+      swipeGestureArea = swipeGestureArea.resize(gestureArea),
+      panGestureArea = panGestureArea.resize(gestureArea)
     )
 
   def appendCmd(cmd: GameplayCommand): GameplayInput =
@@ -41,12 +43,16 @@ final case class GameplayInput(
 
   def onGesture(e: GestureEvent): Outcome[GameplayInput] =
     e match
-      case GestureEvent.AreaTapped(_) =>
+      case GestureEvent.Tapped(_) =>
         Outcome(appendCmd(GameplayCommand.Rotate(RotationDirection.Clockwise)))
-      case GestureEvent.AreaSwiped(Direction.Up) =>
+      case GestureEvent.Swiped(Direction.Up) =>
         Outcome(appendCmd(GameplayCommand.SwapHeld))
-      case GestureEvent.AreaSwiped(Direction.Down) =>
+      case GestureEvent.Swiped(Direction.Down) =>
         Outcome(appendCmd(GameplayCommand.HardDrop))
+      case GestureEvent.Panned(Direction.Left) =>
+        Outcome(appendCmd(GameplayCommand.MoveLeft))
+      case GestureEvent.Panned(Direction.Right) =>
+        Outcome(appendCmd(GameplayCommand.MoveRight))
       case _ =>
         Outcome(this)
 
@@ -64,10 +70,14 @@ final case class GameplayInput(
       ctx: GameContext
   ): Outcome[GameplayInput] =
     val gestureAreas =
-      tapGestureArea.update(e, ctx) combine swipeGestureArea.update(e, ctx)
+      (
+        tapGestureArea.update(e, ctx),
+        swipeGestureArea.update(e, ctx),
+        panGestureArea.update(e, ctx)
+      ).combine
 
-    gestureAreas.map { (tg, sg) =>
-      copy(tapGestureArea = tg, swipeGestureArea = sg)
+    gestureAreas.map { (tg, sg, pg) =>
+      copy(tapGestureArea = tg, swipeGestureArea = sg, panGestureArea = pg)
     }
 
   def isMoving(ctx: GameContext): Boolean =
@@ -123,5 +133,6 @@ object GameplayInput:
       spawnPoint = spawnPoint,
       cmds = Queue.empty[GameplayCommand],
       tapGestureArea = TapGestureArea(gestureArea),
-      swipeGestureArea = SwipeGestureArea(gestureArea)
+      swipeGestureArea = SwipeGestureArea(gestureArea),
+      panGestureArea = PanGestureArea(gestureArea)
     )

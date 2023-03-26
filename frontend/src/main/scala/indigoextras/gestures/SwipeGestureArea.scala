@@ -32,12 +32,12 @@ final case class SwipeGestureArea private (
       state match
         case State.Initial => {
           case e: PointerDown if e.isFrom(area) =>
-            Outcome(State.Moving(e, time.running))
+            Outcome(State.Moving(e.position, time.running))
         }
         case s: State.Moving => {
           case e: PointerMove if e.isFrom(area) =>
             val Point(x1, y1) = e.position
-            val Point(x2, y2) = s.start.position
+            val Point(x2, y2) = s.startPos
             val dx            = x2 - x1
             val dy            = y2 - y1
             val deltaX        = math.sqrt((dx * dx) + (dy * dy))
@@ -88,13 +88,13 @@ object SwipeGestureArea:
     apply(area, Options.default, onSwipe*)
 
   def apply(area: Polygon.Closed): SwipeGestureArea =
-    apply(area, Options.default, GestureEvent.AreaSwiped(_))
+    apply(area, Options.default, GestureEvent.Swiped(_))
 
   type Handler = Direction => Batch[GlobalEvent]
 
   enum State:
     case Initial
-    case Moving(start: PointerDown, startAt: Seconds)
+    case Moving(startPos: Point, startAt: Seconds)
 
   extension (e: PointerEvent)
     def isFrom(polygon: Polygon): Boolean =

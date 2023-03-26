@@ -96,7 +96,7 @@ object TapGestureArea:
     apply(area, Options.default, onTap*)
 
   def apply(area: Polygon.Closed): TapGestureArea =
-    apply(area, Options.default, GestureEvent.AreaTapped(_))
+    apply(area, Options.default, GestureEvent.Tapped(_))
 
   type TapCount = Int
   type Handler = TapCount => Batch[GlobalEvent]
