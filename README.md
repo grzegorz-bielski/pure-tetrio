@@ -33,11 +33,10 @@ bugs:
     - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
 
 UI:
-- add gesture controls
-- remove screen controls
 - centered overlays
 
 setup:
+- limit to 60 FPS - https://discord.com/channels/716435281208672356/850411951443017748/1089673879003336726
 - split vendor chunk from app chunks (borked)
 - add sourcemaps (borked)
 - move vite-pure-css plugin to pure-css repo and publish

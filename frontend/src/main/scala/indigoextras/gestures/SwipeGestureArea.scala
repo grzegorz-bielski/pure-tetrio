@@ -34,16 +34,15 @@ final case class SwipeGestureArea private (
             Outcome(State.Moving(e.position, time.running))
         }
         case s: State.Moving => {
-          case e: PointerMove if e.isFrom(area) =>
+          case e: PointerUp if e.isFrom(area) =>
             val Point(x1, y1) = e.position
             val Point(x2, y2) = s.startPos
             val dx            = x2 - x1
             val dy            = y2 - y1
             val deltaX        = math.sqrt((dx * dx) + (dy * dy))
             val deltaT        = (time.running - s.startAt).toMillis.toDouble
-            val velocity      = deltaX / deltaT
 
-            if velocity >= options.velocity then
+            if deltaX >= options.deltaX && deltaT >= options.deltaT then
               val direction =
                 math.abs(dx) > math.abs(dy) match
                   case true =>
@@ -52,10 +51,8 @@ final case class SwipeGestureArea private (
                     if dy > 0 then Direction.Up else Direction.Down
 
               Outcome(State.Initial).addGlobalEvents(handler(direction))
-            else Outcome(s)
-
-          case e: PointerUp if e.isFrom(area) =>
-            Outcome(State.Initial)
+            else 
+              Outcome(State.Initial)
         }
 
     fn
@@ -63,12 +60,9 @@ final case class SwipeGestureArea private (
       .applyOrElse(e, _ => Outcome(this))
 
 object SwipeGestureArea:
-  /** @param velocity
-    *   minimum velocity in [px/ms] for recognizing the gesture
-    */
-  final case class Options(velocity: Double)
+  final case class Options(deltaX: Double, deltaT: Double)
   object Options:
-    val default = Options(velocity = 0.3)
+    val default = Options(deltaX = 50, deltaT = 75)
 
   def apply(
       area: Polygon.Closed,
