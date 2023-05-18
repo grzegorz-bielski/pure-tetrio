@@ -30,6 +30,8 @@ object Assets:
     // not actual tetromino piece, but it shares the sprite :shrug
     val wall = graphic(size).withCrop(size * 7, 0, size, size) 
 
+    val preview = graphic(size).withCrop(size * 10, 0, size, size) 
+
     private def graphic(size: Int) =
       Graphic(0, 0, size, size, Material.Bitmap(name))
 

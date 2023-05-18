@@ -41,7 +41,8 @@ object GameplayView:
       viewModel: GameplayViewModel
   )(using GameContext): SceneNode =
     Group(
-      drawMap(model.state) ++
+      drawPreview(model.state) ++
+        drawMap(model.state) ++
         drawTetromino(model.state, viewModel) ++
         drawHeld(model.state) ++
         drawNext(model.state)
@@ -90,7 +91,12 @@ object GameplayView:
 
     state match
       case state: GameplayState.InProgress =>
-        Batch(tetrominoGraphic(state.next).moveBy(Point(gridSize.width.toInt * gridSquareSize, 0)))
+        // GameplayViewModel.toGridPoint?
+        Batch(
+          tetrominoGraphic(state.next).moveBy(
+            Point(gridSize.width.toInt * gridSquareSize, 0)
+          )
+        )
       case _ => Batch.empty
 
   def drawTetromino(
@@ -104,6 +110,24 @@ object GameplayView:
 
       case s: GameplayState.Paused =>
         drawTetromino(s.pausedState, viewModel)
+      case _ => Batch.empty[SceneNode]
+
+  def drawPreview(
+      state: GameplayState
+  )(using ctx: GameContext): Batch[SceneNode] =
+    import ctx.startUpData.bootData.{gameAssets, gridSize, gridSquareSize}
+
+    state match
+      case s: GameplayState.InProgress =>
+        val movement = s.movementClosestToBottom
+
+        if movement.intersectedStack then Batch.empty[SceneNode]
+        else
+          movement.movedTetromino.positions.map { p =>
+            gameAssets.tetrominos.preview.moveTo(
+              GameplayViewModel.toGridPoint(p).toPoint
+            )
+          }.toBatch
       case _ => Batch.empty[SceneNode]
 
   def tetrominoGraphic(tetromino: Tetromino)(using ctx: GameContext) =

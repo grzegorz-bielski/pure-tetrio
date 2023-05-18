@@ -213,6 +213,10 @@ object GameplayModel:
     def continue: Outcome[GameplayState] = Outcome(state.pausedState)
 
   extension (state: GameplayState.InProgress)
+    // TODO: call once in lazy val?
+    def movementClosestToBottom: Movement = 
+      Movement.closestMovement(Vector2(0, state.map.bottomInternal), state)
+
     def onCommand(
         ctx: GameContext,
         cmd: GameplayCommand
@@ -249,8 +253,7 @@ object GameplayModel:
       )
 
     def hardDrop(ctx: GameContext): Outcome[GameplayState] =
-      val movement =
-        Movement.closestMovement(Vector2(0, state.map.bottomInternal), state)
+      val movement = movementClosestToBottom
 
       lazy val nextState =
         val nextTetromino = movement.movedTetromino
