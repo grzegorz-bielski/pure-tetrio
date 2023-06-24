@@ -41,6 +41,9 @@ final case class PanGestureArea private (
             val dy            = y2 - y1
             val dxAbs = math.abs(dx)
             val dyAbs =  math.abs(dy)
+            // val deltaX        = math.sqrt((dx * dx) + (dy * dy))
+            // val deltaT        = (time.running - s.startAt).toMillis.toDouble
+            // val velocity      = deltaX / deltaT
 
             if dxAbs > options.threshold || dyAbs > options.threshold then
               val direction =
@@ -50,6 +53,7 @@ final case class PanGestureArea private (
                   case false =>
                     if dy > 0 then Direction.Up else Direction.Down
 
+              println("pan" -> direction)
               Outcome(s.copy(startPos = e.position)).addGlobalEvents(handler(direction))
             else Outcome(s)
 
