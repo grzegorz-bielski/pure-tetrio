@@ -21,7 +21,6 @@ npm run build
 TODO:
 
 features:
-- block placement preview
 - line clear animations
 - game over animations
 - live leader board
@@ -31,11 +30,6 @@ bugs:
 - debounce resizing (!)
     - refactor subs to fs2
     - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
-
-UI:
-- add gesture controls
-- remove screen controls
-- centered overlays
 
 setup:
 - split vendor chunk from app chunks (borked)

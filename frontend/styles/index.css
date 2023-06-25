@@ -1,4 +1,6 @@
-@import './pure-css-stylesheet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -37,4 +39,8 @@
   -webkit-user-drag: none;
   -webkit-user-modify: none;
   -webkit-highlight: none;
+}
+
+canvas {
+  @apply w-full h-screen touch-none m-0;
 }

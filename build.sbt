@@ -27,8 +27,7 @@ lazy val frontend = project
       Dependencies.Tyrian.deps.value,
       Dependencies.munit.value,
       Dependencies.pprint.value,
-      Dependencies.dom.value,
-      Dependencies.Pureframes.deps.value
+      Dependencies.dom.value
     ),
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
@@ -40,11 +39,10 @@ lazy val frontend = project
         ) // TODO: source map are not correctly loaded in vite :sad
           // check: https://www.npmjs.com/package/source-map-support (?)
     },
-    scalaJSUseMainModuleInitializer := true,
     scalacOptions ++= Seq(
       // "-language:strictEquality" TODO: fix bugs
     )
   )
 
-addCommandAlias("dev", "~ fastLinkJS; frontend / run")
-addCommandAlias("build", "fullLinkJS; frontend / run")
+addCommandAlias("dev", "~ fastLinkJS")
+addCommandAlias("build", "fullLinkJS")
