@@ -11,9 +11,9 @@ object IndigoWrapper:
 
   @js.native
   @JSImport("@styles/components/indigo-wrapper.module.css")
-  val root: String = js.native
+  def root: String = js.native
 
   val nodeId = Tetrio.gameNodeId
 
   def view[M]: Html[M] =
-    div(`class` := root, id := nodeId)()
+    div(`class` := "absolute w-full h-screen m-0 p-0", id := nodeId)()

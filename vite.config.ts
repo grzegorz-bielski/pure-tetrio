@@ -29,7 +29,7 @@ export default defineConfig({
     resolve: {
         alias: [
             {
-                find: "#styles",
+                find: "@styles",
                 replacement: url.fileURLToPath(new url.URL(`${feModuleName}/styles`, import.meta.url))
               },
             {
