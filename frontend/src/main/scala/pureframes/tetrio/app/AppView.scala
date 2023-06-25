@@ -1,26 +1,21 @@
 package pureframes.tetrio.app
 
-import pureframes.css.*
 import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
 
-object AppView extends Styled:
+import scala.scalajs.js
+
+object AppView:
+  @js.native
+  @JSImport("@styles/app-view.module.css")
+  val root: String = js.native
+
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
-    div(`class` := styles.className)(
+    div(`class` := root)(
       IndigoWrapper.view,
       Stats.view
     )
-
-  val styles = css"""
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    margin: 0 auto;
-    overflow: hidden;
-  """
 

@@ -1,15 +1,20 @@
 package pureframes.tetrio.app.components
 
-import pureframes.css.*
 import pureframes.tetrio.app.*
 import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import tyrian.Html.*
 import tyrian.*
 
-object Stats extends Styled:
+import scala.scalajs.js
+
+object Stats:
+  @js.native
+  @JSImport("@styles/components/stats.module.css")
+  def root: String = js.native
+
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
-    div(`class` := styles.className)(
+    div(`class` := root)(
       div(
         button(onClick(AppMsg.Pause))("Pause"),
         Controls.view(model.controls).map(AppMsg.ControlsUpdate(_))
@@ -24,9 +29,3 @@ object Stats extends Styled:
         }
         .getOrElse(div())
     )
-
-  val styles = css"""
-    position: absolute;
-    top: 0;
-    right: 0;
-  """

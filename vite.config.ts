@@ -1,19 +1,15 @@
 import { defineConfig } from 'vitest/config'
-import * as fs from 'fs'
-
-import { pureCssPlugin } from "./vite/plugin";
+import * as fs from 'node:fs'
+import * as url from 'node:url'
 
 const scalaVersion = fs.readFileSync("./scalaVersion.txt", { encoding: "utf-8" })
 const feModuleName = "frontend"
-const getAppPath = suffix => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
+const getAppPath = (suffix: string) => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
 
 export default defineConfig({
     test: {
         includeSource: ['vite/**/*.ts'],
     },
-    plugins: [
-        pureCssPlugin(),
-    ],
     base: "/pure-tetrio/", // GHP specific
     build: {
         // TODO: scala-js module splitting is borked?
@@ -35,6 +31,10 @@ export default defineConfig({
     },
     resolve: {
         alias: [
+            {
+                find: "@styles",
+                replacement: url.fileURLToPath(new url.URL(`${feModuleName}/styles`, import.meta.url))
+              },
             {
                 find: "@app",
                 replacement: getAppPath(

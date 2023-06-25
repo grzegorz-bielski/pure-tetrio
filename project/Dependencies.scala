@@ -26,14 +26,6 @@ object Dependencies {
     }
   }
 
-  object Pureframes {
-    val deps: Deps = Def.setting {
-      Seq(
-        "eu.pureframes" %%% "css-core" % "0.0.1-SNAPSHOT"
-      )
-    }
-  }
-
   val munit: Deps = Def.setting(
     Seq("org.scalameta" %%% "munit" % "0.7.29" % Test)
   )
