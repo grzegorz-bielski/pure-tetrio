@@ -3,6 +3,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
   object Indigo {
+    // 0.15 blocked by tyrian-indigo-bridge stuck on 0.14
     val version = "0.14.1-SNAPSHOT"
 
     val deps: Deps = Def.setting {
@@ -15,7 +16,7 @@ object Dependencies {
   }
 
   object Tyrian {
-    val version = "0.6.0"
+    val version = "0.7.1"
 
     val deps: Deps = Def.setting {
       Seq(
@@ -35,7 +36,7 @@ object Dependencies {
   )
 
   val dom: Deps = Def.setting(
-    Seq("org.scala-js" %%% "scalajs-dom" % "2.2.0")
+    Seq("org.scala-js" %%% "scalajs-dom" % "2.6.0")
   )
 
   val organizeImports: Deps = Def.setting(

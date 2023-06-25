@@ -20,6 +20,10 @@ npm run build
 
 TODO:
 
+pure-css-purge:
+- broken tests due to module.css imports:
+    - potential approach, running tests in headless browser, see: https://github.com/mushtaq/scala-js-vite
+
 features:
 - block placement preview
 - line clear animations

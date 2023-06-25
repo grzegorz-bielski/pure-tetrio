@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 import * as fs from 'node:fs'
 import * as url from 'node:url'
 
@@ -7,9 +7,6 @@ const feModuleName = "frontend"
 const getAppPath = (suffix: string) => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
 
 export default defineConfig({
-    test: {
-        includeSource: ['vite/**/*.ts'],
-    },
     base: "/pure-tetrio/", // GHP specific
     build: {
         // TODO: scala-js module splitting is borked?
@@ -32,7 +29,7 @@ export default defineConfig({
     resolve: {
         alias: [
             {
-                find: "@styles",
+                find: "#styles",
                 replacement: url.fileURLToPath(new url.URL(`${feModuleName}/styles`, import.meta.url))
               },
             {

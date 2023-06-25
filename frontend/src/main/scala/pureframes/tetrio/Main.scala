@@ -20,6 +20,7 @@ import scala.scalajs.js.annotation.*
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[AppMsg, AppModel[IO]]:
+  def router: tyrian.Location => AppMsg = Routing.none(AppMsg.Noop)
 
   def init(flags: Map[String, String]): (AppModel[IO], Cmd[IO, AppMsg]) =
     (AppModel.init[IO], Cmd.Emit(AppMsg.StartGame))
