@@ -5,10 +5,10 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vite --config ./vite.config.js dev ./frontend --host",
+    "dev": "vite --config ./vite.config.js dev ./frontend --host --open",
     "build": "vite --config ./vite.config.js build ./frontend",
     "preview": "vite --config ./vite.config.js preview ./frontend",
-    "test": "vitest"
+    "vite": "vite"
   },
   "devDependencies": {
     "@types/node": "^18.11.10",

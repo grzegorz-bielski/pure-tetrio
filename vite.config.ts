@@ -8,6 +8,15 @@ const getAppPath = (suffix: string) => `./target/scala-${scalaVersion}/${feModul
 
 export default defineConfig({
     base: "/pure-tetrio/", // GHP specific
+    server: {
+        watch: {
+            ignored: [
+                `**/${feModuleName}/target/**`,
+                `!**/${feModuleName}/target/**/*.js`,
+                `**/${feModuleName}/src/**`,
+            ]
+        }
+    },
     build: {
         // TODO: scala-js module splitting is borked?
         // rollupOptions: {
