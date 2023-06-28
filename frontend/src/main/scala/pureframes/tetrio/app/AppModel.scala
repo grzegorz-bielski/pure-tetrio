@@ -16,12 +16,14 @@ import pureframes.tetrio.game.scenes.gameplay.model.Progress
 import tyrian.*
 import tyrian.cmds.*
 
+
 case class AppModel[F[_]: Async](
     bridge: TyrianIndigoBridge[F, ExternalCommand],
     gameInProgress: Boolean,
     gameProgress: Option[Progress],
     gameNode: Option[Element],
-    controls: Controls.Model
+    controls: Controls.Model,
+    view: RouterView
 ):
   @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
   val update: AppMsg => (AppModel[F], Cmd[F, AppMsg]) =
@@ -69,6 +71,7 @@ case class AppModel[F[_]: Async](
               "width"  -> gameNode.clientWidth.toString,
               "height" -> gameNode.clientHeight.toString
             )
+          // TODO: keep the ref in memory and halt on game switch
         }
       )
 
@@ -102,13 +105,21 @@ case class AppModel[F[_]: Async](
 
     case AppMsg.Noop => (this, Cmd.None)
 
+    case AppMsg.FollowLink(href, isExternal) => 
+      // see: https://github.com/PurpleKingdomGames/tyrian/pull/195#issuecomment-1564979780
+      if isExternal then (this, Nav.loadUrl(href)) else
+        href match 
+          case RouterView(view) => (this.copy(view = view), Cmd.None)
+          case _ => (this, Cmd.None)
+
 object AppModel:
   def init[F[_]: Async]: AppModel[F] = AppModel[F](
     bridge = TyrianIndigoBridge[F, ExternalCommand](),
     gameInProgress = false,
     gameProgress = None,
     gameNode = None,
-    controls = Controls.init
+    controls = Controls.init,
+    view = RouterView.Home
   )
 
 extension [A](underlying: Option[A])

@@ -15,3 +15,4 @@ enum AppMsg:
   case UpdateProgress(progress: Progress, inProgress: Boolean)
   case ControlsUpdate(m: Controls.Msg)
   case Input(cmd: GameplayCommand)
+  case FollowLink(href: String, isExternal: Boolean)

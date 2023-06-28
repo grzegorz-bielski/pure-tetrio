@@ -30,7 +30,7 @@ final case class Tetrio[F[_]: Async](
     BootData.fromFlags(flags).map { bootData =>
       val gameConfig = GameConfig(
         viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
-        clearColor = RGBA.fromHexString("#242424"),
+        clearColor = RGBA.Zero,
         magnification = bootData.magnificationLevel
       )
 
