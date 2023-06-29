@@ -63,6 +63,9 @@ object Main:
       href := path,
       cls := List(
         "grow",
+        "flex",
+        "items-center",
+        "justify-center",
         "font-bold",
         "py-2",
         "px-4",
@@ -72,7 +75,6 @@ object Main:
         "focus-visible:ring",
         "text-center",
         "cursor-pointer",
-        // "align-middle"
       )
         .concat(
           if emphasized then

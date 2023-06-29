@@ -8,6 +8,7 @@ import pureframes.tetrio.game.scenes.gameplay.model.Progress
 
 enum AppMsg:
   case StartGame
+  case StopGame
   case Pause
   case Noop
   case GameNodeMounted(e: Element)

@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.scenes.gameplay.viewmodel
+package pureframes.tetrio.game.scenes.gameplay.viewmodel
 
 import indigo.IndigoLogger.*
 import indigo.*

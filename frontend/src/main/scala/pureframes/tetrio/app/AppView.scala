@@ -1,7 +1,6 @@
 package pureframes.tetrio.app
 
 import pureframes.tetrio.app.components.*
-import pureframes.tetrio.game.Tetrio.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
