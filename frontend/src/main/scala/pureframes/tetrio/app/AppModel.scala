@@ -24,13 +24,15 @@ case class AppModel[F[_]: Async](
     gameNode: Option[Element],
     controls: Controls.Model,
     view: RouterView,
-    gameInstance: Tetrio[F]
+    gameInstance: Option[Tetrio[F]]
 ):
   @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
   val update: AppMsg => (AppModel[F], Cmd[F, AppMsg]) =
     case AppMsg.StartGame =>
       (
-        this,
+        this.copy(
+          gameInstance = Some(Tetrio(bridge.subSystem(IndigoGameId(gameNodeId))))
+        ),
         Cmd.Run(
           waitForNodeToMount[F, AppMsg, Element](gameNodeId, dom.document.body)
         )(AppMsg.GameNodeMounted(_))
@@ -38,11 +40,16 @@ case class AppModel[F[_]: Async](
 
     case AppMsg.StopGame => 
       (
-        this,
-        gameNode.fold(Cmd.None): _ => 
-          Cmd.SideEffect:
-            gameInstance.halt()
-            document.getElementById(gameNodeId).firstChild.asInstanceOf[HTMLCanvasElement].remove()
+        this.copy(gameInstance = None),
+        (
+          gameNode.mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement]), 
+          gameInstance
+        )
+          .mapN: (node, instance) => 
+            Cmd.SideEffect:
+              instance.halt()
+              node.remove()
+          .getOrElse(Cmd.None)
       )
 
     case AppMsg.Pause =>
@@ -74,13 +81,14 @@ case class AppModel[F[_]: Async](
         ),
         Cmd.SideEffect {
           // TODO: use node directly after new Indigo release
-          gameInstance
-            .launch(
+          gameInstance.foreach:
+            _.launch(
               gameNodeId,
               // TODO: why this have to be unsafe from the Scala side?
               "width"  -> gameNode.clientWidth.toString,
               "height" -> gameNode.clientHeight.toString
             )
+            
         }
           // TODO: keep the ref in memory and halt on game switch
       )
@@ -122,9 +130,11 @@ case class AppModel[F[_]: Async](
           case RouterView(view) => 
             (
               this.copy(view = view), 
-              view match 
-                case RouterView.Home =>  Cmd.Emit(AppMsg.StopGame)
-                case RouterView.Game =>  Cmd.Emit(AppMsg.StartGame)
+                (
+                  view match 
+                    case view @ RouterView.Home =>  Cmd.Emit(AppMsg.StopGame)
+                    case view @ RouterView.Game =>  Cmd.Emit(AppMsg.StartGame)
+                ) |+| Nav.pushUrl(view.fullPath)
             )
             
           case _ => (this, Cmd.None)
@@ -140,7 +150,7 @@ object AppModel:
       gameNode = None,
       controls = Controls.init,
       view = RouterView.Home,
-      gameInstance = Tetrio(bridge.subSystem(IndigoGameId(gameNodeId)))
+      gameInstance = None
     )
 
 extension [A](underlying: Option[A])

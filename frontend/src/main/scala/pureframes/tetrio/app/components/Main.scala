@@ -1,11 +1,12 @@
 package pureframes.tetrio.app.components
 
+import pureframes.tetrio.app.AppMsg
 import pureframes.tetrio.app.RouterView
 import tyrian.Html.*
 import tyrian.*
 
 object Main:
-  def view[M]: Html[M] = div(
+  def view: Html[AppMsg] = div(
     clsx(
       "container",
       "mx-auto",
@@ -31,41 +32,33 @@ object Main:
       clsx("flex", "flex-col", "gap-2")
     )(
       List(
-        menuItem(
-          menuButton(
+        menuItem:
+          btn(
             "Play Now!",
-            path = RouterView.Game.path,
-            emphasized = true
+            emphasized = true,
+            msg = Some:
+              AppMsg.FollowLink(RouterView.Game.fullPath, isExternal = false)
           )
-        ),
-        menuItem(menuButton("Stats")),
-        menuItem(menuButton("Settings")),
-        menuItem(menuButton("About"))
+        ,
+        menuItem(btn("Stats")),
+        menuItem(btn("Settings")),
+        menuItem(btn("About"))
       )
     )
-
-    // h2("A Tetris clone written in Scala 3"),
-    // h3("By @pureframes"),
-    // h4("Powered by Scala.js, Tyrian, and Indigo"),
-    // h5("Source code available at")
   )
 
   private def menuItem[M](item: Html[M]): Html[M] = li(
     clsx("contents")
   )(item)
 
-  private def menuButton[M](
+  private def btn[M](
       txt: String,
-      path: String = "",
-      emphasized: Boolean = false
+      emphasized: Boolean = false,
+      msg: Option[M] = None
   ): Html[M] =
-    a(
-      href := path,
+    val classNames =
       cls := List(
         "grow",
-        "flex",
-        "items-center",
-        "justify-center",
         "font-bold",
         "py-2",
         "px-4",
@@ -74,7 +67,7 @@ object Main:
         "focus:outline-none",
         "focus-visible:ring",
         "text-center",
-        "cursor-pointer",
+        "cursor-pointer"
       )
         .concat(
           if emphasized then
@@ -93,4 +86,5 @@ object Main:
             )
         )
         .mkString(" ")
-    )(txt)
+
+    button(classNames +: msg.toList.map(onClick))(txt)
