@@ -32,7 +32,7 @@ final case class Tetrio[F[_]: Async](
         viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
         clearColor = RGBA.Zero,
         magnification = bootData.magnificationLevel
-      )
+      ).useTransparentBackground
 
       BootResult(gameConfig, bootData)
         .withAssets(Assets.assets)
@@ -80,7 +80,6 @@ final case class Tetrio[F[_]: Async](
           .modify(model, _.onCanvasResize(cmd.canvasSize))
       )
 
-    //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
         tyrianSubSystem.send(

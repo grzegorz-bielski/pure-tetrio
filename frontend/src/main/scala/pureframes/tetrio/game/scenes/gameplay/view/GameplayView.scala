@@ -6,6 +6,7 @@ import indigo.shared.datatypes.RGBA
 import indigo.shared.datatypes.Rectangle.apply
 import indigo.shared.datatypes.Size
 import indigo.shared.scenegraph.Shape
+import indigo.shared.scenegraph.Shape.Circle
 import indigoextras.geometry.Vertex
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -35,6 +36,13 @@ object GameplayView:
       )
     )
 
+  def drawDebugCircle(p: Point): SceneNode =
+    Circle(
+      center = p,
+      radius = 10,
+      fill = Fill.Color(RGBA.Red)
+    )
+
   def drawGame(
       model: GameplayModel,
       viewModel: GameplayViewModel
@@ -44,7 +52,8 @@ object GameplayView:
         drawMap(model.state) ++
         drawTetromino(model.state, viewModel) ++
         drawHeld(model.state) ++
-        drawNext(model.state)
+        drawNext(model.state) 
+        // :+ drawDebugCircle(Point(100, 100))
     )
       .scaleBy(viewModel.gameMapScale)
       .moveBy(

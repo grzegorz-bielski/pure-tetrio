@@ -10,7 +10,11 @@ import scala.scalajs.js
 
 object Stats:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
-    div(`class` := "absolute right-0 top-0 text-white")(
+    div(clsx(
+      "absolute right-0 top-0",
+      "text-white",
+      "select-none"
+    ))(
       div(
         Button(onClick(AppMsg.Pause))("Pause"),
         Controls.view(model.controls).map(AppMsg.ControlsUpdate(_))

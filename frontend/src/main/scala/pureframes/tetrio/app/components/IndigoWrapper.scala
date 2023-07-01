@@ -11,4 +11,9 @@ object IndigoWrapper:
   val nodeId = Tetrio.gameNodeId
 
   def view[M]: Html[M] =
-    div(`class` := "absolute w-full h-screen m-0 p-0", id := nodeId)()
+    div(clsx(
+      "absolute w-full h-screen m-0 p-0",
+      "bg-gradient-to-r from-pink-200",
+      "select-none touch-manipulation",
+      // "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+    ), id := nodeId)()

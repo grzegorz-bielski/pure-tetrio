@@ -79,8 +79,7 @@ case class AppModel[F[_]: Async](
         copy(
           gameNode = Some(gameNode)
         ),
-        Cmd.SideEffect {
-          // TODO: use node directly after new Indigo release
+        Cmd.SideEffect:
           gameInstance.foreach:
             _.launch(
               gameNodeId,
@@ -88,9 +87,6 @@ case class AppModel[F[_]: Async](
               "width"  -> gameNode.clientWidth.toString,
               "height" -> gameNode.clientHeight.toString
             )
-            
-        }
-          // TODO: keep the ref in memory and halt on game switch
       )
 
     case AppMsg.Resize(canvasSize) =>

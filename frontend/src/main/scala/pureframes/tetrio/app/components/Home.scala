@@ -5,53 +5,54 @@ import pureframes.tetrio.app.RouterView
 import tyrian.Html.*
 import tyrian.*
 
-object Main:
-  def view: Html[AppMsg] = div(
-    clsx(
-      "container",
-      "mx-auto",
-      "py-14",
-      "px-8",
-      "m-0",
-      "flex",
-      "flex-col",
-      "justify-between",
-      "h-screen"
-    )
-  )(
-    h1(
+object Home:
+  def view: Html[AppMsg] = 
+    div(
+      clsx("bg-gradient-to-b from-pink-200")
+    ):
+      div(
+        clsx(
+          "container", "mx-auto", 
+          "py-14",
+          "px-8",
+          "m-0",
+          "flex",
+          "flex-col",
+          "justify-between",
+          "h-screen",
+        )
+      )(
+        title("Tetrio"),
+        menu
+      )
+
+  def menu = ul(
+      clsx("flex", "flex-col", "gap-2")
+    ):
+      List(
+        menuItem(
+          "Play Now!",
+          emphasized = true,
+          msg = Some:
+            AppMsg.FollowLink(RouterView.Game.fullPath, isExternal = false)
+        ) ,
+        menuItem("Stats"),
+        menuItem("Settings"),
+        menuItem("About")
+      )
+  
+  def title(txt: String) = h1(
       clsx(
-        "text-8xl",
+        "text-9xl/loose",
+        "italic",
         "font-extralight",
         "tracking-wider",
         "text-center",
         "text-indigo-500"
       )
-    )("Tetrio"),
-    ul(
-      clsx("flex", "flex-col", "gap-2")
-    )(
-      List(
-        menuItem:
-          btn(
-            "Play Now!",
-            emphasized = true,
-            msg = Some:
-              AppMsg.FollowLink(RouterView.Game.fullPath, isExternal = false)
-          )
-        ,
-        menuItem(btn("Stats")),
-        menuItem(btn("Settings")),
-        menuItem(btn("About"))
-      )
-    )
-  )
+    )(txt)
 
-  private def menuItem[M](item: Html[M]): Html[M] = li(
-    clsx("contents")
-  )(item)
-
-  private def btn[M](
+  def menuItem[M](
       txt: String,
       emphasized: Boolean = false,
       msg: Option[M] = None
@@ -87,4 +88,5 @@ object Main:
         )
         .mkString(" ")
 
-    button(classNames +: msg.toList.map(onClick))(txt)
+    li(clsx("contents")):
+      button(classNames +: msg.toList.map(onClick))(txt)

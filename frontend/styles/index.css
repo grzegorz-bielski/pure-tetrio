@@ -4,6 +4,6 @@
 
 @layer components {
   canvas {
-    @apply w-full h-screen touch-none m-0;
+    @apply w-full h-screen touch-manipulation m-0;
   }
 }
