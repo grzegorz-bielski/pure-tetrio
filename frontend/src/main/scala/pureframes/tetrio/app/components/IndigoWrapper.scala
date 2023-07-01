@@ -15,5 +15,4 @@ object IndigoWrapper:
       "absolute w-full h-screen m-0 p-0",
       "bg-gradient-to-r from-pink-200",
       "select-none touch-manipulation",
-      // "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
     ), id := nodeId)()

@@ -21,10 +21,24 @@ object PauseMenu:
         element.foreach(_.close())
         
     def view = dialog(
-        id := viewId
-
+        id := viewId,
+        clsx(
+            "rounded",
+            "p-12", 
+            "pt-0", 
+            "bg-white/95",
+            "backdrop:bg-indigo-500/20",
+        ),
     )(
         h2(
+            clsx(
+                "text-6xl/loose",
+                "text-center",
+                "font-extralight",
+                "text-indigo-500",
+                "pv-5",
+            )
+        )(
             "Paused"
         ),
         menu

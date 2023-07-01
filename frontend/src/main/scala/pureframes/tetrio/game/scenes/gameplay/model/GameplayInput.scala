@@ -110,6 +110,7 @@ final case class GameplayInput(
     case Key.KEY_P       => Pause
     case Key.KEY_H       => SwapHeld
     case Key.SHIFT       => SwapHeld
+    case Key.ESCAPE      => Pause
 
   lazy val debugMappings: PartialFunction[Key, GameplayCommand] =
     case Key.KEY_I => SpawnTetromino(Tetromino.i(spawnPoint))

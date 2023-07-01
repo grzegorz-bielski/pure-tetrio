@@ -23,7 +23,6 @@ case class AppModel[F[_]: Async](
     gameState: GameState,
     gameProgress: Option[Progress],
     gameNode: Option[Element],
-    controls: Controls.Model,
     view: RouterView,
     gameInstance: Option[Tetrio[F]]
 ):
@@ -68,14 +67,6 @@ case class AppModel[F[_]: Async](
           case GameState.InProgress -> GameState.Paused     => PauseMenu.show[F]
           case GameState.Paused     -> GameState.InProgress => PauseMenu.hide[F]
           case _                                            => Cmd.None
-      )
-
-    case AppMsg.ControlsUpdate(msg) =>
-      (
-        copy(
-          controls = Controls.update(msg, controls)
-        ),
-        Cmd.None
       )
 
     case AppMsg.GameNodeMounted(gameNode) =>
@@ -145,7 +136,6 @@ object AppModel:
       gameState = GameState.UnStarted,
       gameProgress = None,
       gameNode = None,
-      controls = Controls.init,
       view = RouterView.Home,
       gameInstance = None
     )

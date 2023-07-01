@@ -14,6 +14,5 @@ enum AppMsg:
   case GameNodeMounted(e: Element)
   case Resize(canvasSize: CanvasSize)
   case UpdateProgress(state: GameState, details: Option[Progress])
-  case ControlsUpdate(m: Controls.Msg)
   case Input(cmd: GameplayCommand)
   case FollowLink(href: String, isExternal: Boolean)

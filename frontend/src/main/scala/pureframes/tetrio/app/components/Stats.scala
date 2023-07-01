@@ -16,8 +16,7 @@ object Stats:
       "select-none"
     ))(
       div(
-        Button(onClick(AppMsg.Pause))("Pause"),
-        Controls.view(model.controls).map(AppMsg.ControlsUpdate(_))
+        Button(onClick(AppMsg.Pause))("Pause")
       ),
       model.gameProgress
         .map { progress =>
