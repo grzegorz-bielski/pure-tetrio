@@ -63,16 +63,16 @@ object GameplayView:
   // todo: separate scene ?
   def drawOverlay(state: GameplayState)(using
       ctx: GameContext
-  ): Option[SceneNode] =
-    import ctx.startUpData.bootData.scale
-    val point = state.map.grid.position.toPoint
+  ): Option[SceneNode] = None
+    // import ctx.startUpData.bootData.scale
+    // val point = state.map.grid.position.toPoint
 
-    state match
-      case s: GameplayState.Paused =>
-        Some(drawTextBox("Paused", point, scale))
-      case s: GameplayState.GameOver =>
-        Some(drawTextBox("Game Over", point, scale))
-      case _ => None
+    // state match
+    //   case s: GameplayState.Paused =>
+    //     Some(drawTextBox("Paused", point, scale))
+    //   case s: GameplayState.GameOver =>
+    //     Some(drawTextBox("Game Over", point, scale))
+    //   case _ => None
 
   def drawTextBox(text: String, p: Point, scale: Vector2): SceneNode =
     TextBox(text)

@@ -1,6 +1,7 @@
 package pureframes.tetrio.app
 
 import pureframes.tetrio.app.components.*
+import pureframes.tetrio.game.scenes.gameplay.GameState
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
@@ -12,5 +13,4 @@ object AppView:
     main(clsx("relative w-full h-screen overflow-hidden mx-auto m-0 p-0")):
       model.view match
         case RouterView.Home => List(Home.view)
-        case RouterView.Game => List(IndigoWrapper.view, Stats.view)
-
+        case RouterView.Game => List(IndigoWrapper.view, Stats.view, PauseMenu.view)

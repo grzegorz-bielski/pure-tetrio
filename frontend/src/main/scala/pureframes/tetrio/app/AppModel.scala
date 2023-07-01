@@ -12,14 +12,15 @@ import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import pureframes.tetrio.game.*
 import pureframes.tetrio.game.core.*
+import pureframes.tetrio.game.scenes.gameplay.GameState
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
 import tyrian.*
 import tyrian.cmds.*
 
 
 case class AppModel[F[_]: Async](
-    bridge: TyrianIndigoBridge[F, ExternalCommand],
-    gameInProgress: Boolean,
+    bridge: TyrianIndigoBridge[F, ExternalMsg],
+    gameState: GameState,
     gameProgress: Option[Progress],
     gameNode: Option[Element],
     controls: Controls.Model,
@@ -57,13 +58,16 @@ case class AppModel[F[_]: Async](
         this,
         bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
       )
-    case AppMsg.UpdateProgress(progress, inProgress) =>
+    case AppMsg.UpdateProgress(gameState, gameProgress) =>
       (
         copy(
-          gameProgress = Some(progress),
-          gameInProgress = inProgress
+          gameState = gameState,
+          gameProgress =  gameProgress.orElse(this.gameProgress),
         ),
-        Cmd.None
+        (this.gameState, gameState) match
+          case GameState.InProgress -> GameState.Paused     => PauseMenu.show[F]
+          case GameState.Paused     -> GameState.InProgress => PauseMenu.hide[F]
+          case _                                            => Cmd.None
       )
 
     case AppMsg.ControlsUpdate(msg) =>
@@ -96,12 +100,9 @@ case class AppModel[F[_]: Async](
           Cmd.SideEffect {
             gameNode
               .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
-              .foreach { canvas =>
-                println("canvas" -> canvas)
-
+              .foreach: canvas =>
                 canvas.width = canvasSize.drawingBufferWidth
                 canvas.height = canvasSize.drawingBufferHeight
-              }
           },
           bridge.publish(
             IndigoGameId(gameNodeId),
@@ -137,11 +138,11 @@ case class AppModel[F[_]: Async](
 
 object AppModel:
   def init[F[_]: Async]: AppModel[F] = 
-    val bridge = TyrianIndigoBridge[F, ExternalCommand]()
+    val bridge = TyrianIndigoBridge[F, ExternalMsg]()
 
     AppModel[F](
       bridge = bridge,
-      gameInProgress = false,
+      gameState = GameState.UnStarted,
       gameProgress = None,
       gameNode = None,
       controls = Controls.init,

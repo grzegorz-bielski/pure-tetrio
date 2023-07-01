@@ -21,8 +21,8 @@ import scala.scalajs.js.annotation.*
 object AppSubs:
   def all[F[_]: Async](model: AppModel[F]): Sub[F, AppMsg] =
     val indigoBridge = model.bridge.subscribe {
-      case m: ExternalCommand.UpdateProgress =>
-        Some(AppMsg.UpdateProgress(m.progress, m.inProgress))
+      case m: ExternalEvent.ProgressUpdated =>
+        Some(AppMsg.UpdateProgress(m.state, m.progress))
       case _ => None
     }
 

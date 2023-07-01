@@ -11,8 +11,8 @@ import scala.scalajs.js
 object Stats:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
     div(clsx(
-      "absolute right-0 top-0",
-      "text-white",
+      "absolute right-0 bottom-0",
+      "text-black",
       "select-none"
     ))(
       div(

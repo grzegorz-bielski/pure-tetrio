@@ -1,11 +1,15 @@
 package pureframes.tetrio.game
 
 import pureframes.tetrio.game.core.*
-import pureframes.tetrio.game.scenes.gameplay.GameplayCommand
+import pureframes.tetrio.game.scenes.gameplay.*
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
 
-enum ExternalCommand:
+sealed trait ExternalMsg
+
+enum ExternalCommand extends ExternalMsg:
     case Pause
     case CanvasResize(canvasSize: CanvasSize)
-    case UpdateProgress(progress: Progress, inProgress: Boolean)
     case Input(cmd: GameplayCommand)
+
+enum ExternalEvent extends ExternalMsg:
+    case ProgressUpdated(state: GameState, progress: Option[Progress])

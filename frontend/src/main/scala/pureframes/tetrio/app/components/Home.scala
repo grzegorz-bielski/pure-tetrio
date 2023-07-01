@@ -30,15 +30,15 @@ object Home:
       clsx("flex", "flex-col", "gap-2")
     ):
       List(
-        menuItem(
+        MenuItem.view(
           "Play Now!",
           emphasized = true,
           msg = Some:
             AppMsg.FollowLink(RouterView.Game.fullPath, isExternal = false)
         ) ,
-        menuItem("Stats"),
-        menuItem("Settings"),
-        menuItem("About")
+        MenuItem.view("Stats"),
+        MenuItem.view("Settings"),
+        MenuItem.view("About")
       )
   
   def title(txt: String) = h1(
@@ -51,42 +51,3 @@ object Home:
         "text-indigo-500"
       )
     )(txt)
-
-  def menuItem[M](
-      txt: String,
-      emphasized: Boolean = false,
-      msg: Option[M] = None
-  ): Html[M] =
-    val classNames =
-      cls := List(
-        "grow",
-        "font-bold",
-        "py-2",
-        "px-4",
-        "h-12",
-        "rounded",
-        "focus:outline-none",
-        "focus-visible:ring",
-        "text-center",
-        "cursor-pointer"
-      )
-        .concat(
-          if emphasized then
-            List(
-              "bg-indigo-500",
-              "hover:bg-indigo-700",
-              "text-white"
-            )
-          else
-            List(
-              "border-2",
-              "border-indigo-500",
-              "text-indigo-500",
-              "hover:bg-indigo-700",
-              "hover:text-white"
-            )
-        )
-        .mkString(" ")
-
-    li(clsx("contents")):
-      button(classNames +: msg.toList.map(onClick))(txt)

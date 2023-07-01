@@ -30,6 +30,8 @@ bugs:
 - debounce resizing (!)
     - refactor subs to fs2
     - use new `Sub.make(id: String, fs2.Stream[F, A])` constructor
+- IOs zoom bubble:
+    - https://discourse.threejs.org/t/iphone-how-to-remove-text-selection-magnifier/47812/11 
 
 setup:
 - split vendor chunk from app chunks (borked)

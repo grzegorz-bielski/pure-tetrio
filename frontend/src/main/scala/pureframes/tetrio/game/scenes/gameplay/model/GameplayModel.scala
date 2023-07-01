@@ -162,7 +162,7 @@ object GameplayModel:
           next = spawnTetrominoPiece(ctx)
         )
       ).addGlobalEvents(
-        GameplayEvent.ProgressUpdated(state.progress, inProgress = true)
+        GameplayEvent.ProgressUpdated(GameState.InProgress, Some(state.progress))
       )
 
     def reset(ctx: GameContext, t: Option[Tetromino]): Outcome[GameplayState] =
@@ -188,7 +188,7 @@ object GameplayModel:
         )
       )
         .addGlobalEvents(
-          GameplayEvent.ProgressUpdated(nextProgress, inProgress = true)
+          GameplayEvent.ProgressUpdated(GameState.InProgress, Some(nextProgress))
         )
 
   extension (state: GameplayState.GameOver)
@@ -209,7 +209,11 @@ object GameplayModel:
         case Pause => state.continue
         case _     => Outcome(state)
 
-    def continue: Outcome[GameplayState] = Outcome(state.pausedState)
+    def continue: Outcome[GameplayState] = 
+        Outcome(state.pausedState)
+          .addGlobalEvents(
+            GameplayEvent.ProgressUpdated(GameState.InProgress, None)
+          )
 
   extension (state: GameplayState.InProgress)
     // TODO: call once in lazy val?
@@ -305,7 +309,7 @@ object GameplayModel:
       if movement.sticksOutOfTheMap(gameOverLine) then
         Outcome(GameplayState.GameOver(finishedState = state))
           .addGlobalEvents(
-            GameplayEvent.ProgressUpdated(state.progress, inProgress = false)
+            GameplayEvent.ProgressUpdated(GameState.Lost, Some(state.progress))
           )
       else if movement.intersectedStack then
         val nextMap = state.map.insertTetromino(state.tetromino)
@@ -360,3 +364,4 @@ object GameplayModel:
 
     def pause: Outcome[GameplayState] =
       Outcome(GameplayState.Paused(pausedState = state))
+          .addGlobalEvents(GameplayEvent.ProgressUpdated(GameState.Paused, None))

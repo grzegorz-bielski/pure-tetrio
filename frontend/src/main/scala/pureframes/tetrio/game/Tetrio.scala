@@ -13,7 +13,7 @@ import snabbdom.h.apply
 import tyrian.TyrianSubSystem
 
 final case class Tetrio[F[_]: Async](
-    tyrianSubSystem: TyrianSubSystem[F, ExternalCommand]
+    tyrianSubSystem: TyrianSubSystem[F, ExternalMsg]
 ) extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
   import tyrianSubSystem.TyrianEvent.Receive as FromTyrian
 
@@ -82,9 +82,7 @@ final case class Tetrio[F[_]: Async](
 
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
-        tyrianSubSystem.send(
-          ExternalCommand.UpdateProgress(e.progress, e.inProgress)
-        )
+        tyrianSubSystem.send(ExternalEvent.ProgressUpdated(e.state, e.progress))
       )
 
     case _ => Outcome(model)
