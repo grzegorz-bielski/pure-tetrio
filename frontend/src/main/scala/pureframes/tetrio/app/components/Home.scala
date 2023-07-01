@@ -34,7 +34,7 @@ object Home:
           "Play Now!",
           emphasized = true,
           msg = Some:
-            AppMsg.FollowLink(RouterView.Game.fullPath, isExternal = false)
+            AppMsg.InternalLink(RouterView.Game.fullPath)
         ) ,
         MenuItem.view("Stats"),
         MenuItem.view("Settings"),

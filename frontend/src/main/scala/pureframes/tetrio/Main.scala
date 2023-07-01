@@ -21,8 +21,8 @@ import scala.scalajs.js.annotation.*
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[AppMsg, AppModel[IO]]:
   def router: tyrian.Location => AppMsg = Routing.basic(
-    AppMsg.FollowLink(_, isExternal = false),
-    AppMsg.FollowLink(_, isExternal = true)
+    AppMsg.InternalLink(_),
+    AppMsg.ExternalLink(_)
   )
 
   def init(flags: Map[String, String]): (AppModel[IO], Cmd[IO, AppMsg]) =

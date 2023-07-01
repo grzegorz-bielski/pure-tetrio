@@ -1,7 +1,7 @@
 package pureframes.tetrio.app
 
 import pureframes.tetrio.app.components.*
-import pureframes.tetrio.game.scenes.gameplay.GameState
+import pureframes.tetrio.game.scenes.gameplay.*
 import tyrian.Html.*
 import tyrian.*
 import tyrian.cmds.*
@@ -10,7 +10,31 @@ import scala.scalajs.js
 
 object AppView:
   def view[F[_]](using model: AppModel[F]): Html[AppMsg] =
-    main(clsx("relative w-full h-screen overflow-hidden mx-auto m-0 p-0")):
+    main(
+      clsx(
+        "relative", 
+        "w-full", 
+        "h-screen", 
+        "overflow-hidden", 
+        "mx-auto", 
+        "m-0", 
+        "p-0"
+      )
+    ):
       model.view match
         case RouterView.Home => List(Home.view)
-        case RouterView.Game => List(IndigoWrapper.view, Stats.view, PauseMenu.view)
+        case RouterView.Game => List(
+            IndigoWrapper.view, 
+            Stats.view, 
+            modal(model.gameState)
+          ) 
+
+  def modal(state: GameState) = 
+    state match
+      case GameState.Paused => 
+        //  AppMsg.Pause could be sent twice when clicking the button & onClose
+        //   so we are relying on Key.ESCAPE in GameplayInput
+        Dialog.view()(PauseMenu.view: _*)
+      case GameState.Lost   => 
+        Dialog.view(Event("close", _ => AppMsg.Reset))(GameOverMenu.view: _*)
+      case _ => Dialog.view()()

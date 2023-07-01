@@ -9,10 +9,15 @@ import pureframes.tetrio.game.scenes.gameplay.model.Progress
 enum AppMsg:
   case StartGame
   case StopGame
-  case Pause
   case Noop
   case GameNodeMounted(e: Element)
   case Resize(canvasSize: CanvasSize)
   case UpdateProgress(state: GameState, details: Option[Progress])
   case Input(cmd: GameplayCommand)
   case FollowLink(href: String, isExternal: Boolean)
+object AppMsg:
+  val Pause = Input(GameplayCommand.Pause)
+  val Reset = Input(GameplayCommand.Reset)
+
+  def ExternalLink(href: String) = FollowLink(href, isExternal = true)
+  def InternalLink(href: String) = FollowLink(href, isExternal = false)

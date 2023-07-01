@@ -52,20 +52,23 @@ case class AppModel[F[_]: Async](
           .getOrElse(Cmd.None)
       )
 
-    case AppMsg.Pause =>
-      (
-        this,
-        bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
-      )
+    // case AppMsg.Pause =>
+    //   (
+    //     this,
+    //     bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
+    //   )
     case AppMsg.UpdateProgress(gameState, gameProgress) =>
+      println((gameState, gameProgress))
       (
         copy(
           gameState = gameState,
           gameProgress =  gameProgress.orElse(this.gameProgress),
         ),
         (this.gameState, gameState) match
-          case GameState.InProgress -> GameState.Paused     => PauseMenu.show[F]
-          case GameState.Paused     -> GameState.InProgress => PauseMenu.hide[F]
+          case GameState.InProgress -> GameState.Paused     => Dialog.show[F]
+          case GameState.InProgress -> GameState.Lost       => Dialog.show[F]
+          case GameState.Paused     -> GameState.InProgress => Dialog.hide[F]
+          case GameState.Lost       -> GameState.InProgress => Dialog.hide[F]
           case _                                            => Cmd.None
       )
 

@@ -7,6 +7,7 @@ import pureframes.tetrio.game.scenes.gameplay.model.Progress
 sealed trait ExternalMsg
 
 enum ExternalCommand extends ExternalMsg:
+    case Restart
     case Pause
     case CanvasResize(canvasSize: CanvasSize)
     case Input(cmd: GameplayCommand)

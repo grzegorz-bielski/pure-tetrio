@@ -52,7 +52,7 @@ final case class GameplayInput(
         Outcome(appendCmd(GameplayCommand.MoveLeft))
       case GestureEvent.Panned(Direction.Right) =>
         Outcome(appendCmd(GameplayCommand.MoveRight))
-      case GestureEvent.Panned(Direction.Down) => 
+      case GestureEvent.Panned(Direction.Down) =>
         Outcome(appendCmd(GameplayCommand.MoveDown))
       case _ =>
         Outcome(this)
@@ -100,17 +100,16 @@ final case class GameplayInput(
     debugMappings orElse gameMappings
 
   lazy val gameMappings: PartialFunction[Key, GameplayCommand] =
-    case Key.SPACE       => HardDrop
-    case Key.LEFT_ARROW  => MoveLeft
-    case Key.RIGHT_ARROW => MoveRight
-    case Key.DOWN_ARROW  => MoveDown
-    case Key.UP_ARROW    => Rotate(Clockwise)
-    case Key.KEY_Q       => Rotate(CounterClockwise)
-    case Key.KEY_W       => Rotate(Clockwise)
-    case Key.KEY_P       => Pause
-    case Key.KEY_H       => SwapHeld
-    case Key.SHIFT       => SwapHeld
-    case Key.ESCAPE      => Pause
+    case Key.SPACE              => HardDrop
+    case Key.LEFT_ARROW         => MoveLeft
+    case Key.RIGHT_ARROW        => MoveRight
+    case Key.DOWN_ARROW         => MoveDown
+    case Key.UP_ARROW           => Rotate(Clockwise)
+    case Key.KEY_Q              => Rotate(CounterClockwise)
+    case Key.KEY_W              => Rotate(Clockwise)
+    case Key.KEY_P | Key.ESCAPE => Pause
+    case Key.KEY_H              => SwapHeld
+    case Key.SHIFT              => SwapHeld
 
   lazy val debugMappings: PartialFunction[Key, GameplayCommand] =
     case Key.KEY_I => SpawnTetromino(Tetromino.i(spawnPoint))
