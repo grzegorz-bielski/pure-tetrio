@@ -14,18 +14,14 @@ object AppView:
       clsx(
         "relative", 
         "w-full", 
-        "h-screen", 
-        "overflow-hidden", 
-        "mx-auto", 
-        "m-0", 
-        "p-0"
+        "h-screen",
       )
     ):
       model.view match
         case RouterView.Home => List(Home.view)
         case RouterView.Game => List(
             IndigoWrapper.view, 
-            Stats.view, 
+            Overlay.view, 
             modal(model.gameState)
           ) 
 

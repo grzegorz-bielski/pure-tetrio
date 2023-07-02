@@ -52,11 +52,6 @@ case class AppModel[F[_]: Async](
           .getOrElse(Cmd.None)
       )
 
-    // case AppMsg.Pause =>
-    //   (
-    //     this,
-    //     bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
-    //   )
     case AppMsg.UpdateProgress(gameState, gameProgress) =>
       println((gameState, gameProgress))
       (

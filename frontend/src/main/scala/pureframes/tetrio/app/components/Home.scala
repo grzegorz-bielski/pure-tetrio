@@ -27,7 +27,11 @@ object Home:
       )
 
   def menu = ul(
-      clsx("flex", "flex-col", "gap-2")
+      clsx(
+        "flex", "flex-col", "gap-2",
+        "md:w-1/2", "md:mx-auto",
+        "lg:w-1/3",
+      )
     ):
       List(
         MenuItem.view(
@@ -38,7 +42,6 @@ object Home:
         ) ,
         MenuItem.view("Stats"),
         MenuItem.view("Settings"),
-        MenuItem.view("About")
       )
   
   def title(txt: String) = h1(

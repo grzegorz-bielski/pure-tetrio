@@ -31,9 +31,9 @@ object PauseMenu:
                 MenuItem.view(
                     "Resume",
                     msg = Some: 
-                        AppMsg.Pause
+                        AppMsg.Pause,
+                    emphasized = true
                 ) ,
-                MenuItem.view("Controls"),
                 MenuItem.view(
                     "Quit",
                     msg = Some:

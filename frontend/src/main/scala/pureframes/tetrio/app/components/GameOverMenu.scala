@@ -32,7 +32,8 @@ object GameOverMenu:
                 MenuItem.view(
                     "Retry?",
                     msg = Some:
-                        AppMsg.Reset
+                        AppMsg.Reset,
+                    emphasized = true
                 ),
                 MenuItem.view(
                     "Quit",

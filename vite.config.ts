@@ -9,9 +9,6 @@ const getAppPath = (suffix: string) => `./target/scala-${scalaVersion}/${feModul
 export default defineConfig({
     base: "/pure-tetrio/", // GHP specific
     server: {
-        // hmr: {
-        //     host: 'localhost'
-        // },
         watch: {
             ignored: [
                 `**/${feModuleName}/target/**`,
