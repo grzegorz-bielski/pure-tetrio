@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game
+package pureframes.tetrio.game
 
 import indigo.*
 import indigo.shared.Outcome

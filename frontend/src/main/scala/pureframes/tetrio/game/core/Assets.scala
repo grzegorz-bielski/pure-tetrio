@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.core
+package pureframes.tetrio.game.core
 
 import indigo.shared.assets.*
 import indigo.shared.materials.Material

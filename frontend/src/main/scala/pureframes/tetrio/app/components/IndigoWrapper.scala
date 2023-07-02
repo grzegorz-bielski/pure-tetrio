@@ -8,12 +8,11 @@ import tyrian.*
 import scala.scalajs.js
 
 object IndigoWrapper:
-
-  @js.native
-  @JSImport("@styles/components/indigo-wrapper.module.css")
-  def root: String = js.native
-
   val nodeId = Tetrio.gameNodeId
 
   def view[M]: Html[M] =
-    div(`class` := "absolute w-full h-screen m-0 p-0", id := nodeId)()
+    div(clsx(
+      "absolute w-full h-screen m-0 p-0",
+      "bg-gradient-to-r from-pink-200",
+      "select-none touch-manipulation",
+    ), id := nodeId)()

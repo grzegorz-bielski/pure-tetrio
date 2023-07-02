@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.scenes.gameplay.model
+package pureframes.tetrio.game.scenes.gameplay.model
 
 import indigo.Vector2
 import indigo.shared.collections.Batch

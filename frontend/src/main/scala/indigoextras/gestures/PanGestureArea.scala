@@ -53,7 +53,6 @@ final case class PanGestureArea private (
                   case false =>
                     if dy > 0 then Direction.Up else Direction.Down
 
-              println("pan" -> direction)
               Outcome(s.copy(startPos = e.position)).addGlobalEvents(handler(direction))
             else Outcome(s)
 

@@ -18,5 +18,6 @@ metals.sbt
 .bsp
 node_modules
 .parcel-cache
+specs
 
 frontend/styles/pure-css-stylesheet.css

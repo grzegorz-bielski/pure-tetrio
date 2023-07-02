@@ -2,45 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  --text-white: rgba(255, 255, 255, 0.87);
-
-  color-scheme: light dark;
-  color: var(--text-white);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-* {
-  box-sizing: border-box;
-
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-
-  touch-action: none;
-
-  -webkit-touch-callout: none;
-  -webkit-user-callout: none;
-  -webkit-user-drag: none;
-  -webkit-user-modify: none;
-  -webkit-highlight: none;
-}
-
-canvas {
-  @apply w-full h-screen touch-none m-0;
+@layer components {
+  canvas {
+    @apply w-full h-screen touch-manipulation m-0;
+  }
 }

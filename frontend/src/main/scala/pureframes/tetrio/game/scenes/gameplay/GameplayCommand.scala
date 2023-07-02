@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.scenes.gameplay
+package pureframes.tetrio.game.scenes.gameplay
 
 import indigo.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -12,6 +11,7 @@ object GameplayCommand:
     case SwapHeld
     case HardDrop
     case Pause
+    case Reset
   export GameCommand.*
   
   val MoveLeft = Move(Vector2(-1, 0))
@@ -19,7 +19,6 @@ object GameplayCommand:
   val MoveDown = Move(Vector2(0, 1))
 
   enum DebugCommand extends GameplayCommand:
-    case Reset
     case SpawnTetromino(t: Tetromino)
   export DebugCommand.*
 

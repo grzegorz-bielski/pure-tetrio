@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.scenes.gameplay.view
+package pureframes.tetrio.game.scenes.gameplay.view
 
 import indigo.*
 import indigo.scenes.*
@@ -7,12 +6,14 @@ import indigo.shared.datatypes.RGBA
 import indigo.shared.datatypes.Rectangle.apply
 import indigo.shared.datatypes.Size
 import indigo.shared.scenegraph.Shape
+import indigo.shared.scenegraph.Shape.Circle
 import indigoextras.geometry.Vertex
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
 import pureframes.tetrio.game.scenes.gameplay.viewmodel.*
 
 import GameplayModel.GameplayState
+import GameplayViewModel.toGridPoint
 
 object GameplayView:
   def present(
@@ -22,56 +23,28 @@ object GameplayView:
   ): Outcome[SceneUpdateFragment] =
     given GameContext = ctx
 
-    Outcome(
-      SceneUpdateFragment.empty.addLayers(
+    Outcome:
+      SceneUpdateFragment.empty.addLayers:
         Layer(
           BindingKey("game"),
           drawGame(model, viewModel)
         )
-          .withMagnification(ctx.startUpData.bootData.magnificationLevel),
-        Layer(
-          BindingKey("overlay"),
-          drawOverlay(model.state).toBatch
-        )
-      )
-    )
+          .withMagnification(ctx.startUpData.bootData.magnificationLevel)
+
 
   def drawGame(
       model: GameplayModel,
       viewModel: GameplayViewModel
   )(using GameContext): SceneNode =
-    Group(
-      drawPreview(model.state) ++
-        drawMap(model.state) ++
-        drawTetromino(model.state, viewModel) ++
-        drawHeld(model.state) ++
-        drawNext(model.state)
-    )
-      .scaleBy(viewModel.gameMapScale)
-      .moveBy(
-        viewModel.gameMapCoords
+      Group(
+          drawPreview(model.state) ++
+          drawMap(model.state) ++
+          drawTetromino(model.state, viewModel) ++
+          drawHeld(model.state) ++
+          drawNext(model.state)
       )
-
-  // todo: separate scene ?
-  def drawOverlay(state: GameplayState)(using
-      ctx: GameContext
-  ): Option[SceneNode] =
-    import ctx.startUpData.bootData.scale
-    val point = state.map.grid.position.toPoint
-
-    state match
-      case s: GameplayState.Paused =>
-        Some(drawTextBox("Paused", point, scale))
-      case s: GameplayState.GameOver =>
-        Some(drawTextBox("Game Over", point, scale))
-      case _ => None
-
-  def drawTextBox(text: String, p: Point, scale: Vector2): SceneNode =
-    TextBox(text)
-      .scaleBy(scale)
-      .moveTo(p)
-      .withColor(RGBA.White)
-      .withFontSize(Pixels(30))
+        .scaleBy(viewModel.gameMapScale)
+        .moveBy(viewModel.gameMapCoords)
 
   def drawMap(state: GameplayState)(using GameContext): Batch[SceneNode] =
     state.map.elements.map {
@@ -91,13 +64,11 @@ object GameplayView:
 
     state match
       case state: GameplayState.InProgress =>
-        // GameplayViewModel.toGridPoint?
-        Batch(
-          tetrominoGraphic(state.next).moveBy(
+        Batch:
+          tetrominoGraphic(state.next).moveBy:
             Point(gridSize.width.toInt * gridSquareSize, 0)
-          )
-        )
-      case _ => Batch.empty
+      case _ => 
+        Batch.empty
 
   def drawTetromino(
       state: GameplayState,
@@ -123,11 +94,9 @@ object GameplayView:
 
         if movement.intersectedStack then Batch.empty[SceneNode]
         else
-          movement.movedTetromino.positions.map { p =>
-            gameAssets.tetrominos.preview.moveTo(
-              GameplayViewModel.toGridPoint(p).toPoint
-            )
-          }.toBatch
+          movement.movedTetromino.positions.map: p =>
+            gameAssets.tetrominos.preview.moveTo(toGridPoint(p))
+          .toBatch
       case _ => Batch.empty[SceneNode]
 
   def tetrominoGraphic(tetromino: Tetromino)(using ctx: GameContext) =
@@ -141,20 +110,16 @@ object GameplayView:
 
     e.tetrominoOrdinal
       .map(blockGraphic(_, gameAssets.tetrominos))
-      .getOrElse(
+      .getOrElse:
         Shape.Box(
           Rectangle(Size(gridSquareSize)),
           Fill.Color(RGBA.SlateGray)
         )
-      )
-      .moveTo(
-        GameplayViewModel.toGridPoint(e.point).toPoint
-      )
+      .moveTo:
+        GameplayViewModel.toGridPoint(e.point)
 
   def drawBoundaries(e: MapElement)(using ctx: GameContext) =
-    ctx.startUpData.bootData.gameAssets.tetrominos.wall.moveTo(
-      GameplayViewModel.toGridPoint(e.point).toPoint
-    )
+    ctx.startUpData.bootData.gameAssets.tetrominos.wall.moveTo(toGridPoint(e.point))
 
   def blockGraphic(
       ord: Tetromino.Ordinal,

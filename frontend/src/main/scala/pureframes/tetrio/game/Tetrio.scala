@@ -13,7 +13,7 @@ import snabbdom.h.apply
 import tyrian.TyrianSubSystem
 
 final case class Tetrio[F[_]: Async](
-    tyrianSubSystem: TyrianSubSystem[F, ExternalCommand]
+    tyrianSubSystem: TyrianSubSystem[F, ExternalMsg]
 ) extends IndigoGame[BootData, SetupData, GameModel, GameViewModel]:
   import tyrianSubSystem.TyrianEvent.Receive as FromTyrian
 
@@ -30,9 +30,9 @@ final case class Tetrio[F[_]: Async](
     BootData.fromFlags(flags).map { bootData =>
       val gameConfig = GameConfig(
         viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
-        clearColor = RGBA.fromHexString("#242424"),
+        clearColor = RGBA.Zero,
         magnification = bootData.magnificationLevel
-      )
+      ).useTransparentBackground
 
       BootResult(gameConfig, bootData)
         .withAssets(Assets.assets)
@@ -80,12 +80,9 @@ final case class Tetrio[F[_]: Async](
           .modify(model, _.onCanvasResize(cmd.canvasSize))
       )
 
-    //  Why can't I use `SceneEvent` as a scrutine ??
     case e: GameplayEvent.ProgressUpdated =>
       Outcome(model).addGlobalEvents(
-        tyrianSubSystem.send(
-          ExternalCommand.UpdateProgress(e.progress, e.inProgress)
-        )
+        tyrianSubSystem.send(ExternalEvent.ProgressUpdated(e.state, e.progress))
       )
 
     case _ => Outcome(model)

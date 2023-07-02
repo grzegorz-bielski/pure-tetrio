@@ -1,5 +1,4 @@
-package pureframes.tetrio
-package game.scenes.gameplay.viewmodel
+package pureframes.tetrio.game.scenes.gameplay.viewmodel
 
 import indigo.IndigoLogger.*
 import indigo.*
@@ -7,6 +6,7 @@ import indigo.shared.Outcome
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigoextras.geometry.Polygon
+import indigoextras.geometry.Vertex
 import indigoextras.subsystems.Automata
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
@@ -80,11 +80,8 @@ case class GameplayViewModel(
       case _ => Outcome(this)
 
 object GameplayViewModel:
-  val fromGrindPoint: GameContext ?=> Vector2 => Point =
-    toGridPoint.andThen(_.toPoint)
-
-  def toGridPoint(point: Vector2)(using ctx: GameContext): Vector2 =
-    point * ctx.startUpData.bootData.gridSquareSize
+  def toGridPoint(point: Vector2)(using ctx: GameContext): Point =
+    (point * ctx.startUpData.bootData.gridSquareSize).toPoint
 
   def initial(canvasSize: CanvasSize): GameplayViewModel =
     GameplayViewModel(
@@ -113,4 +110,4 @@ object GameplayViewModel:
       state.prevTetrominoPositions.map(_.toPoint)
 
     def targetPoints(using GameContext): Batch[Point] =
-      state.targetTetrominoPositions.map(fromGrindPoint).toBatch
+      state.targetTetrominoPositions.map(toGridPoint).toBatch

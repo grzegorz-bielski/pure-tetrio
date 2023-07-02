@@ -12,47 +12,59 @@ import pureframes.tetrio.app.components.*
 import pureframes.tetrio.game.Tetrio.*
 import pureframes.tetrio.game.*
 import pureframes.tetrio.game.core.*
+import pureframes.tetrio.game.scenes.gameplay.GameState
 import pureframes.tetrio.game.scenes.gameplay.model.Progress
 import tyrian.*
 import tyrian.cmds.*
 
+
 case class AppModel[F[_]: Async](
-    bridge: TyrianIndigoBridge[F, ExternalCommand],
-    gameInProgress: Boolean,
+    bridge: TyrianIndigoBridge[F, ExternalMsg],
+    gameState: GameState,
     gameProgress: Option[Progress],
     gameNode: Option[Element],
-    controls: Controls.Model
+    view: RouterView,
+    gameInstance: Option[Tetrio[F]]
 ):
   @SuppressWarnings(Array("scalafix:DisableSyntax.asInstanceOf"))
   val update: AppMsg => (AppModel[F], Cmd[F, AppMsg]) =
     case AppMsg.StartGame =>
       (
-        this,
+        this.copy(
+          gameInstance = Some(Tetrio(bridge.subSystem(IndigoGameId(gameNodeId))))
+        ),
         Cmd.Run(
           waitForNodeToMount[F, AppMsg, Element](gameNodeId, dom.document.body)
         )(AppMsg.GameNodeMounted(_))
       )
 
-    case AppMsg.Pause =>
+    case AppMsg.StopGame => 
       (
-        this,
-        bridge.publish(IndigoGameId(gameNodeId), ExternalCommand.Pause)
-      )
-    case AppMsg.UpdateProgress(progress, inProgress) =>
-      (
-        copy(
-          gameProgress = Some(progress),
-          gameInProgress = inProgress
-        ),
-        Cmd.None
+        this.copy(gameInstance = None),
+        (
+          gameNode.mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement]), 
+          gameInstance
+        )
+          .mapN: (node, instance) => 
+            Cmd.SideEffect:
+              instance.halt()
+              node.remove()
+          .getOrElse(Cmd.None)
       )
 
-    case AppMsg.ControlsUpdate(msg) =>
+    case AppMsg.UpdateProgress(gameState, gameProgress) =>
+      println((gameState, gameProgress))
       (
         copy(
-          controls = Controls.update(msg, controls)
+          gameState = gameState,
+          gameProgress =  gameProgress.orElse(this.gameProgress),
         ),
-        Cmd.None
+        (this.gameState, gameState) match
+          case GameState.InProgress -> GameState.Paused     => Dialog.show[F]
+          case GameState.InProgress -> GameState.Lost       => Dialog.show[F]
+          case GameState.Paused     -> GameState.InProgress => Dialog.hide[F]
+          case GameState.Lost       -> GameState.InProgress => Dialog.hide[F]
+          case _                                            => Cmd.None
       )
 
     case AppMsg.GameNodeMounted(gameNode) =>
@@ -60,16 +72,14 @@ case class AppModel[F[_]: Async](
         copy(
           gameNode = Some(gameNode)
         ),
-        Cmd.SideEffect {
-          // TODO: use node directly after new Indigo release
-          Tetrio(bridge.subSystem(IndigoGameId(gameNodeId)))
-            .launch(
+        Cmd.SideEffect:
+          gameInstance.foreach:
+            _.launch(
               gameNodeId,
               // TODO: why this have to be unsafe from the Scala side?
               "width"  -> gameNode.clientWidth.toString,
               "height" -> gameNode.clientHeight.toString
             )
-        }
       )
 
     case AppMsg.Resize(canvasSize) =>
@@ -79,12 +89,9 @@ case class AppModel[F[_]: Async](
           Cmd.SideEffect {
             gameNode
               .mapNullable(_.firstChild.asInstanceOf[HTMLCanvasElement])
-              .foreach { canvas =>
-                println("canvas" -> canvas)
-
+              .foreach: canvas =>
                 canvas.width = canvasSize.drawingBufferWidth
                 canvas.height = canvasSize.drawingBufferHeight
-              }
           },
           bridge.publish(
             IndigoGameId(gameNodeId),
@@ -102,14 +109,34 @@ case class AppModel[F[_]: Async](
 
     case AppMsg.Noop => (this, Cmd.None)
 
+    case AppMsg.FollowLink(href, isExternal) => 
+      // see: https://github.com/PurpleKingdomGames/tyrian/pull/195#issuecomment-1564979780
+      if isExternal then (this, Nav.loadUrl(href)) else
+        href match 
+          case RouterView(view) => 
+            (
+              this.copy(view = view), 
+                (
+                  view match 
+                    case view @ RouterView.Home =>  Cmd.Emit(AppMsg.StopGame)
+                    case view @ RouterView.Game =>  Cmd.Emit(AppMsg.StartGame)
+                ) |+| Nav.pushUrl(view.fullPath)
+            )
+            
+          case _ => (this, Cmd.None)
+
 object AppModel:
-  def init[F[_]: Async]: AppModel[F] = AppModel[F](
-    bridge = TyrianIndigoBridge[F, ExternalCommand](),
-    gameInProgress = false,
-    gameProgress = None,
-    gameNode = None,
-    controls = Controls.init
-  )
+  def init[F[_]: Async]: AppModel[F] = 
+    val bridge = TyrianIndigoBridge[F, ExternalMsg]()
+
+    AppModel[F](
+      bridge = bridge,
+      gameState = GameState.UnStarted,
+      gameProgress = None,
+      gameNode = None,
+      view = RouterView.Home,
+      gameInstance = None
+    )
 
 extension [A](underlying: Option[A])
   // fp-ts like method

@@ -1,7 +1,6 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / scalafixDependencies += Dependencies.organizeImports.value.head
 ThisBuild / organization      := "eu.pureframes"
 ThisBuild / scalaVersion      := IO.read(file("./scalaVersion.txt"))
 ThisBuild / version           := "0.0.1"
