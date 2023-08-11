@@ -13,6 +13,6 @@ object IndigoWrapper:
   def view[M]: Html[M] =
     div(clsx(
       "absolute w-full h-screen m-0 p-0",
-      "bg-gradient-to-r from-pink-200",
+      // "bg-gradient-to-r from-pink-200",
       "select-none touch-manipulation",
     ), id := nodeId)()

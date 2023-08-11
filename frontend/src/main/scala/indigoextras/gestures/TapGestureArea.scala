@@ -22,6 +22,7 @@ final case class TapGestureArea private (
     state: State,
     options: Options
 ) derives CanEqual:
+  def reset: TapGestureArea = copy(state = State.Initial)
   def resize(nextArea: Polygon.Closed): TapGestureArea = 
     copy(area = nextArea)
   def update(e: PointerEvent, ctx: FrameContext[?]): Outcome[TapGestureArea] =

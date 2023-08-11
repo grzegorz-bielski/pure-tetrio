@@ -22,6 +22,7 @@ final case class SwipeGestureArea private (
     state: State,
     options: Options
 ) derives CanEqual:
+  def reset: SwipeGestureArea = copy(state = State.Initial)
   def resize(nextArea: Polygon.Closed): SwipeGestureArea = 
     copy(area = nextArea)
   def update(e: PointerEvent, ctx: FrameContext[?]): Outcome[SwipeGestureArea] =

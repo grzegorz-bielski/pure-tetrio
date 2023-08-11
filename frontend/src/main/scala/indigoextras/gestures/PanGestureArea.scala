@@ -22,6 +22,7 @@ final case class PanGestureArea private (
     state: State,
     options: Options
 ) derives CanEqual:
+  def reset: PanGestureArea = copy(state = State.Initial)
   def resize(nextArea: Polygon.Closed): PanGestureArea = 
     copy(area = nextArea)
   def update(e: PointerEvent, ctx: FrameContext[?]): Outcome[PanGestureArea] =

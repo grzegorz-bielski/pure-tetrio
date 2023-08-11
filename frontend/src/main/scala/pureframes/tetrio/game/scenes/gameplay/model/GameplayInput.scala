@@ -18,6 +18,8 @@ import scala.collection.immutable.Queue
 import GameplayCommand.*
 import RotationDirection.*
 
+// TODO: gestures are still broked
+
 final case class GameplayInput(
     spawnPoint: Vector2,
     cmds: Queue[GameplayCommand],
@@ -25,6 +27,13 @@ final case class GameplayInput(
     swipeGestureArea: SwipeGestureArea,
     panGestureArea: PanGestureArea
 ):
+  def resetGestureRecognizers: GameplayInput =
+    copy(
+      tapGestureArea = tapGestureArea.reset,
+      swipeGestureArea = swipeGestureArea.reset,
+      panGestureArea = panGestureArea.reset
+    )
+    
   def onCanvasResize(nextCanvasSize: CanvasSize): GameplayInput =
     val gestureArea = nextCanvasSize.toPolygon
 

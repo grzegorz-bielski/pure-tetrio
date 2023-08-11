@@ -118,9 +118,8 @@ object GameplayModel:
         ctx: GameContext,
         input: GameplayInput
     ): Outcome[GameplayState] =
-      input.cmds.foldLeft(Outcome(state)) { (acc, cmd) =>
+      input.cmds.foldLeft(Outcome(state)): (acc, cmd) =>
         acc.flatMap(_.onCommand(ctx, cmd))
-      }
 
     def onCommand(
         ctx: GameContext,
