@@ -1,9 +1,9 @@
 package pureframes.tetrio.game.core
 
+import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.config.GameViewport
 import indigo.shared.datatypes.Vector2
-import indigoextras.geometry.Polygon
 import org.scalajs.dom
 import org.scalajs.dom.*
 

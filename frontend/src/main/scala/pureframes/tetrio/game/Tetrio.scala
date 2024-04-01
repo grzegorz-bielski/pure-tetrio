@@ -6,7 +6,6 @@ import cats.effect.kernel.Async
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
-import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 import snabbdom.h.apply

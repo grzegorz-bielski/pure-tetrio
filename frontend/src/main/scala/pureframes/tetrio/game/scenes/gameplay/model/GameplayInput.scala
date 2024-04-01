@@ -7,7 +7,6 @@ import indigo.shared.datatypes.Vector2
 import indigo.shared.events.KeyboardEvent.KeyDown
 import indigo.shared.events.PointerEvent
 import indigo.shared.utils.Lens
-import indigoextras.geometry.Polygon
 import indigoextras.gestures.*
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*

@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import * as fs from 'node:fs'
 import * as url from 'node:url'
 
-const scalaVersion = fs.readFileSync("./scalaVersion.txt", { encoding: "utf-8" })
+const scalaVersion = fs.readFileSync("./scalaVersion.txt", { encoding: "utf-8" }).trim()
 const feModuleName = "frontend"
 const getAppPath = (suffix: string) => `./target/scala-${scalaVersion}/${feModuleName}-${suffix}`
 

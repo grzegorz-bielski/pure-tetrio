@@ -2,7 +2,6 @@ package pureframes.tetrio.game
 
 import indigo.*
 import indigo.shared.Outcome
-import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.GameplayModel
 

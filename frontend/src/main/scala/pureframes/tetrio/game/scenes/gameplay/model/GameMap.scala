@@ -1,11 +1,10 @@
 package pureframes.tetrio.game.scenes.gameplay.model
 
-import indigo.Vector2
+import indigo.*
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.datatypes.Point
 import indigo.shared.datatypes.RGBA
-import indigoextras.geometry.*
 import indigoextras.trees.QuadTree
 import pureframes.tetrio.game.core.*
 

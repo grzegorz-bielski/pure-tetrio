@@ -91,5 +91,5 @@ object Tetromino:
   private def at(pos: List[(Int, Int)])(center: Vector2) =
     NonEmptyBatch(
       center,
-      pos.map(p => center.moveBy(Vector2(p._1, p._2))): _*
+      pos.map(p => center.moveBy(Vector2(p._1, p._2)))*
     )

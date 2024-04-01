@@ -30,7 +30,7 @@ object AppView:
       case GameState.Paused => 
         //  AppMsg.Pause could be sent twice when clicking the button & onClose
         //   so we are relying on Key.ESCAPE in GameplayInput
-        Dialog.view()(PauseMenu.view: _*)
+        Dialog.view()(PauseMenu.view*)
       case GameState.Lost   => 
-        Dialog.view(Event("close", _ => AppMsg.Reset))(GameOverMenu.view: _*)
+        Dialog.view(Event("close", _ => AppMsg.Reset))(GameOverMenu.view*)
       case _ => Dialog.view()()
