@@ -31,7 +31,9 @@ final case class Tetrio[F[_]: Async](
         viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
         clearColor = RGBA.Zero,
         magnification = bootData.magnificationLevel
-      ).useTransparentBackground
+      )
+        .useTransparentBackground
+        .noResize // done in a custom way by `CanvasSize` and friends
 
       BootResult(gameConfig, bootData)
         .withAssets(Assets.assets)

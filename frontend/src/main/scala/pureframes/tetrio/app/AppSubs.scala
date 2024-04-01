@@ -35,7 +35,7 @@ object AppSubs:
         )
         .map { (entries, _) =>
           // TODO: this should be in suspended and handled in flatMap...
-          val size = CanvasSize.unsafFromResizeEntry(entries.head)
+          val size = CanvasSize.unsafeFromResizeEntry(entries.head)
 
           AppMsg.Resize(size)
         }

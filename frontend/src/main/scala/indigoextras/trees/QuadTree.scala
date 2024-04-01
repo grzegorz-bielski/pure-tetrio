@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 /**
  * Original Indigo's QuadTree from before 0.16.0.
  * 
- * To be removed for something simpler
+ * It's only used by GameMap and should be replaced by something simpler
  * 
  * */
 sealed trait QuadTree[T] derives CanEqual:
