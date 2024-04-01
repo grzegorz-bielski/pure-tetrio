@@ -11,12 +11,12 @@
     "vite": "vite"
   },
   "devDependencies": {
-    "@types/node": "^18.11.10",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.16",
-    "postcss-nested": "^5.0.6",
-    "tailwindcss": "^3.3.2",
-    "typescript": "^4.9.3",
-    "vite": "^4.3.9"
+    "@types/node": "^20.12.2",
+    "autoprefixer": "^ 10.4.19",
+    "postcss": "^8.4.38",
+    "postcss-nested": "^6.0.1",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.7"
   }
 }

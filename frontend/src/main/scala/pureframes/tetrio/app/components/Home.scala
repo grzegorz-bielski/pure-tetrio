@@ -19,7 +19,7 @@ object Home:
           "flex",
           "flex-col",
           "justify-between",
-          "h-screen",
+          "h-dvh",
         )
       )(
         title("Tetrio"),
