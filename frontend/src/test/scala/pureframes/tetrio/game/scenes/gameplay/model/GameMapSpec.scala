@@ -1,14 +1,12 @@
 package pureframes.tetrio
 package game.scenes.gameplay.model
 
+import indigo.*
 import indigo.shared.collections.Batch
 import indigo.shared.collections.NonEmptyBatch
 import indigo.shared.datatypes.Point
 import indigo.shared.datatypes.RGBA
 import indigo.shared.datatypes.Vector2
-import indigoextras.geometry.BoundingBox
-import indigoextras.geometry.BoundingBox.apply
-import indigoextras.geometry.Vertex
 import munit.FunSuite
 import pureframes.tetrio.game.core.*
 

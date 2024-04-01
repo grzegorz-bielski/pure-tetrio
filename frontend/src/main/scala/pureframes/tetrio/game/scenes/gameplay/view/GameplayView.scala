@@ -7,7 +7,6 @@ import indigo.shared.datatypes.Rectangle.apply
 import indigo.shared.datatypes.Size
 import indigo.shared.scenegraph.Shape
 import indigo.shared.scenegraph.Shape.Circle
-import indigoextras.geometry.Vertex
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.model.*
 import pureframes.tetrio.game.scenes.gameplay.viewmodel.*

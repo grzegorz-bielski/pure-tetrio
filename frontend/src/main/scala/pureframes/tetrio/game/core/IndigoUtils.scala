@@ -3,8 +3,8 @@ package pureframes.tetrio.game.core
 import cats.kernel.Monoid
 import indigo.Point
 import indigo.Vector2
+import indigo.Vertex
 import indigo.shared.collections.Batch
-import indigoextras.geometry.Vertex
 
 import scala.annotation.tailrec
 import scala.annotation.targetName

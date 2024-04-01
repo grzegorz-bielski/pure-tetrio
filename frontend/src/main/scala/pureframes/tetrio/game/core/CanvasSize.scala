@@ -1,9 +1,9 @@
 package pureframes.tetrio.game.core
 
+import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.config.GameViewport
 import indigo.shared.datatypes.Vector2
-import indigoextras.geometry.Polygon
 import org.scalajs.dom
 import org.scalajs.dom.*
 
@@ -36,17 +36,17 @@ case class CanvasSize(displayWidth: Double, displayHeight: Double, dpr: Double):
     math.round(size * dpr).toInt
 
 object CanvasSize:
-  def fromClientSize(width: Int, heigth: Int): Outcome[CanvasSize] =
-    Outcome(unsafeFromClientSizes(width, heigth))
+  def fromClientSize(width: Int, height: Int): Outcome[CanvasSize] =
+    Outcome(unsafeFromClientSizes(width, height))
 
-  def unsafeFromClientSizes(width: Int, heigt: Int): CanvasSize =
+  def unsafeFromClientSizes(width: Int, height: Int): CanvasSize =
     CanvasSize(
       width,
-      heigt,
+      height,
       window.devicePixelRatio
     )
 
-  def unsafFromResizeEntry(entry: ResizeObserverEntry): CanvasSize =
+  def unsafeFromResizeEntry(entry: ResizeObserverEntry): CanvasSize =
     // TODO: no entry.devicePixelContentBoxSize on scala-js dom :sad
 
     // CanvasSize(

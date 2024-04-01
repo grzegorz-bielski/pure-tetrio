@@ -40,8 +40,9 @@ object Home:
           msg = Some:
             AppMsg.InternalLink(RouterView.Game.fullPath)
         ) ,
-        MenuItem.view("Stats"),
-        MenuItem.view("Settings"),
+        // These are not yet implemented, no point in showing them
+        // MenuItem.view("Stats"),
+        // MenuItem.view("Settings"),
       )
   
   def title(txt: String) = h1(

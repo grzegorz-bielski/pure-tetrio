@@ -1,5 +1,6 @@
 package indigoextras.gestures
 
+import indigo.*
 import indigo.shared.FrameContext
 import indigo.shared.Outcome
 import indigo.shared.collections.Batch
@@ -11,8 +12,6 @@ import indigo.shared.events.PointerEvent.*
 import indigo.shared.time.GameTime
 import indigo.shared.time.Millis
 import indigo.shared.time.Seconds
-import indigoextras.geometry.Polygon
-import indigoextras.geometry.Vertex
 
 import TapGestureArea.*
 

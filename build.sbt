@@ -2,14 +2,14 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / organization      := "eu.pureframes"
-ThisBuild / scalaVersion      := IO.read(file("./scalaVersion.txt"))
+ThisBuild / scalaVersion      := IO.read(file("./scalaVersion.txt")).trim
 ThisBuild / version           := "0.0.1"
 ThisBuild / scalafixOnCompile := true
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-ThisBuild / resolvers += 
-  Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers ++= 
+  Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / resolvers += 
   "sonatype-s01-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"

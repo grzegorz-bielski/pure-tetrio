@@ -6,7 +6,6 @@ import indigo.shared.Outcome
 import indigo.shared.events.GlobalEvent
 import indigo.shared.events.KeyboardEvent.KeyDown
 import indigo.shared.utils.Lens
-import indigoextras.geometry.BoundingBox
 import indigoextras.gestures.GestureEvent
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*

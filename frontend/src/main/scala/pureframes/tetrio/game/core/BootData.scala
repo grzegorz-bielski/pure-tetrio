@@ -1,10 +1,9 @@
 package pureframes.tetrio.game.core
 
 import cats.syntax.all.*
-import indigo.GameViewport
+import indigo.*
 import indigo.shared.Outcome
 import indigo.shared.datatypes.Vector2
-import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 
 case class BootData(

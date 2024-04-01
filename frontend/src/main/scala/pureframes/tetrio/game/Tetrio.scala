@@ -6,7 +6,6 @@ import cats.effect.kernel.Async
 import indigo.*
 import indigo.scenes.*
 import indigo.shared.datatypes.*
-import indigoextras.geometry.BoundingBox
 import pureframes.tetrio.game.core.*
 import pureframes.tetrio.game.scenes.gameplay.*
 import snabbdom.h.apply
@@ -32,7 +31,9 @@ final case class Tetrio[F[_]: Async](
         viewport = bootData.initialCanvasSize.toDrawingBufferViewport,
         clearColor = RGBA.Zero,
         magnification = bootData.magnificationLevel
-      ).useTransparentBackground
+      )
+        .useTransparentBackground
+        .noResize // done in a custom way by `CanvasSize` and friends
 
       BootResult(gameConfig, bootData)
         .withAssets(Assets.assets)
